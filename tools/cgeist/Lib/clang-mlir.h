@@ -73,6 +73,8 @@ struct MLIRASTConsumer : public ASTConsumer {
   LLVM::TypeFromLLVMIRTranslator typeTranslator;
   LLVM::TypeToLLVMIRTranslator reverseTypeTranslator;
 
+  std::set<std::string> &disaggTarget;
+
   MLIRASTConsumer(
       std::set<std::string> &emitIfFound, std::set<std::string> &done,
       std::map<std::string, mlir::LLVM::GlobalOp> &llvmStringGlobals,
@@ -82,7 +84,8 @@ struct MLIRASTConsumer : public ASTConsumer {
       std::map<std::string, mlir::LLVM::LLVMFuncOp> &llvmFunctions,
       Preprocessor &PP, ASTContext &astContext,
       mlir::OwningOpRef<mlir::ModuleOp> &module, clang::SourceManager &SM,
-      CodeGenOptions &codegenops)
+      CodeGenOptions &codegenops,
+      std::set<std::string> &disaggTarget)
       : emitIfFound(emitIfFound), done(done),
         llvmStringGlobals(llvmStringGlobals), globals(globals),
         functions(functions), llvmGlobals(llvmGlobals),
@@ -92,7 +95,8 @@ struct MLIRASTConsumer : public ASTConsumer {
         CGM(astContext, PP.getHeaderSearchInfo().getHeaderSearchOpts(),
             PP.getPreprocessorOpts(), codegenops, llvmMod, PP.getDiagnostics()),
         error(false), typeTranslator(*module->getContext()),
-        reverseTypeTranslator(lcontext) {
+        reverseTypeTranslator(lcontext),
+        disaggTarget(disaggTarget) {
     addPragmaScopHandlers(PP, scopLocList);
     addPragmaEndScopHandlers(PP, scopLocList);
     addPragmaLowerToHandlers(PP, LTInfo);
@@ -137,6 +141,8 @@ struct MLIRASTConsumer : public ASTConsumer {
   llvm::Type *getLLVMType(clang::QualType t);
 
   mlir::Location getMLIRLocation(clang::SourceLocation loc);
+  bool isTargetLine(clang::SourceLocation loc);
+  bool isTargetExpr(clang::Expr *expr);
 };
 
 class MLIRScanner : public StmtVisitor<MLIRScanner, ValueCategory> {

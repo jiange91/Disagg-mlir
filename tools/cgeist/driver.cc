@@ -130,6 +130,7 @@ static cl::opt<bool> NoCUDALib("nocudalib", cl::init(false),
                                cl::desc("Do not link CUDA libdevice"));
 
 static cl::opt<std::string> Output("o", cl::init("-"), cl::desc("Output file"));
+static cl::opt<std::string> DisaggIn("disin", cl::init("-"), cl::desc("Disaggregation target input file"));
 
 static cl::opt<std::string> cfunction("function",
                                       cl::desc("<Specify function>"),
@@ -461,7 +462,7 @@ int main(int argc, char **argv) {
   llvm::Triple triple;
   llvm::DataLayout DL("");
   parseMLIR(argv[0], files, cfunction, includeDirs, defines, module, triple,
-            DL);
+            DL, DisaggIn);
   mlir::PassManager pm(&context);
 
   OpPrintingFlags flags;

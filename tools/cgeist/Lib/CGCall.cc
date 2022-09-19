@@ -1424,19 +1424,27 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
             cast<FunctionDecl>(sr->getDecl()), KernelReferenceKind::Kernel));
       else
         name = Glob.CGM.getMangledName(sr->getDecl());
+      // llvm::errs() << "callee name here: " << name << "\n";
       if (funcs.count(name.str()) || name.startswith("mkl_") ||
           name.startswith("MKL_") || name.startswith("cublas") ||
           name.startswith("cblas_")) {
-
+      
         std::vector<mlir::Value> args;
         for (auto *a : expr->arguments()) {
           args.push_back(getLLVM(a));
         }
         mlir::Value called;
 
+        // prepare remote attr
+        SmallVector<NamedAttribute, 1> attrs;
+        auto remoteAttr = builder.getNamedAttr("remote_target", builder.getI32IntegerAttr(1));
+        if (Glob.isTargetExpr(expr)) {
+          attrs.push_back(remoteAttr);
+        }
+
         if (callee) {
           auto strcmpF = Glob.GetOrCreateLLVMFunction(callee);
-          called = builder.create<mlir::LLVM::CallOp>(loc, strcmpF, args)
+          called = builder.create<mlir::LLVM::CallOp>(loc, strcmpF, args, attrs)
                        .getResult(0);
         } else {
           args.insert(args.begin(), getLLVM(expr->getCallee()));
@@ -1445,7 +1453,7 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
           if (RTs[0].isa<LLVM::LLVMVoidType>())
             RTs.clear();
           called =
-              builder.create<mlir::LLVM::CallOp>(loc, RTs, args).getResult(0);
+              builder.create<mlir::LLVM::CallOp>(loc, RTs, args, attrs).getResult(0);
         }
         return ValueCategory(called, /*isReference*/ expr->isLValue() ||
                                          expr->isXValue());

@@ -3535,6 +3535,7 @@ ValueCategory MLIRScanner::VisitCastExpr(CastExpr *E) {
                sr->getDecl()->getName() == "calloc"))
             if (auto mt =
                     getMLIRType(E->getType()).dyn_cast<mlir::MemRefType>()) {
+              // mt.print(llvm::errs());
               auto shape = std::vector<int64_t>(mt.getShape());
 
               auto elemSize = getTypeSize(
@@ -5230,6 +5231,39 @@ llvm::Type *MLIRASTConsumer::getLLVMType(clang::QualType t) {
   return T;
 }
 
+bool MLIRASTConsumer::isTargetLine(clang::SourceLocation loc) {
+  clang::SourceLocation expLoc = SM.getExpansionLoc(loc);
+  const FileEntry *F = SM.getFileEntryForID(SM.getFileID(expLoc));
+  StringRef fpath = F->tryGetRealPathName();
+  if (fpath.empty()) return false;
+  int lineNo = SM.getExpansionLineNumber(expLoc);
+  auto k = fpath.str() + ":" + std::to_string(lineNo);
+  if (disaggTarget.count(k)) {
+    // llvm::errs() << "found target line - " << fpath << ":" << lineNo << "\n";
+    return true;
+  }
+  return false;
+}
+
+bool MLIRASTConsumer::isTargetExpr(clang::Expr *expr) {
+  // TODO: handle cxx new 
+  if (auto CI = dyn_cast<clang::CallExpr>(expr)) {
+    if (auto ic = dyn_cast<ImplicitCastExpr>(CI->getCallee())) {
+      if (auto sr = dyn_cast<DeclRefExpr>(ic->getSubExpr())) {
+        auto mangledName = CGM.getMangledName(sr->getDecl());
+        if (mangledName.equals("malloc") || 
+            mangledName.equals("calloc") ||
+            (sr->getDecl()->getIdentifier() && 
+              (sr->getDecl()->getName() == "malloc" ||
+               sr->getDecl()->getName() == "calloc"))) {
+                return isTargetLine(expr->getExprLoc());
+            }
+      }
+    }
+  }
+  return false;
+}
+
 #include "llvm/Support/Host.h"
 
 #include "clang/Frontend/FrontendAction.h"
@@ -5243,16 +5277,22 @@ public:
   std::map<std::string, mlir::func::FuncOp> functions;
   std::map<std::string, mlir::LLVM::GlobalOp> llvmGlobals;
   std::map<std::string, mlir::LLVM::LLVMFuncOp> llvmFunctions;
-  MLIRAction(std::string fn, mlir::OwningOpRef<mlir::ModuleOp> &module)
-      : module(module) {
+  std::set<std::string /* filename::row */> disaggTarget;
+  MLIRAction(std::string fn, mlir::OwningOpRef<mlir::ModuleOp> &module,
+  std::set<std::string> disaggTarget = {})
+      : module(module), disaggTarget(disaggTarget) {
     emitIfFound.insert(fn);
+    for (auto &s : disaggTarget) {
+      llvm::errs() << s << "\n";
+    }
   }
   std::unique_ptr<clang::ASTConsumer>
   CreateASTConsumer(CompilerInstance &CI, StringRef InFile) override {
     return std::unique_ptr<clang::ASTConsumer>(new MLIRASTConsumer(
         emitIfFound, done, llvmStringGlobals, globals, functions, llvmGlobals,
         llvmFunctions, CI.getPreprocessor(), CI.getASTContext(), module,
-        CI.getSourceManager(), CI.getCodeGenOpts()));
+        CI.getSourceManager(), CI.getCodeGenOpts(),
+        disaggTarget));
   }
 };
 
@@ -5314,7 +5354,8 @@ static bool parseMLIR(const char *Argv0, std::vector<std::string> filenames,
                       std::string fn, std::vector<std::string> includeDirs,
                       std::vector<std::string> defines,
                       mlir::OwningOpRef<mlir::ModuleOp> &module,
-                      llvm::Triple &triple, llvm::DataLayout &DL) {
+                      llvm::Triple &triple, llvm::DataLayout &DL,
+                      std::string DisaggIn) {
 
   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
   // Buffer diagnostics from argument parsing so that we can output them using a
@@ -5434,7 +5475,21 @@ static bool parseMLIR(const char *Argv0, std::vector<std::string> filenames,
   if (Jobs.size() < 1)
     return false;
 
-  MLIRAction Act(fn, module);
+  // Construct disaggregation target location set
+  std::set<std::string> dissaggTarget;
+  if (DisaggIn != "-") {
+    ifstream dissInFile(DisaggIn);
+    if (!dissInFile.good()) {
+      llvm::errs() << "Cannot open disagg target file: " << DisaggIn << "\n";
+      return -1;
+    }
+    std::string fnameLine;
+    while (std::getline(dissInFile, fnameLine)) {
+      dissaggTarget.emplace(fnameLine);
+    }
+    dissInFile.close();
+  }
+  MLIRAction Act(fn, module, dissaggTarget);
 
   for (auto &job : Jobs) {
     std::unique_ptr<CompilerInstance> Clang(new CompilerInstance());

@@ -5,19 +5,18 @@
 - cmake
 - make or ninja
 
-### 1. Clone Polygeist
+> Build mlir and polygeist seperately, following option 1 in the original instruction 
+
+1. First check working gcc/clang include search path `include_dir`
 ```sh
-git clone --recursive https://github.com/llvm/Polygeist
-cd Polygeist
+gcc -E -v -
+``` 
+2. (MacOS) Check `root_dir`
+```sh
+xcrun --show-sdk-path
 ```
 
-### 2. Install LLVM, MLIR, Clang, and Polygeist
-
-#### Option 1: Using pre-built LLVM, MLIR, and Clang
-
-Polygeist can be built by providing paths to a pre-built MLIR and Clang toolchain.
-
-1. Build LLVM, MLIR, and Clang:
+3. Build LLVM, MLIR, and Clang:
 ```sh
 mkdir llvm-project/build
 cd llvm-project/build
@@ -25,37 +24,22 @@ cmake -G Ninja ../llvm \
   -DLLVM_ENABLE_PROJECTS="mlir;clang" \
   -DLLVM_TARGETS_TO_BUILD="host" \
   -DLLVM_ENABLE_ASSERTIONS=ON \
-  -DCMAKE_BUILD_TYPE=DEBUG
+  -DCMAKE_BUILD_TYPE=RELEASE \
+  -DC_INCLUDE_DIRS="{include_dir}"\
+  -DDEFAULT_SYSROOT="{root_dir}"
 ninja
 ninja check-mlir
 ```
 
-2. Build Polygeist:
+4. Build Polygeist and Disaggregation:
 ```sh
+# at root directory
 mkdir build
 cd build
 cmake -G Ninja .. \
   -DMLIR_DIR=$PWD/../llvm-project/build/lib/cmake/mlir \
   -DCLANG_DIR=$PWD/../llvm-project/build/lib/cmake/clang \
-  -DLLVM_TARGETS_TO_BUILD="host" \
-  -DLLVM_ENABLE_ASSERTIONS=ON \
-  -DCMAKE_BUILD_TYPE=DEBUG
-ninja
-ninja check-polygeist-opt && ninja check-cgeist
-```
-
-#### Option 2: Using unified LLVM, MLIR, Clang, and Polygeist build
-
-Polygeist can also be built as an external LLVM project using [LLVM_EXTERNAL_PROJECTS](https://llvm.org/docs/CMake.html#llvm-related-variables).
-
-1. Build LLVM, MLIR, Clang, and Polygeist:
-```sh
-mkdir build
-cd build
-cmake -G Ninja ../llvm-project/llvm \
-  -DLLVM_ENABLE_PROJECTS="clang;mlir" \
-  -DLLVM_EXTERNAL_PROJECTS="polygeist" \
-  -DLLVM_EXTERNAL_POLYGEIST_SOURCE_DIR=.. \
+  -DLLVM_EXTERNAL_LIT=$PWD/../llvm-project/build/bin/llvm-lit \
   -DLLVM_TARGETS_TO_BUILD="host" \
   -DLLVM_ENABLE_ASSERTIONS=ON \
   -DCMAKE_BUILD_TYPE=DEBUG

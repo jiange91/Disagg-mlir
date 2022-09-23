@@ -1,0 +1,4 @@
+add_subdirectory(Common)
+add_subdirectory(LLVMDisagg)
+add_subdirectory(MemRefDisagg)
+add_subdirectory(BltFuncSigDisagg)

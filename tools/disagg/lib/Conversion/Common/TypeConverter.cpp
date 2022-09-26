@@ -10,7 +10,6 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
   llvmTypeConverter(ctx) {
   assert(rmemDialect && "RemoteMem Dialect is not registered");
 
-  /* Register conversions for both types */
   addConversion(
     // Base case, add before the following conversion
     [](Type type) { return type; }
@@ -43,13 +42,15 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
       type.print(llvm::outs());
       llvm::outs() << "\n";
 
-      // return builder.create<UnrealizedConversionCastOp>(loc, type, inputs).getResult(0);
+      auto convOp = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
+      convOp->setAttr("arg_mat", builder.getBoolAttr(true));
+      return convOp.getResult(0);
 
-      Value unpacked = inputs[0];
-      if (auto t = unpacked.getType().dyn_cast<LLVM::LLVMStructType>()) {
-        return builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]).getResult();
-      }
-      return llvm::None;
+      // Value unpacked = inputs[0];
+      // if (auto t = unpacked.getType().dyn_cast<LLVM::LLVMStructType>()) {
+      //   return builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]).getResult();
+      // }
+      // return llvm::None;
       // return builder.create<MaterializeOp>(loc, type, unpacked).getResult();
     }
   );
@@ -67,11 +68,15 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     resultType.print(llvm::outs());
     llvm::outs() << "\n";
 
-    Value unpacked = inputs[0];
-      if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
-        unpacked = builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]);
-      }
-      return builder.create<MaterializeOp>(loc, resultType, unpacked).getResult();
+      auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
+      convOp->setAttr("src_mat", builder.getBoolAttr(true));
+      return convOp.getResult(0);
+
+    // Value unpacked = inputs[0];
+    //   if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
+    //     unpacked = builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]);
+    //   }
+    //   return builder.create<MaterializeOp>(loc, resultType, unpacked).getResult();
   });
   addTargetMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
@@ -87,8 +92,9 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     resultType.print(llvm::outs());
     llvm::outs() << "\n";
 
-    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
-        .getResult(0);
+    auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
+    convOp->setAttr("tgt_mat", builder.getBoolAttr(true));
+    return convOp.getResult(0);
     // Value unpacked = inputs[0];
     // if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
     //     unpacked = builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]);
@@ -120,22 +126,24 @@ FunctionType RemoteMemTypeConverter::convertFunctionSignature(FunctionType funcT
 
 
 LLVM::LLVMFunctionType RemoteMemTypeConverter::convertLLVMFunctionSignature(LLVM::LLVMFunctionType funcTy, bool isVariadic, SignatureConversion &result) {
-  for (auto &en : llvm::enumerate(funcTy.getParams())) {
-    Type type = en.value();
-    SmallVector<Type, 4> convertedTy;
-    if (failed(funcArgTypeConverter(type, convertedTy, true/* need llvm compatible */))) {
-      llvm::errs() << "Unable to convert llvm function signature\n";
-      return {};
-    }
-    result.addInputs(en.index(), convertedTy);
-  }
-  auto convertedResult = convertFunctionResult(funcTy.getReturnType(), true);
-  if (!convertedResult) return {};
+  llvm_unreachable("Will be moved to lowering pass");
+  // for (auto &en : llvm::enumerate(funcTy.getParams())) {
+  //   Type type = en.value();
+  //   SmallVector<Type, 4> convertedTy;
+  //   if (failed(funcArgTypeConverter(type, convertedTy, true/* need llvm compatible */))) {
+  //     llvm::errs() << "Unable to convert llvm function signature\n";
+  //     return {};
+  //   }
+  //   result.addInputs(en.index(), convertedTy);
+  // }
+  // auto convertedResult = convertFunctionResult(funcTy.getReturnType(), true);
+  // if (!convertedResult) return {};
 
-  return LLVM::LLVMFunctionType::get(convertedResult, result.getConvertedTypes(), isVariadic);
+  // return LLVM::LLVMFunctionType::get(convertedResult, result.getConvertedTypes(), isVariadic);
 }
 
 llvm::Optional<Type> RemoteMemTypeConverter::convertLLVMPointerType(LLVM::LLVMPointerType type) {
+  // check if remote_target attr is annotated
   if (type.isOpaque()) 
     return rmem::RemoteMemRefType::get(type);
   if (auto pointee = convertType(type.getElementType())) {

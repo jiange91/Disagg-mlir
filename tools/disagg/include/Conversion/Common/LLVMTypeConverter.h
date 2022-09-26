@@ -54,7 +54,7 @@ private:
   // Convert MemRefType (recursive convert contained elementType if has nested llvm.ptr |struct | memref)
   llvm::Optional<Type> convertMemRefType(MemRefType type);
 
-  // For memref size calculation
+  // For memref lowering logic reuse 
   LLVMTypeConverter llvmTypeConverter;
 };
 }

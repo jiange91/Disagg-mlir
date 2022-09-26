@@ -11,6 +11,7 @@
 #include "llvm/Support/PointerLikeTypeTraits.h"
 
 #include "Dialect/RemoteMemTypes.h"
+#include "Dialect/RemoteMemOpsEnums.h.inc"
 #define GET_OP_CLASSES
 #include "Dialect/RemoteMemOps.h.inc"
 

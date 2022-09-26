@@ -3,12 +3,12 @@
 
 include "mlir/Pass/PassBase.td"
 
-def MemRefDisaggregation: Pass<"convert-memrefmem-to-remote", "ModuleOp"> {
+def MemRefDisaggregation: Pass<"convert-memrefmem-to-remote", "func::FuncOp"> {
   let summary = "Convert memref operations that involve memory side effects to remotemem ops";
   let constructor = "mlir::disagg::createMemRefDisaggPass()";
 }
 
-def LLVMDisaggregation : Pass<"convert-llvm-to-remote", "ModuleOp"> {
+def LLVMDisaggregation : Pass<"convert-llvm-to-remote", "func::FuncOp"> {
   let summary = "Currently only convert llvm function call to malloc";
   let constructor = "mlir::disagg::createLLVMDisaggregationPass()";
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect"];

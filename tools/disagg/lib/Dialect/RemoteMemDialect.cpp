@@ -11,6 +11,7 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
+#include "Dialect/RemoteMemOpsEnums.cpp.inc"
 #include "Dialect/RemoteMemOpsDialect.cpp.inc"
 
 //================================================================
@@ -110,57 +111,29 @@ LogicalResult MaterializeOp::verify() {
   return mlir::success();
 }
 
-struct MaterializationFoldPattern : public OpRewritePattern<MaterializeOp> {
-  using OpRewritePattern<MaterializeOp>::OpRewritePattern;
+// struct MaterializationFoldPattern : public OpRewritePattern<MaterializeOp> {
+//   using OpRewritePattern<MaterializeOp>::OpRewritePattern;
 
-  /* Fold x.virtualize().materialize()
-    current virtualize and materialze will keep the result type consistent, might need castOp in the future
-  */
-  LogicalResult matchAndRewrite(MaterializeOp op, PatternRewriter &rewriter) const override {
-    Value matInput = op.getOperand();
-    VirtualizeOp virtOp = matInput.getDefiningOp<VirtualizeOp>();
-    if (!virtOp) return mlir::failure();
+//   /* Fold x.virtualize().materialize()
+//     current virtualize and materialze will keep the result type consistent, might need castOp in the future
+//   */
+//   LogicalResult matchAndRewrite(MaterializeOp op, PatternRewriter &rewriter) const override {
+//     Value matInput = op.getOperand();
+//     VirtualizeOp virtOp = matInput.getDefiningOp<VirtualizeOp>();
+//     if (!virtOp) return mlir::failure();
 
-    // Replace materialize op with virtualize input
-    // DCE will take care of redundant virt op
-    rewriter.replaceOp(op, virtOp.getOperand());
-    return mlir::success();
-  }
-};
+//     // Replace materialize op with virtualize input
+//     // DCE will take care of redundant virt op
+//     rewriter.replaceOp(op, virtOp.getOperand());
+//     return mlir::success();
+//   }
+// };
 
-void MaterializeOp::getCanonicalizationPatterns(RewritePatternSet &results, MLIRContext *context) {
-  results.add<
-  MaterializationFoldPattern
-  >(context);
-}
-
-// ================================================================
-// VirtualizeOp
-// ================================================================
-
-struct VirtualizationFoldPattern : public OpRewritePattern<VirtualizeOp> {
-  using OpRewritePattern<VirtualizeOp>::OpRewritePattern;
-
-  /* Fold x.virtualize().materialize()
-    current virtualize and materialze will keep the result type consistent, might need castOp in the future
-  */
-  LogicalResult matchAndRewrite(VirtualizeOp op, PatternRewriter &rewriter) const override {
-    Value virtInput = op.getOperand();
-    MaterializeOp matOp = virtInput.getDefiningOp<MaterializeOp>();
-    if (!matOp) return mlir::failure();
-
-    // Replace materialize op with virtualize input
-    // DCE will take care of redundant virt op
-    rewriter.replaceOp(op, matOp.getOperand());
-    return mlir::success();
-  }
-};
-
-void VirtualizeOp::getCanonicalizationPatterns(RewritePatternSet &results, MLIRContext *context) {
-  results.add<
-  VirtualizationFoldPattern
-  >(context);
-}
+// void MaterializeOp::getCanonicalizationPatterns(RewritePatternSet &results, MLIRContext *context) {
+//   results.add<
+//   MaterializationFoldPattern
+//   >(context);
+// }
 
 //================================================================
 // RemoteMem Dialect

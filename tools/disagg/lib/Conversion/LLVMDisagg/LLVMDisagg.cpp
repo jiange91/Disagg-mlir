@@ -28,95 +28,95 @@ static llvm::StringSet<> allowedFuncSyms = {
 "atoi"
 };
 
-class LLVMFuncOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::LLVMFuncOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::LLVMFuncOp>::ConvertOpToRemoteMemPattern;
+// class LLVMFuncOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::LLVMFuncOp> {
+//   using ConvertOpToRemoteMemPattern<LLVM::LLVMFuncOp>::ConvertOpToRemoteMemPattern;
 
-  LLVM::LLVMFuncOp disaggLLVMFuncSignature(LLVM::LLVMFuncOp funcOp, LLVM::LLVMFuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const {
+//   LLVM::LLVMFuncOp disaggLLVMFuncSignature(LLVM::LLVMFuncOp funcOp, LLVM::LLVMFuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const {
 
-    TypeConverter::SignatureConversion result(funcOp.getNumArguments());
-    auto newFuncType = getTypeConverter()->convertLLVMFunctionSignature(funcOp.getFunctionType(), funcOp.isVarArg(), result);
-    if (!newFuncType)
-      return nullptr;
+//     TypeConverter::SignatureConversion result(funcOp.getNumArguments());
+//     auto newFuncType = getTypeConverter()->convertLLVMFunctionSignature(funcOp.getFunctionType(), funcOp.isVarArg(), result);
+//     if (!newFuncType)
+//       return nullptr;
     
-    SmallVector<NamedAttribute, 4> attributes;
-    // for (const auto &attr : funcOp->getAttrs()) {
-    //   if (attr.getName() == SymbolTable::getSymbolAttrName() ||
-    //     attr.getName() == FunctionOpInterface::getTypeAttrName())
-    //   continue;
-    //   attributes.push_back(attr);
-    // }
-    // auto isVarArg = rewriter.getNamedAttr("func.varargs", rewriter.getBoolAttr(funcOp.isVarArg()));
-    // attributes.push_back(isVarArg);
-    auto newFuncOp = rewriter.create<LLVM::LLVMFuncOp>(
-      funcOp.getLoc(), funcOp.getName(), newFuncType, funcOp.getLinkage(), funcOp.getDsoLocal(), attributes 
-    );
+//     SmallVector<NamedAttribute, 4> attributes;
+//     // for (const auto &attr : funcOp->getAttrs()) {
+//     //   if (attr.getName() == SymbolTable::getSymbolAttrName() ||
+//     //     attr.getName() == FunctionOpInterface::getTypeAttrName())
+//     //   continue;
+//     //   attributes.push_back(attr);
+//     // }
+//     // auto isVarArg = rewriter.getNamedAttr("func.varargs", rewriter.getBoolAttr(funcOp.isVarArg()));
+//     // attributes.push_back(isVarArg);
+//     auto newFuncOp = rewriter.create<LLVM::LLVMFuncOp>(
+//       funcOp.getLoc(), funcOp.getName(), newFuncType, funcOp.getLinkage(), funcOp.getDsoLocal(), attributes 
+//     );
 
-    // move func body to new funcop
-    rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
-    // if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result)))
-      // return nullptr;
-    rewriter.applySignatureConversion(&newFuncOp.getBody(), result, getTypeConverter());
-    return newFuncOp;
-  }
+//     // move func body to new funcop
+//     rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
+//     // if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result)))
+//       // return nullptr;
+//     rewriter.applySignatureConversion(&newFuncOp.getBody(), result, getTypeConverter());
+//     return newFuncOp;
+//   }
 
-  LogicalResult matchAndRewrite(LLVM::LLVMFuncOp op, LLVM::LLVMFuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    auto newFuncOp = disaggLLVMFuncSignature(op, adaptor, rewriter);
-    // newFuncOp.dump();
-    if (!newFuncOp)
-      return mlir::failure();
-    rewriter.eraseOp(op);
-    return mlir::success();  
-  }
-};
+//   LogicalResult matchAndRewrite(LLVM::LLVMFuncOp op, LLVM::LLVMFuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+//     auto newFuncOp = disaggLLVMFuncSignature(op, adaptor, rewriter);
+//     // newFuncOp.dump();
+//     if (!newFuncOp)
+//       return mlir::failure();
+//     rewriter.eraseOp(op);
+//     return mlir::success();  
+//   }
+// };
 
-class LLVMCallOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::CallOp>::ConvertOpToRemoteMemPattern;
+// class LLVMCallOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
+//   using ConvertOpToRemoteMemPattern<LLVM::CallOp>::ConvertOpToRemoteMemPattern;
 
-  LogicalResult matchAndRewrite(LLVM::CallOp op, typename LLVM::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    // Pack raw remote memref to llvm.struct
-    SmallVector<Value, 4> newOperandTypes;
-    newOperandTypes.reserve(op.getNumOperands());
-    for (auto v : adaptor.getOperands()) {
-      if (v.getType().isa<RemoteMemRefType>()) {
-        auto packedTy = LLVM::LLVMStructType::getLiteral(getContext(), {v.getType()});
-        Value llvmTyValue = rewriter.create<PackToLLVMStruct>(op.getLoc(), packedTy, v);
-        newOperandTypes.push_back(llvmTyValue);
-      } else {
-        newOperandTypes.push_back(v);
-      }
-    }
+//   LogicalResult matchAndRewrite(LLVM::CallOp op, typename LLVM::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+//     // Pack raw remote memref to llvm.struct
+//     SmallVector<Value, 4> newOperandTypes;
+//     newOperandTypes.reserve(op.getNumOperands());
+//     for (auto v : adaptor.getOperands()) {
+//       if (v.getType().isa<RemoteMemRefType>()) {
+//         auto packedTy = LLVM::LLVMStructType::getLiteral(getContext(), {v.getType()});
+//         Value llvmTyValue = rewriter.create<PackToLLVMStruct>(op.getLoc(), packedTy, v);
+//         newOperandTypes.push_back(llvmTyValue);
+//       } else {
+//         newOperandTypes.push_back(v);
+//       }
+//     }
 
-    // Pack result if is remote memref
-    Type newResultType = nullptr;
-    if (op.getNumResults() > 0) {
-      newResultType = getTypeConverter()->convertFunctionResult(op.getResultTypes().front(), true);
-    }
-    auto newCallOp = rewriter.create<LLVM::CallOp>(
-      op.getLoc(), newResultType ? TypeRange(newResultType) : TypeRange(), newOperandTypes, op->getAttrs()
-    );
-    rewriter.replaceOp(op, newCallOp.getResults());
-    return mlir::success();
-  }
-};
+//     // Pack result if is remote memref
+//     Type newResultType = nullptr;
+//     if (op.getNumResults() > 0) {
+//       newResultType = getTypeConverter()->convertFunctionResult(op.getResultTypes().front(), true);
+//     }
+//     auto newCallOp = rewriter.create<LLVM::CallOp>(
+//       op.getLoc(), newResultType ? TypeRange(newResultType) : TypeRange(), newOperandTypes, op->getAttrs()
+//     );
+//     rewriter.replaceOp(op, newCallOp.getResults());
+//     return mlir::success();
+//   }
+// };
 
-class LLVMReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::ReturnOp>::ConvertOpToRemoteMemPattern;
+// class LLVMReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
+//   using ConvertOpToRemoteMemPattern<LLVM::ReturnOp>::ConvertOpToRemoteMemPattern;
 
-  LogicalResult matchAndRewrite(LLVM::ReturnOp op, LLVM::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    Value returnValue = adaptor.getOperands().front();
-    if (returnValue.getType().isa<RemoteMemRefType>()) {
-      auto packedTy = LLVM::LLVMStructType::getLiteral(getContext(), {returnValue.getType()});
-      returnValue = rewriter.create<PackToLLVMStruct>(op.getLoc(), packedTy, returnValue);
-    }
-    rewriter.replaceOpWithNewOp<LLVM::ReturnOp>(
-      op,
-      TypeRange(),
-      returnValue,
-      op->getAttrs()
-    );
-    return mlir::success();
-  }
-};
+//   LogicalResult matchAndRewrite(LLVM::ReturnOp op, LLVM::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+//     Value returnValue = adaptor.getOperands().front();
+//     if (returnValue.getType().isa<RemoteMemRefType>()) {
+//       auto packedTy = LLVM::LLVMStructType::getLiteral(getContext(), {returnValue.getType()});
+//       returnValue = rewriter.create<PackToLLVMStruct>(op.getLoc(), packedTy, returnValue);
+//     }
+//     rewriter.replaceOpWithNewOp<LLVM::ReturnOp>(
+//       op,
+//       TypeRange(),
+//       returnValue,
+//       op->getAttrs()
+//     );
+//     return mlir::success();
+//   }
+// };
 
 class LLVMCallMallocDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
   using ConvertOpToRemoteMemPattern<LLVM::CallOp>::ConvertOpToRemoteMemPattern;
@@ -134,6 +134,19 @@ class LLVMCallMallocDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
     return mlir::success();
   }
 };
+
+class LLVMLoadFromVirtualAddr : public ConvertOpToRemoteMemPattern<LLVM::LoadOp> {
+  using ConvertOpToRemoteMemPattern<LLVM::LoadOp>::ConvertOpToRemoteMemPattern;
+  LogicalResult matchAndRewrite(LLVM::LoadOp op, LLVM::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (auto loadTarget = op.getAddr().getType().dyn_cast<LLVM::LLVMPointerType>()) {
+      if (loadTarget.getAddressSpace() == 0) return mlir::failure();
+      Value newLoad = rewriter.create<LoadOp>(op.getLoc(), op.getRes().getType(), op.getAddr());
+      rewriter.replaceOp(op, {newLoad});
+      return mlir::success();
+    }
+    return mlir::failure();
+  }
+};
 }
 
 namespace disagg {
@@ -147,32 +160,18 @@ public:
     populateLLVMDisaggPatterns(typeConverter, patterns);
     RemoteMemConversionTarget target(getContext());
 
-    // add illegal function op
-
-    // Illegal llvm.func with ptr/memref signature
-    target.addDynamicallyLegalOp<LLVM::LLVMFuncOp>([](LLVM::LLVMFuncOp op) {
-      llvm::StringRef name = op.getName();
-      if (!rmem::hasRemotableSignature(op) || 
-          name.equals("malloc") || 
-          allowedFuncSyms.find(name) != allowedFuncSyms.end())
-        return true;
-      return false;
-    });
-    target.addDynamicallyLegalOp<LLVM::CallOp>([](LLVM::CallOp op){
-      // only checks direct call now
-      // TODO:: handle indirect call
-      if (!rmem::hasRemotableSignature(op)) return true;
-      if (auto calleeSym = op.getCallee()) {
-        if (allowedFuncSyms.find(*calleeSym) != allowedFuncSyms.end()) {
-          // llvm::errs() << *calleeSym << "\n"; 
-          return true;
-        } 
+    target.addDynamicallyLegalOp<LLVM::LoadOp>([](LLVM::LoadOp op){
+      // check if the base ptr is not at address space 0
+      if (auto ptrType = op.getAddr().getType().dyn_cast<LLVM::LLVMPointerType>()) {
+        if (ptrType.getAddressSpace() != 0) {
+          return false;
+        }
       }
-      return false;
+      return true;
     });
-    target.addDynamicallyLegalOp<LLVM::ReturnOp>([](LLVM::ReturnOp op) { 
-      return !rmem::hasRemotableSignature(op);
-    });
+    // target.addDynamicallyLegalOp<LLVM::ReturnOp>([](LLVM::ReturnOp op) { 
+    //   return !rmem::hasRemotableSignature(op);
+    // });
 
     if (failed(applyPartialConversion(op, target, std::move(patterns)))) {
       signalPassFailure();
@@ -182,10 +181,11 @@ public:
 
 void populateLLVMDisaggPatterns (rmem::RemoteMemTypeConverter &converter, RewritePatternSet &patterns) {
   patterns.add<
-  LLVMFuncOpDisagg,
-  LLVMCallOpDisagg,
-  LLVMReturnOpDisagg,
-  LLVMCallMallocDisagg
+  // LLVMFuncOpDisagg,
+  // LLVMCallOpDisagg,
+  // LLVMReturnOpDisagg,
+  LLVMCallMallocDisagg,
+  LLVMLoadFromVirtualAddr
   >(converter, &converter.getContext());
 }
 

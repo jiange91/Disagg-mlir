@@ -7,6 +7,9 @@
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
+#include "llvm/ADT/ScopeExit.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/TypeSize.h"
 
 using namespace mlir;
 using namespace mlir::rmem;
@@ -85,6 +88,18 @@ Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
   return type;
 }
 
+
+// Look up operation with given type and symbol
+template <typename OpTy>
+static OpTy lookupSymbolInModule(Operation *parent, StringRef name) {
+  Operation *module = parent;
+  while (module && !LLVM::satisfiesLLVMModule(module))
+    module = module->getParentOp();
+  assert(module && "unexpected operation outside of a module");
+  return dyn_cast_or_null<OpTy>(
+      mlir::SymbolTable::lookupSymbolIn(module, name));
+}
+
 //================================================================
 // LLVM Mlloc Operation
 //================================================================
@@ -134,6 +149,14 @@ LogicalResult MaterializeOp::verify() {
 //   MaterializationFoldPattern
 //   >(context);
 // }
+
+
+// ==============================================================
+// RemoteMem LLVMAddressOfOP
+LLVMGlobalOp LLVMAddressOfOp::getGlobal() {
+  return lookupSymbolInModule<LLVMGlobalOp>((*this)->getParentOp(), getGlobalName());
+}
+// ==============================================================
 
 //================================================================
 // RemoteMem Dialect

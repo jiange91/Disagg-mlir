@@ -15,6 +15,7 @@
 #include "mlir/Transforms/Passes.h"
 #include "Dialect/RemoteMem.h"
 #include "Conversion/Passes.h"
+#include "Lowering/Passes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 
@@ -35,6 +36,7 @@ int main(int argc, char **argv) {
   registry.insert<mlir::rmem::RemoteMemDialect>();
 
   mlir::registerDisaggregationConversionPasses();
+  mlir::registerRemoteMemLoweringPasses();
   // interface perpare
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
     LLVM::LLVMPointerType::attachInterface<MemRefInsider>(*ctx);

@@ -8,7 +8,7 @@ def MemRefDisaggregation: Pass<"convert-memrefmem-to-remote", "func::FuncOp"> {
   let constructor = "mlir::disagg::createMemRefDisaggPass()";
 }
 
-def LLVMDisaggregation : Pass<"convert-llvm-to-remote", "func::FuncOp"> {
+def LLVMDisaggregation : Pass<"convert-llvm-to-remote", "ModuleOp"> {
   let summary = "Currently only convert llvm function call to malloc";
   let constructor = "mlir::disagg::createLLVMDisaggregationPass()";
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect"];

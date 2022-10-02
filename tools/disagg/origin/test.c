@@ -23,9 +23,10 @@ A *expand(A* node, int v) {
 }
 
 void visit(A *head) {
+  A *hn = (A*) ((char *)head + sizeof(A));
   printf("struct chasing\n");
   while (head) {
-    printf("%d\n", head->n.v);
+    printf("%d\n", hn->n.v);
     head = head->next;
   }
 }

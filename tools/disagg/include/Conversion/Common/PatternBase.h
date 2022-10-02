@@ -5,8 +5,6 @@
 #include "Conversion/Common/TypeConverter.h"
 #include "mlir/IR/OperationSupport.h"
 
-using namespace mlir;
-using namespace mlir::rmem;
 
 namespace mlir {
 namespace rmem {
@@ -15,6 +13,8 @@ bool hasRemotableSignature(Operation *op);
 }
 }
 
+using namespace mlir;
+using namespace mlir::rmem;
 class ConvertToRemoteMemPattern : public ConversionPattern {
 public:
   ConvertToRemoteMemPattern(StringRef rootOpName, 

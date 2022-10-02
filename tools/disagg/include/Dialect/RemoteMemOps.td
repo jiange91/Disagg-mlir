@@ -3,18 +3,17 @@
 
 include "RemoteMemBase.td"
 include "RemoteMemTypes.td"
-include "mlir/IR/EnumAttr.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/IR/SymbolInterfaces.td"
 
 class RemoteMem_Op<string mnemonic, list<Trait> traits = []>:
   Op<RemoteMem_Dialect, mnemonic, traits>;
 
-def RemoteMem_ConstantOp: RemoteMem_Op<"constant"> {
-  let summary = "Create a remote memref on stack";
-  let arguments = (ins TypeAttr: $eleTy);
+def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
+  let summary = "Create an undefined value of remote memref wrapping llvm ptr";
   let results = (outs RemoteMemRef: $rmemref);
   let assemblyFormat = [{
-    attr-dict `:` functional-type(operands, results)
+    attr-dict `:` type(results)
   }];
 }
 
@@ -26,7 +25,7 @@ def RemoteMem_NullRefOp: RemoteMem_Op<"nullref"> {
   }];
 }
 
-def RemoteMem_AddressOfOp: RemoteMem_Op<"to_addr"> {
+def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   let summary = "Get the virtual pointer from a remote memref that can be used for `getelemptr` operations";
   let description = "This operation does not materialize a remote memref at the local side, the return pointer will be used for address calculation `getelementptr`. If the remote memref is dummy, i.e. created from stack/non-remote heap alloc, the returned address is the original pointer, else is the virtual cache address";
   let arguments = (ins RemoteMemRef: $rmemref);
@@ -63,31 +62,33 @@ def RemoteMem_LoadOp: RemoteMem_Op<"load"> {
   }];
 }
 
-// Address compare predicates
-def AddrCmpPredicateEQ  : I64EnumAttrCase<"eq", 0>;
-def AddrCmpPredicateNE  : I64EnumAttrCase<"ne", 1>;
-def AddrCmpPredicateSLT : I64EnumAttrCase<"slt", 2>;
-def AddrCmpPredicateSLE : I64EnumAttrCase<"sle", 3>;
-def AddrCmpPredicateSGT : I64EnumAttrCase<"sgt", 4>;
-def AddrCmpPredicateSGE : I64EnumAttrCase<"sge", 5>;
-def AddrCmpPredicateULT : I64EnumAttrCase<"ult", 6>;
-def AddrCmpPredicateULE : I64EnumAttrCase<"ule", 7>;
-def AddrCmpPredicateUGT : I64EnumAttrCase<"ugt", 8>;
-def AddrCmpPredicateUGE : I64EnumAttrCase<"uge", 9>;
-def AddrCmpPredicate : I64EnumAttr<
-    "AddrCmpPredicate",
-    "rmem.addrcmp comparison predicate",
-    [AddrCmpPredicateEQ, AddrCmpPredicateNE, AddrCmpPredicateSLT, AddrCmpPredicateSLE,
-     AddrCmpPredicateSGT, AddrCmpPredicateSGE, AddrCmpPredicateULT, AddrCmpPredicateULE,
-     AddrCmpPredicateUGT, AddrCmpPredicateUGE]> {
-  let cppNamespace = "::mlir::rmem";
-}
+def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [NoSideEffect]> {
+  let arguments = (ins 
+    RemoteMemRef:$base,
+    Variadic<LLVM_ScalarOrVectorOf<AnyInteger>>:$indices);
+  let results = (outs RemoteMemRef: $addr);
+  let builders = [
+    OpBuilder<(ins "Value":$basePtr, "ValueRange":$indices, 
+      CArg<"ArrayRef<NamedAttribute>", "{}">:$attributes)>,
+  ];
+
+  // let extraClassDeclaration = [{
+  //   constexpr static int kDynamicIndex = std::numeric_limits<int32_t>::min();
+
+  //   /// Returns the type pointed to by the pointer argument of this GEP.
+  //   Type getSourceElementType();
+  // }];
+
+  let assemblyFormat = [{
+    $base `[` $indices `]` attr-dict `:` functional-type(operands, results)
+  }];
+} 
 
 def RemoteMem_AddrCmpOp: RemoteMem_Op<"addrcmp"> {
   let summary = "Compare the address of two remote mem refs";
   let arguments = (ins RemoteMemRef: $lhs,
                        RemoteMemRef: $rhs,
-                       AddrCmpPredicate:$predicate
+                       RemoteMem_AddrCmpPredicate:$predicate
   );
   let results = (outs I1: $rel);
   let assemblyFormat = [{
@@ -148,6 +149,77 @@ def RemoteMem_MemRefAllocOp: RemoteMem_Op<
 
   let assemblyFormat = [{
     `(`$dynamicSizes`)` (`` `[` $symbolOperands^ `]`)? attr-dict `:` type(results)
+  }];
+}
+
+def RemoteMem_GlobalReturnOp : RemoteMem_Op<"global.return", [
+  HasParent<"LLVMGlobalOp">,
+  Terminator,
+  NoSideEffect]> {
+    let summary = "terminator for remote mem global op";
+    let arguments = (ins Variadic<AnyType>:$result);
+    let assemblyFormat = [{
+      attr-dict ($result^ `:` type($result))?
+    }];
+}
+
+def RemoteMem_LLVMGlobalOp : RemoteMem_Op<"llvm.global", [IsolatedFromAbove,
+SingleBlock,
+// SingleBlockImplicitTerminator<"GlobalReturnOp">, 
+Symbol]> {
+  let arguments = (ins
+    TypeAttr:$global_type,
+    UnitAttr:$constant,
+    StrAttr:$sym_name,
+    RemoteMem_Linkage:$linkage,
+    UnitAttr:$dso_local,
+    UnitAttr:$thread_local_,
+    OptionalAttr<AnyAttr>:$value,
+    OptionalAttr<I64Attr>:$alignment,
+    DefaultValuedAttr<Confined<I32Attr, [IntNonNegative]>, "0">:$addr_space,
+    OptionalAttr<RemoteMem_RUnnamedAddr>:$unnamed_addr,
+    OptionalAttr<StrAttr>:$section
+  );
+  let summary = "Remote mem version of llvm global";
+  let regions = (region AnyRegion:$initializer);
+  // let builders = [
+  //   OpBuilder<(ins "Type":$type, "bool":$isConstant, "RLinkageType":$linkage,
+  //     "StringRef":$name, "Attribute":$value,
+  //     CArg<"uint64_t", "0">:$alignment,
+  //     CArg<"unsigned", "0">:$addrSpace,
+  //     CArg<"bool", "false">:$dsoLocal,
+  //     CArg<"bool", "false">:$thread_local_,
+  //     CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs)>
+  // ];
+  let assemblyFormat = [{
+    attr-dict `:` regions
+  }];
+}
+
+def RemoteMem_LLVMAddressOfOp : RemoteMem_Op<"llvm.addressof", [NoSideEffect]> {
+  let arguments = (ins FlatSymbolRefAttr:$global_name);
+  let results = (outs LLVM_AnyPointer:$res);
+  let summary = "Creates a pointer pointing to a remote mem global or a remote mem function";
+  let builders = [
+    // TODO: support llvm function, memref global (potentially)
+    OpBuilder<(ins "LLVMGlobalOp":$global,
+      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs),
+      [{
+        build($_builder, $_state, 
+          LLVM::LLVMPointerType::get(
+            global.getGlobalType(), 
+            global.getAddrSpace()),
+          global.getSymName());
+        $_state.addAttributes(attrs);
+      }]>
+  ];
+  let extraClassDeclaration = [{
+    /// Return the rmem.llvm.global operation that defined the value referenced
+    /// here.
+    LLVMGlobalOp getGlobal();
+  }];
+  let assemblyFormat = [{
+    $global_name attr-dict `:` type($res)
   }];
 }
 

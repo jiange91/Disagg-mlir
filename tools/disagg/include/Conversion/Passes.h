@@ -1,5 +1,5 @@
-#ifndef MLIR_REMOTE_MEM_CONVERSION_PASSES_H
-#define MLIR_REMOTE_MEM_CONVERSION_PASSES_H
+#ifndef MLIR_REMOTE_MEM_LOWERING_PASSES_H
+#define MLIR_REMOTE_MEM_LOWERING_PASSES_H
 
 #include "mlir/Pass/Pass.h"
 #include "Conversion/LLVMDisagg/LLVMDisagg.h"

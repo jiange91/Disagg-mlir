@@ -12,7 +12,6 @@
 namespace mlir {
 namespace rmem {
 class RemoteMemDialect;
-// special converter that converts llvm.ptr to llvm.struct<llvm.ptr>
 class LLVMTypeConverter : public TypeConverter {
 public:
   using TypeConverter::convertType;

@@ -9,6 +9,7 @@ namespace rmem {
 class RemoteMemDialect;
 class RemoteMemRefType;
 Type getRawTypeFromRemotedType(Type type);
+
 }
 }
 

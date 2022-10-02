@@ -36,13 +36,15 @@ def Detail_RemoteMemRefType: Detail_RemoteMemType<"RemoteMemRef", "rmref", [
   DeclareTypeInterfaceMethods<MemRefElementTypeInterface>
 ]> {
   let summary = "Remote MemRef Type";
-  let parameters = (ins "Type":$elementType);
+  let parameters = (ins "Type":$elementType,
+    "unsigned":$canRemote);
   let genVerifyDecl = 1;
-  let assemblyFormat = "`<` $elementType `>`";
+  let assemblyFormat = "`<` $canRemote`,` $elementType `>`";
   // let hasCustomAssemblyFormat = 1;
   let builders = [
-    TypeBuilderWithInferredContext<(ins "Type":$elementType), [{
-      return Base::get(elementType.getContext(), elementType);
+    TypeBuilderWithInferredContext<(ins "Type":$elementType,
+      CArg<"unsigned", "1">:$canRemote), [{
+      return Base::get(elementType.getContext(), elementType, canRemote);
     }]>
   ];
   let extraClassDeclaration = [{

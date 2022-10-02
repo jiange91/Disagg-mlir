@@ -5,6 +5,8 @@ set(LIBS
   ${conversion_libs}
   MLIRArithmetic
   MLIROptLib
+  MLIRDialect
+  MLIRIR
   # MLIRRemoteMem
 )
 

@@ -6,7 +6,6 @@
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "mlir/Conversion/LLVMCommon/TypeConverter.h"
 
 namespace mlir {
 namespace rmem {
@@ -27,8 +26,6 @@ public:
   rmem::RemoteMemDialect *getDialect() { return rmemDialect; };
 
   LogicalResult funcArgTypeConverter(Type type, SmallVectorImpl<Type> &result, bool needLLVMComp = false);
-
-  LLVMTypeConverter *getllvmTypeConverter() { return &llvmTypeConverter; };
 
 protected:
   rmem::RemoteMemDialect *rmemDialect;
@@ -52,8 +49,6 @@ private:
   // Convert MemRefType (recursive convert contained elementType if has nested llvm.ptr |struct | memref)
   llvm::Optional<Type> convertMemRefType(MemRefType type);
 
-  // For memref size calculation
-  LLVMTypeConverter llvmTypeConverter;
 };
 }
 }

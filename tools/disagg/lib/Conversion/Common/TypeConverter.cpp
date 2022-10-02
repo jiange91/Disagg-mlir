@@ -6,8 +6,7 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
-RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()),
-  llvmTypeConverter(ctx) {
+RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()) {
   assert(rmemDialect && "RemoteMem Dialect is not registered");
 
   addConversion(

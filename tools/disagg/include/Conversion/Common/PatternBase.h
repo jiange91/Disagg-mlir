@@ -25,13 +25,6 @@ public:
 protected:
   RemoteMemDialect &getDialect() const;
   RemoteMemTypeConverter *getTypeConverter() const;
-  LLVMTypeConverter *getLLVMTypeConverter() const;
-
-  Value createIndexConstant(ConversionPatternRewriter &rewriter, Location loc, uint64_t value) const;
-  bool isLLVMConvertibleAndHasIdentityMaps(MemRefType type) const;
-  Type getElementLLVMPtrType(MemRefType type) const;
-
-  Value getMemRefSizeBytesByLLVM(Location loc, MemRefType memRefType, ValueRange dynSizes, ConversionPatternRewriter &rewriter) const;
 
   Value allocateBuffer(ConversionPatternRewriter &rewriter, Location loc, Operation *op) const;
 };

@@ -28,37 +28,121 @@ static llvm::StringSet<> allowedFuncSyms = {
 "atoi"
 };
 
-class LLVMCallMallocDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::CallOp>::ConvertOpToRemoteMemPattern;
+class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
+  using OpConversionPattern<LLVM::CallOp>::OpConversionPattern;
 
   LogicalResult matchAndRewrite(LLVM::CallOp op, LLVM::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    auto calleeName = adaptor.getCallee();
+    auto calleeName = op.getCallee();
     if (!calleeName.hasValue() || !(calleeName.getValue().equals("malloc")))
       return mlir::failure();
-    auto rawptrTy = op.getResult(0).getType().cast<LLVM::LLVMPointerType>();
-    RemoteMemRefType t = RemoteMemRefType::get(rawptrTy);
-    Value rmemAlloc = rewriter.create<LLVMMallocOp>(op.getLoc(), t, adaptor.getOperands().front());
-    Value virtAddr = rewriter.create<ToAddressOp>(op.getLoc(), LLVM::LLVMPointerType::get(rawptrTy.getElementType(), 1), rmemAlloc);
 
-    // type conflict can be handled by source materialzation
-    rewriter.replaceOp(op, {virtAddr});
-    return mlir::success();
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto newPtr = rewriter.create<rmem::LLVMMallocOp>(
+        op.getLoc(), rType.getValue(), adaptor.getOperands()[0]
+      );
+      rewriter.replaceOp(op, {newPtr});
+      return mlir::success();
+    } 
+    return mlir::failure();
   }
 };
 
-class LLVMReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::ReturnOp>::ConvertOpToRemoteMemPattern;
+class LLVMBitCastDisagg : public OpConversionPattern<LLVM::BitcastOp> {
+  using OpConversionPattern<LLVM::BitcastOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(LLVM::BitcastOp op, LLVM::BitcastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto newPtr = rewriter.create<rmem::BitCastOp>(
+        op.getLoc(), rType.getValue(), adaptor.getOperands()[0]
+      );
+      rewriter.replaceOp(op, {newPtr});
+      return mlir::success();
+    } 
+    return mlir::failure(); 
+  }
+};
+
+class LLVMReturnOpDisagg : public OpConversionPattern<LLVM::ReturnOp> {
+  using OpConversionPattern<LLVM::ReturnOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::ReturnOp op, LLVM::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    rewriter.replaceOpWithNewOp<rmem::ReturnOp>(op, adaptor.getOperands());
+    rewriter.replaceOpWithNewOp<rmem::ReturnOp>(op, adaptor.getOperands()[0]);
     return mlir::success();
   }
 };
 
-class LLVMUndefDisagg : public ConvertOpToRemoteMemPattern<LLVM::UndefOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::UndefOp>::ConvertOpToRemoteMemPattern;
+class LLVMStoreDisagg : public OpConversionPattern<LLVM::StoreOp> {
+  using OpConversionPattern<LLVM::StoreOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(LLVM::StoreOp op, LLVM::StoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<rmem::StoreOp>(op, 
+      adaptor.getOperands()[0],
+      adaptor.getOperands()[1],
+      op.getAccessGroupsAttr(),
+      op.getAliasScopesAttr(),
+      op.getNoaliasScopesAttr(),
+      op.getAlignmentAttr(),
+      op.getVolatile_Attr(),
+      op.getNontemporalAttr()
+    );
+    return mlir::success();
+  }
+};
+
+class LLVMLoadDisagg : public OpConversionPattern<LLVM::LoadOp> {
+  using OpConversionPattern<LLVM::LoadOp>::OpConversionPattern;
+  LogicalResult matchAndRewrite(LLVM::LoadOp op, LLVM::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto newLoad = rewriter.create<rmem::LoadOp>(
+        op.getLoc(),
+        rType.getValue(),
+        adaptor.getOperands()[0],
+        op.getAccessGroupsAttr(),
+        op.getAliasScopesAttr(),
+        op.getNoaliasScopesAttr(),
+        op.getAlignmentAttr(),
+        op.getVolatile_Attr(),
+        op.getNontemporalAttr()
+      );
+      rewriter.replaceOp(op, {newLoad});
+      return mlir::success();
+    }
+    return mlir::failure();
+  }
+};
+
+class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
+  using OpConversionPattern<LLVM::GEPOp>::OpConversionPattern;
+  LogicalResult matchAndRewrite(LLVM::GEPOp op, LLVM::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // filter dummy separator GEPOp::kdynamicindex
+    SmallVector<int32_t> filteredStructIndices;
+    for (auto i : adaptor.getStructIndices().getValues<int32_t>()) {
+      if (i == LLVM::GEPOp::kDynamicIndex) continue;
+      filteredStructIndices.push_back(i);
+    }
+
+    Type resultType = op.getResult().getType();
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      resultType = rType.getValue();
+    }
+
+    auto newGEPOp = rewriter.create<rmem::GEPOp>(
+      op.getLoc(),
+      resultType,
+      adaptor.getBase(),
+      adaptor.getIndices(),
+      rewriter.getI32TensorAttr(filteredStructIndices),
+      adaptor.getElemTypeAttr()
+    );
+    rewriter.replaceOp(op, {newGEPOp});
+    return mlir::success();
+  }
+};
+
+class LLVMUndefDisagg : public OpConversionPattern<LLVM::UndefOp> {
+  using OpConversionPattern<LLVM::UndefOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::UndefOp op, LLVM::UndefOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    if (auto rType = op->getAttrOfType<TypeAttr>("res_type")) {
-      auto newUndef = rewriter.create<UndefOp>(
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto newUndef = rewriter.create<rmem::UndefOp>(
         op.getLoc(), rType.getValue()
       );
       rewriter.replaceOp(op, {newUndef});
@@ -68,8 +152,8 @@ class LLVMUndefDisagg : public ConvertOpToRemoteMemPattern<LLVM::UndefOp> {
   }
 };
 
-class LLVMGlobalDisagg : public ConvertOpToRemoteMemPattern<LLVM::GlobalOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::GlobalOp>::ConvertOpToRemoteMemPattern;
+class LLVMGlobalDisagg : public OpConversionPattern<LLVM::GlobalOp> {
+  using OpConversionPattern<LLVM::GlobalOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::GlobalOp op, LLVM::GlobalOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     auto optLinkage = symbolizeRLinkageType(static_cast<uint64_t>(op.getLinkage()));
     if (!optLinkage.hasValue()) {
@@ -111,8 +195,8 @@ class LLVMGlobalDisagg : public ConvertOpToRemoteMemPattern<LLVM::GlobalOp> {
   }
 };
 
-class LLVMAddressOfDisagg : public ConvertOpToRemoteMemPattern<LLVM::AddressOfOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::AddressOfOp>::ConvertOpToRemoteMemPattern;
+class LLVMAddressOfDisagg : public OpConversionPattern<LLVM::AddressOfOp> {
+  using OpConversionPattern<LLVM::AddressOfOp>::OpConversionPattern;
 
   LogicalResult matchAndRewrite(LLVM::AddressOfOp op, LLVM::AddressOfOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
@@ -131,20 +215,9 @@ public:
   LLVMDisaggregationPass() = default;
   void runOnOperation() override {
     Operation *op = getOperation();
-    rmem::RemoteMemTypeConverter typeConverter(&getContext());
     RewritePatternSet patterns(&getContext());
-    populateLLVMDisaggPatterns(typeConverter, patterns);
+    populateLLVMDisaggPatterns(&getContext(), patterns);
     RemoteMemConversionTarget target(getContext());
-
-    target.addDynamicallyLegalOp<LLVM::LoadOp>([](LLVM::LoadOp op){
-      // check if the base ptr is not at address space 0
-      if (auto ptrType = op.getAddr().getType().dyn_cast<LLVM::LLVMPointerType>()) {
-        if (ptrType.getAddressSpace() != 0) {
-          return false;
-        }
-      }
-      return true;
-    });
 
     if (failed(applyPartialConversion(op, target, std::move(patterns)))) {
       signalPassFailure();
@@ -152,17 +225,18 @@ public:
   }
 };
 
-void populateLLVMDisaggPatterns (rmem::RemoteMemTypeConverter &converter, RewritePatternSet &patterns) {
+void populateLLVMDisaggPatterns (MLIRContext *ctx, RewritePatternSet &patterns) {
   patterns.add<
-  // LLVMFuncOpDisagg,
-  // LLVMCallOpDisagg,
-  // LLVMReturnOpDisagg,
   LLVMCallMallocDisagg,
+  LLVMBitCastDisagg,
   LLVMGlobalDisagg,
+  LLVMStoreDisagg,
+  LLVMLoadDisagg,
+  LLVMGEPOpDisagg,
   LLVMUndefDisagg,
   LLVMReturnOpDisagg,
   LLVMAddressOfDisagg
-  >(converter, &converter.getContext());
+  >(ctx);
 }
 
 std::unique_ptr<Pass> createLLVMDisaggregationPass() {

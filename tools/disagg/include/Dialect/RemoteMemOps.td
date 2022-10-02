@@ -60,14 +60,20 @@ def RemoteMem_LoadOp: RemoteMem_Op<"llvm.load"> {
 
     Will be lowered according to the input:
       1. If the mapped operand is !llvm.ptr<(!rmem.rmref)+>
-         No special operation needed, just convert the rmref type to pointer
+         No special operation needed, just convert the rmref type to pointer type
       2. If the mapped operand is !rmref.rmref
          Need to convert the type as well as materialize
   }];
   let arguments = (ins 
     Arg<AnyTypeOf<
       [LLVM_PointerTo<LLVM_LoadableType>, 
-      RemoteMemRef]>,"",[MemRead]>:$addr);
+      RemoteMemRef]>,"",[MemRead]>:$addr,
+      OptionalAttr<SymbolRefArrayAttr>:$access_groups,
+      OptionalAttr<SymbolRefArrayAttr>:$alias_scopes,
+      OptionalAttr<SymbolRefArrayAttr>:$noalias_scopes,
+      OptionalAttr<I64Attr>:$alignment, UnitAttr:$volatile_,
+      UnitAttr:$nontemporal
+    );
   let results = (outs LLVM_LoadableType:$res);
   let assemblyFormat = [{
     $addr attr-dict `:` functional-type(operands, results)
@@ -86,7 +92,7 @@ def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
       UnitAttr:$nontemporal);
   
   let assemblyFormat = [{
-    $value`,` $addr attr-dict `:` functional-type(operands, results)
+    $value `->` $addr attr-dict `:` type(operands)
   }];
 }
 
@@ -156,6 +162,13 @@ def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   let assemblyFormat = [{
     $memSize attr-dict `:` functional-type(operands, results)
   }];
+}
+
+def RemoteMem_BitCastOp : RemoteMem_Op<"bitcast", [NoSideEffect]> {
+  let summary = "Dummy bitcast, only for type unification";
+  let arguments = (ins RemoteMemRef:$arg);
+  let results = (outs RemoteMemRef:$res);
+  let assemblyFormat = "$arg attr-dict `:` functional-type(operands, results)";
 }
 
 def RemoteMem_MemRefAllocOp: RemoteMem_Op<
@@ -252,6 +265,8 @@ def RemoteMem_LLVMAddressOfOp : RemoteMem_Op<"llvm.addressof", [NoSideEffect]> {
 }
 
 def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [NoSideEffect]> {
+  let summary = "LLVM getelementptr on remote memref";
+  let description = "Not supporting vector GEPop now, llvmvcector not compatible with remote memref";
   let arguments = (ins 
     AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$base,
     Variadic<AnyInteger>:$indices,
@@ -260,11 +275,12 @@ def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [NoSideEffect]> {
   let results = (outs 
     AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$res);
   let assemblyFormat = [{
-    $base `[` custom<GEPIndices>($indices, $structIndices) `]` attr-dict
+    $base `[`$indices $structIndices`]` attr-dict
     `:` functional-type(operands, results) (`,` $elem_type^)?
   }];
   let extraClassDeclaration = [{
-    constexpr static int kDynamicIndex = std::numeric_limits<int32_t>::min();
+    /// Returns the type pointed to by the pointer argument of this GEP.
+    Type getSourceElementType();
   }];
 }
 

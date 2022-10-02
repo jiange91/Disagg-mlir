@@ -17,7 +17,7 @@ class RemoteMemTypeConverter;
 
 namespace disagg {
 
-void populateLLVMDisaggPatterns(rmem::RemoteMemTypeConverter &converter, RewritePatternSet &patterns);
+void populateLLVMDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 
 std::unique_ptr<Pass> createLLVMDisaggregationPass();
 }

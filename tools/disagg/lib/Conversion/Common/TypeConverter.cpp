@@ -6,13 +6,12 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
+Type rejType(Type type) {
+  return {};
+}
 RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()) {
   assert(rmemDialect && "RemoteMem Dialect is not registered");
 
-  addConversion(
-    // Base case, add before the following conversion
-    [](Type type) { return type; }
-  );
   addConversion(
     [&](LLVM::LLVMPointerType type) { return convertLLVMPointerType(type); });
   addConversion(
@@ -32,17 +31,8 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
       if (inputs.size() != 1)
         return llvm::None;
 
-      llvm::outs() << "-- Arg mat -- \n";
-      llvm::outs() << "-vals:"; 
-      for (auto v: inputs) {
-        v.print(llvm::outs() << "\n");
-      }
-      llvm::outs() << "\n-type: ";
-      type.print(llvm::outs());
-      llvm::outs() << "\n";
-
       auto convOp = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
-      convOp->setAttr("arg_mat", builder.getBoolAttr(true));
+      convOp->setAttr("conv_arg_mat", builder.getBoolAttr(true));
       return convOp.getResult(0);
 
       // Value unpacked = inputs[0];
@@ -58,18 +48,9 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
                                Location loc) -> Optional<Value> {
     if (inputs.size() != 1) return llvm::None;
 
-    llvm::outs() << "-- Src mat -- \n";
-    llvm::outs() << "-vals:"; 
-    for (auto v: inputs) {
-      v.print(llvm::outs() << "\n");
-    }
-    llvm::outs() << "\n-type: ";
-    resultType.print(llvm::outs());
-    llvm::outs() << "\n";
-
-      auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
-      convOp->setAttr("src_mat", builder.getBoolAttr(true));
-      return convOp.getResult(0);
+    auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
+    convOp->setAttr("conv_src_mat", builder.getBoolAttr(true));
+    return convOp.getResult(0);
 
     // Value unpacked = inputs[0];
     //   if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
@@ -82,17 +63,8 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
                                Location loc) -> Optional<Value> {
     if (inputs.size() != 1) return llvm::None;
 
-    llvm::outs() << "-- Target mat -- \n";
-    llvm::outs() << "-vals:"; 
-    for (auto v: inputs) {
-      v.print(llvm::outs() << "\n");
-    }
-    llvm::outs() << "\n-type: ";
-    resultType.print(llvm::outs());
-    llvm::outs() << "\n";
-
     auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
-    convOp->setAttr("tgt_mat", builder.getBoolAttr(true));
+    convOp->setAttr("conv_tgt_mat", builder.getBoolAttr(true));
     return convOp.getResult(0);
     // Value unpacked = inputs[0];
     // if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
@@ -100,7 +72,14 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     //   } 
     // return builder.create<VirtualizeOp>(loc, resultType, unpacked).getResult();
     });
+
+    addConversion([&](Type type, SmallVectorImpl<Type> &results) -> Optional<LogicalResult> { 
+      results.push_back(type);
+      results.push_back(type);
+      return mlir::success();
+    });
 }
+
 
 // Function Signature (inputs, results) are converted to remote memref
 FunctionType RemoteMemTypeConverter::convertFunctionSignature(FunctionType funcTy, SignatureConversion &result) {

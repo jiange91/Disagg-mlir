@@ -46,19 +46,6 @@ class LLVMCallMallocDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
   }
 };
 
-class LLVMLoadFromVirtualAddr : public ConvertOpToRemoteMemPattern<LLVM::LoadOp> {
-  using ConvertOpToRemoteMemPattern<LLVM::LoadOp>::ConvertOpToRemoteMemPattern;
-  LogicalResult matchAndRewrite(LLVM::LoadOp op, LLVM::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    if (auto loadTarget = op.getAddr().getType().dyn_cast<LLVM::LLVMPointerType>()) {
-      if (loadTarget.getAddressSpace() == 0) return mlir::failure();
-      Value newLoad = rewriter.create<LoadOp>(op.getLoc(), op.getRes().getType(), op.getAddr());
-      rewriter.replaceOp(op, {newLoad});
-      return mlir::success();
-    }
-    return mlir::failure();
-  }
-};
-
 class LLVMGlobalReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
   using ConvertOpToRemoteMemPattern<LLVM::ReturnOp>::ConvertOpToRemoteMemPattern;
   LogicalResult matchAndRewrite(LLVM::ReturnOp op, LLVM::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -126,6 +113,7 @@ class LLVMGlobalDisagg : public ConvertOpToRemoteMemPattern<LLVM::GlobalOp> {
     return mlir::success();
   }
 };
+
 }
 
 namespace disagg {
@@ -161,7 +149,6 @@ void populateLLVMDisaggPatterns (rmem::RemoteMemTypeConverter &converter, Rewrit
   // LLVMCallOpDisagg,
   // LLVMReturnOpDisagg,
   LLVMCallMallocDisagg,
-  LLVMLoadFromVirtualAddr,
   LLVMGlobalDisagg,
   LLVMUndefDisagg,
   LLVMGlobalReturnOpDisagg

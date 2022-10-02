@@ -53,12 +53,40 @@ def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   }];
 }
 
-def RemoteMem_LoadOp: RemoteMem_Op<"load"> {
-  let summary = "Load from a virtual address";
-  let arguments = (ins Arg<LLVM_PointerTo<LLVM_LoadableType>, "", [MemRead]>:$addr);
+def RemoteMem_LoadOp: RemoteMem_Op<"llvm.load"> {
+  let summary = "Load from memory";
+  let description = [{
+    The orignal operands of load operation may be converted to remote memref, use this operation to maintain correctness symbolically.
+
+    Will be lowered according to the input:
+      1. If the mapped operand is !llvm.ptr<(!rmem.rmref)+>
+         No special operation needed, just convert the rmref type to pointer
+      2. If the mapped operand is !rmref.rmref
+         Need to convert the type as well as materialize
+  }];
+  let arguments = (ins 
+    Arg<AnyTypeOf<
+      [LLVM_PointerTo<LLVM_LoadableType>, 
+      RemoteMemRef]>,"",[MemRead]>:$addr);
   let results = (outs LLVM_LoadableType:$res);
   let assemblyFormat = [{
     $addr attr-dict `:` functional-type(operands, results)
+  }];
+}
+
+def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
+  let arguments = (ins LLVM_LoadableType:$value,
+      Arg<AnyTypeOf<
+        [LLVM_PointerTo<LLVM_LoadableType>, 
+        RemoteMemRef]>,"",[MemWrite]>:$addr,
+      OptionalAttr<SymbolRefArrayAttr>:$access_groups,
+      OptionalAttr<SymbolRefArrayAttr>:$alias_scopes,
+      OptionalAttr<SymbolRefArrayAttr>:$noalias_scopes,
+      OptionalAttr<I64Attr>:$alignment, UnitAttr:$volatile_,
+      UnitAttr:$nontemporal);
+  
+  let assemblyFormat = [{
+    $value`,` $addr attr-dict `:` functional-type(operands, results)
   }];
 }
 
@@ -220,6 +248,23 @@ def RemoteMem_LLVMAddressOfOp : RemoteMem_Op<"llvm.addressof", [NoSideEffect]> {
   }];
   let assemblyFormat = [{
     $global_name attr-dict `:` type($res)
+  }];
+}
+
+def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [NoSideEffect]> {
+  let arguments = (ins 
+    AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$base,
+    Variadic<AnyInteger>:$indices,
+    I32ElementsAttr:$structIndices,
+    OptionalAttr<TypeAttr>:$elem_type);
+  let results = (outs 
+    AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$res);
+  let assemblyFormat = [{
+    $base `[` custom<GEPIndices>($indices, $structIndices) `]` attr-dict
+    `:` functional-type(operands, results) (`,` $elem_type^)?
+  }];
+  let extraClassDeclaration = [{
+    constexpr static int kDynamicIndex = std::numeric_limits<int32_t>::min();
   }];
 }
 

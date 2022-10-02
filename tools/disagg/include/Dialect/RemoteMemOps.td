@@ -180,11 +180,11 @@ def RemoteMem_MemRefAllocOp: RemoteMem_Op<
   }];
 }
 
-def RemoteMem_GlobalReturnOp : RemoteMem_Op<"global.return", [
-  HasParent<"LLVMGlobalOp">,
+def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
   Terminator,
   NoSideEffect]> {
-    let summary = "terminator for remote mem global op";
+    let summary = "general terminator for remote mem op";
+    let description = "currently only used in llvm.global";
     let arguments = (ins Variadic<AnyType>:$result);
     let assemblyFormat = [{
       attr-dict ($result^ `:` type($result))?
@@ -193,7 +193,7 @@ def RemoteMem_GlobalReturnOp : RemoteMem_Op<"global.return", [
 
 def RemoteMem_LLVMGlobalOp : RemoteMem_Op<"llvm.global", [IsolatedFromAbove,
 SingleBlock,
-// SingleBlockImplicitTerminator<"GlobalReturnOp">, 
+// SingleBlockImplicitTerminator<"ReturnOp">, 
 Symbol]> {
   let arguments = (ins
     TypeAttr:$global_type,

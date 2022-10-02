@@ -46,23 +46,20 @@ class LLVMCallMallocDisagg : public ConvertOpToRemoteMemPattern<LLVM::CallOp> {
   }
 };
 
-class LLVMGlobalReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
+class LLVMReturnOpDisagg : public ConvertOpToRemoteMemPattern<LLVM::ReturnOp> {
   using ConvertOpToRemoteMemPattern<LLVM::ReturnOp>::ConvertOpToRemoteMemPattern;
   LogicalResult matchAndRewrite(LLVM::ReturnOp op, LLVM::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    if (auto rTypes = op->getAttrOfType<ArrayAttr>("remote_arg_types")) {
-      rewriter.replaceOpWithNewOp<GlobalReturnOp>(op, adaptor.getOperands());
-      return mlir::success();
-    } 
-    return mlir::failure();
+    rewriter.replaceOpWithNewOp<rmem::ReturnOp>(op, adaptor.getOperands());
+    return mlir::success();
   }
 };
 
 class LLVMUndefDisagg : public ConvertOpToRemoteMemPattern<LLVM::UndefOp> {
   using ConvertOpToRemoteMemPattern<LLVM::UndefOp>::ConvertOpToRemoteMemPattern;
   LogicalResult matchAndRewrite(LLVM::UndefOp op, LLVM::UndefOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    if (auto rTypes = op->getAttrOfType<ArrayAttr>("remote_result_types")) {
+    if (auto rType = op->getAttrOfType<TypeAttr>("res_type")) {
       auto newUndef = rewriter.create<UndefOp>(
-        op.getLoc(), rTypes[0].dyn_cast<TypeAttr>().getValue()
+        op.getLoc(), rType.getValue()
       );
       rewriter.replaceOp(op, {newUndef});
       return mlir::success();
@@ -114,6 +111,18 @@ class LLVMGlobalDisagg : public ConvertOpToRemoteMemPattern<LLVM::GlobalOp> {
   }
 };
 
+class LLVMAddressOfDisagg : public ConvertOpToRemoteMemPattern<LLVM::AddressOfOp> {
+  using ConvertOpToRemoteMemPattern<LLVM::AddressOfOp>::ConvertOpToRemoteMemPattern;
+
+  LogicalResult matchAndRewrite(LLVM::AddressOfOp op, LLVM::AddressOfOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto newAddrOf = rewriter.create<rmem::LLVMAddressOfOp>(op.getLoc(), rType.getValue(), op.getGlobalNameAttr());
+      rewriter.replaceOp(op, {newAddrOf});
+      return mlir::success();
+    }
+    return mlir::failure();
+  }
+};
 }
 
 namespace disagg {
@@ -151,7 +160,8 @@ void populateLLVMDisaggPatterns (rmem::RemoteMemTypeConverter &converter, Rewrit
   LLVMCallMallocDisagg,
   LLVMGlobalDisagg,
   LLVMUndefDisagg,
-  LLVMGlobalReturnOpDisagg
+  LLVMReturnOpDisagg,
+  LLVMAddressOfDisagg
   >(converter, &converter.getContext());
 }
 

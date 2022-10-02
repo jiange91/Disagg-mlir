@@ -74,9 +74,9 @@ class RemoteMemLLVMGlobalLowering : public RemoteMemOpLoweringPattern<rmem::LLVM
   }
 };
 
-class RemoteMemGlobalReturnLowering : public RemoteMemOpLoweringPattern<rmem::GlobalReturnOp> {
-  using RemoteMemOpLoweringPattern<rmem::GlobalReturnOp>::RemoteMemOpLoweringPattern;
-  LogicalResult matchAndRewrite(rmem::GlobalReturnOp op, rmem::GlobalReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+class RemoteMemReturnLowering : public RemoteMemOpLoweringPattern<rmem::ReturnOp> {
+  using RemoteMemOpLoweringPattern<rmem::ReturnOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::ReturnOp op, rmem::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     rewriter.replaceOpWithNewOp<LLVM::ReturnOp>(op, adaptor.getOperands());
     return mlir::success();
   }
@@ -120,7 +120,7 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   patterns.add<
   RemoteMemUndefLowering,
   RemoteMemLLVMGlobalLowering,
-  RemoteMemGlobalReturnLowering,
+  RemoteMemReturnLowering,
   RemoteMemLLVMAddressOfLowering
   >(converter, &converter.getContext());
 }

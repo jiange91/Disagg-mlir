@@ -34,7 +34,7 @@ class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
 
   LogicalResult matchAndRewrite(LLVM::CallOp op, LLVM::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     auto calleeName = op.getCallee();
-    if (!calleeName.hasValue() || !(calleeName.getValue().equals("malloc")))
+    if (!calleeName.has_value() || !((*calleeName).equals(llvm::StringRef("malloc"))))
       return mlir::failure();
 
     if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
@@ -117,7 +117,7 @@ class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
   LogicalResult matchAndRewrite(LLVM::GEPOp op, LLVM::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
 
     SmallVector<int32_t> filteredStructIndices;
-    for (auto i : adaptor.getStructIndices().getValues<int32_t>()) {
+    for (auto i : adaptor.getRawConstantIndices()) {
       if (i == LLVM::GEPOp::kDynamicIndex) continue;
       filteredStructIndices.push_back(i);
     }
@@ -134,13 +134,13 @@ class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
       op.getLoc(),
       resultType,
       adaptor.getBase(),
-      adaptor.getIndices(),
-      rewriter.getI32TensorAttr(filteredStructIndices),
+      adaptor.getDynamicIndices(),
+      filteredStructIndices,
       adaptor.getElemTypeAttr()
     );
 
 
-    rewriter.replaceOp(op, {newGEPOp});
+    rewriter.replaceOp(op, newGEPOp.getResult());
     return mlir::success();
   }
 };
@@ -163,7 +163,7 @@ class LLVMGlobalDisagg : public OpConversionPattern<LLVM::GlobalOp> {
   using OpConversionPattern<LLVM::GlobalOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::GlobalOp op, LLVM::GlobalOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     auto optLinkage = symbolizeRLinkageType(static_cast<uint64_t>(op.getLinkage()));
-    if (!optLinkage.hasValue()) {
+    if (!optLinkage.has_value()) {
       llvm::errs() << "Cannot convert linkage info\n"; 
       return mlir::failure();
     }
@@ -171,7 +171,7 @@ class LLVMGlobalDisagg : public OpConversionPattern<LLVM::GlobalOp> {
     RUnnamedAddrAttr nattr = {};
     if (auto onattr = op.getUnnamedAddrAttr()) {
       if (auto optnattr = symbolizeRUnnamedAddr(static_cast<uint64_t>(onattr.getValue()))) {
-        nattr = RUnnamedAddrAttr::get(onattr.getContext(), optnattr.getValue());
+        nattr = RUnnamedAddrAttr::get(onattr.getContext(), *optnattr);
       }
     }
     Type newGlobType = {};
@@ -186,7 +186,7 @@ class LLVMGlobalDisagg : public OpConversionPattern<LLVM::GlobalOp> {
       newGlobType,
       op.getConstant(),
       op.getSymName(),
-      optLinkage.getValue(),
+      *optLinkage,
       op.getDsoLocal(),
       op.getThreadLocal_(),
       op.getValueAttr(),

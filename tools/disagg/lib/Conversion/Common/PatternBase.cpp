@@ -80,20 +80,3 @@ rmem::RemoteMemDialect &ConvertToRemoteMemPattern::getDialect() const {
 RemoteMemTypeConverter *ConvertToRemoteMemPattern::getTypeConverter() const {
   return ConversionPattern::getTypeConverter<RemoteMemTypeConverter>();
 }
-
-Value ConvertToRemoteMemPattern::allocateBuffer(ConversionPatternRewriter &rewriter, Location loc, Operation *op) const {
-  if (auto memrefAlloc = dyn_cast<memref::AllocOp>(op)) {
-    RemoteMemRefType resultType = RemoteMemRefType::get(memrefAlloc.memref().getType());
-    return rewriter.create<MemRefAllocOp>(loc, resultType, memrefAlloc.getDynamicSizes(), memrefAlloc.symbolOperands(), memrefAlloc.alignmentAttr());
-  }
-  if (auto llvmCall = dyn_cast<LLVM::CallOp>(op)) {
-    if (auto calleeName = llvmCall.getCalleeAttrName()) {
-      assert(calleeName == "malloc" && "expect malloc call to be remoted");
-    }
-    RemoteMemRefType resultType = RemoteMemRefType::get(llvmCall.getResult(0).getType());
-    auto poolId = rmem::createIntConstant(rewriter, loc, 0, rmem::getIntBitType(loc.getContext(), 32));
-    return rewriter.create<LLVMMallocOp>(loc, resultType, poolId, op->getOperand(0));
-  }
-  llvm::errs() << "alloc for " << op->getName() << " is not supported\n";
-  return nullptr;
-}

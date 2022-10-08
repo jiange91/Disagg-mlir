@@ -26,7 +26,6 @@ protected:
   RemoteMemDialect &getDialect() const;
   RemoteMemTypeConverter *getTypeConverter() const;
 
-  Value allocateBuffer(ConversionPatternRewriter &rewriter, Location loc, Operation *op) const;
 };
 
 template<typename SourceOp>

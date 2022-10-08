@@ -19,15 +19,6 @@
 
 namespace mlir {
 namespace {
-class MemRefAllocDisagg : public ConvertOpToRemoteMemPattern<memref::AllocOp> {
-  using ConvertOpToRemoteMemPattern<memref::AllocOp>::ConvertOpToRemoteMemPattern;
-
-  LogicalResult matchAndRewrite(memref::AllocOp op, memref::AllocOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    Value rmemAlloc = allocateBuffer(rewriter, op.getLoc(), op);
-    rewriter.replaceOp(op, {rmemAlloc});
-    return mlir::success();
-  }
-};
 }
 
 namespace disagg{
@@ -49,9 +40,8 @@ public:
 };
 
 void populateMemRefDisaggPatterns(rmem::RemoteMemTypeConverter &converter, RewritePatternSet &patterns) {
-  patterns.add<
-  MemRefAllocDisagg
-  >(converter, &converter.getContext());
+  // patterns.add<
+  // >(converter, &converter.getContext());
 }
 
 std::unique_ptr<Pass> createMemRefDisaggPass() {

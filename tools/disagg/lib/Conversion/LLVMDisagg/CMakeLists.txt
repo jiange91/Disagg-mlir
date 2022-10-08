@@ -14,8 +14,8 @@ add_mlir_conversion_library(MLIRLLVMDisagg
   MLIRAnalysis
   MLIRDataLayoutInterfaces
   MLIRRemoteMemCommonConversion
-  MLIRMemRef
-  MLIRLLVMIR
+  MLIRMemRefDialect
+  MLIRLLVMDialect
   MLIRRemoteMem
   MLIRTransforms
 )

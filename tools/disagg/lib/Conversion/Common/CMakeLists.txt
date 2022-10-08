@@ -8,8 +8,8 @@ add_mlir_conversion_library(MLIRRemoteMemCommonConversion
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRLLVMIR
-  MLIRMemRef
+  MLIRLLVMDialect
+  MLIRMemRefDialect
   MLIRSupport
   MLIRTransforms
 )

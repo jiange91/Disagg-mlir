@@ -14,7 +14,7 @@ add_mlir_conversion_library(MLIRBltFuncSigDisagg
   MLIRAnalysis
   MLIRDataLayoutInterfaces
   MLIRRemoteMemCommonConversion
-  MLIRMemRef
-  MLIRLLVMIR
+  MLIRMemRefDialect
+  MLIRLLVMDialect
   MLIRTransforms
 )

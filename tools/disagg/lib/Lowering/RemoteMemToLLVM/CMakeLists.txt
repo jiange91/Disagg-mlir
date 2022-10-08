@@ -13,8 +13,8 @@ add_mlir_conversion_library(MLIRRemoteMemToLLVM
   LINK_LIBS PUBLIC
   MLIRAnalysis
   MLIRDataLayoutInterfaces
-  MLIRMemRef
-  MLIRLLVMIR
+  MLIRMemRefDialect
+  MLIRLLVMDialect
   MLIRRemoteMem
   MLIRRemoteMemLowerCommonConversion
   MLIRTransforms

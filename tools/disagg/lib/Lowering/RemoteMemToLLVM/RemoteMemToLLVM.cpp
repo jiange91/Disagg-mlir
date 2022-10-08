@@ -39,7 +39,7 @@ class RemoteMemLLVMGlobalLowering : public RemoteMemOpLoweringPattern<rmem::LLVM
   
   LogicalResult matchAndRewrite(rmem::LLVMGlobalOp op, rmem::LLVMGlobalOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     auto linkage = LLVM::linkage::symbolizeLinkage(static_cast<uint64_t>(op.getLinkage()));
-    if (!linkage.hasValue()) {
+    if (!linkage.has_value()) {
       llvm::errs() << "Cannot convert linkage info\n"; 
       return mlir::failure();
     }
@@ -57,7 +57,7 @@ class RemoteMemLLVMGlobalLowering : public RemoteMemOpLoweringPattern<rmem::LLVM
       convertedGlobTy,
       op.getConstant(),
       op.getSymName(),
-      linkage.getValue(),
+      *linkage,
       op.getDsoLocal(),
       op.getThreadLocal_(),
       op.getValueAttr(),
@@ -207,12 +207,13 @@ class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
 class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
   using RemoteMemOpLoweringPattern<rmem::GEPOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::GEPOp op, rmem::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    // LLVM GEPOP
-    // basePtr Indices = op.indices
-    // struct Indices = kDynamicIndex + op.structIndices
-    SmallVector<int32_t, 2> structIndices(1, LLVM::GEPOp::kDynamicIndex);
-    for (int32_t i : adaptor.getStructIndices().getValues<int32_t>()) {
-      structIndices.push_back(i);
+
+    SmallVector<LLVM::GEPArg, 2> indices;
+    for (Value i : adaptor.getIndices()) {
+      indices.push_back(i);
+    } 
+    for (int32_t i : adaptor.getStructIndices()) {
+      indices.push_back(i);
     }
 
     SmallVector<NamedAttribute, 2> newAttr;
@@ -221,13 +222,12 @@ class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
       newAttr.push_back(attr);
     }
 
-    Type basePtrType = getTypeConverter()->convertType(op.getRes().getType());
+    Type resPtrType = getTypeConverter()->convertType(op.getRes().getType());
     Value newGEPRel = rewriter.create<LLVM::GEPOp>(
       op.getLoc(),
-      basePtrType,
+      resPtrType,
       adaptor.getBase(),
-      adaptor.getIndices(),
-      structIndices,
+      indices,
       newAttr
     );
 

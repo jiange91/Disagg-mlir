@@ -7,7 +7,7 @@ add_mlir_conversion_library(MLIRRemoteMemLowerCommonConversion
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRLLVMIR
+  MLIRLLVMDialect
   MLIRSupport
   MLIRTransforms
   MLIRRemoteMem

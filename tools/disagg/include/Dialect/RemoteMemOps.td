@@ -177,7 +177,7 @@ def RemoteMem_MemRefAllocOp: RemoteMem_Op<
   let arguments = (ins
     Variadic<Index>: $dynamicSizes,
     Variadic<Index>: $symbolOperands,
-    Confined<OptionalAttr<I64Attr>, [IntMinValue<0>]>: $alignment
+    ConfinedAttr<OptionalAttr<I64Attr>, [IntMinValue<0>]>: $alignment
   );
   let results = (outs
     Res<RemoteMemRef,"",[MemAlloc]>: $rmemref
@@ -217,7 +217,7 @@ Symbol]> {
     UnitAttr:$thread_local_,
     OptionalAttr<AnyAttr>:$value,
     OptionalAttr<I64Attr>:$alignment,
-    DefaultValuedAttr<Confined<I32Attr, [IntNonNegative]>, "0">:$addr_space,
+    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "0">:$addr_space,
     OptionalAttr<RemoteMem_RUnnamedAddr>:$unnamed_addr,
     OptionalAttr<StrAttr>:$section
   );
@@ -270,7 +270,7 @@ def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [NoSideEffect]> {
   let arguments = (ins 
     AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$base,
     Variadic<AnyInteger>:$indices,
-    I32ElementsAttr:$structIndices,
+    DenseI32ArrayAttr:$structIndices,
     OptionalAttr<TypeAttr>:$elem_type);
   let results = (outs 
     AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$res);

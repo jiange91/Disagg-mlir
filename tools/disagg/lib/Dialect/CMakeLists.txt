@@ -11,6 +11,6 @@ MLIRRemoteMemOpsIncGen
 
 LINK_LIBS PUBLIC
 MLIRIR
-MLIRMemRef
+MLIRMemRefDialect
 MLIRInferTypeOpInterface
 )

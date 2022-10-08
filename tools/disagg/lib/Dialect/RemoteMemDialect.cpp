@@ -169,7 +169,7 @@ LLVMGlobalOp LLVMAddressOfOp::getGlobal() {
 //     int32_t constantIndex;
 //     OptionalParseResult parsedInteger =
 //         parser.parseOptionalInteger(constantIndex);
-//     if (parsedInteger.hasValue()) {
+//     if (parsedInteger.has_value()) {
 //       if (failed(parsedInteger.getValue()))
 //         return failure();
 //       constantIndices.push_back(constantIndex);

@@ -16,5 +16,6 @@ add_mlir_conversion_library(MLIRLLVMDisagg
   MLIRRemoteMemCommonConversion
   MLIRMemRef
   MLIRLLVMIR
+  MLIRRemoteMem
   MLIRTransforms
 )

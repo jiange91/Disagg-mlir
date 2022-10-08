@@ -1,0 +1,1 @@
+int disagg_virenvmain(int argc, char **argv, int (*origin_main)(int, char **));

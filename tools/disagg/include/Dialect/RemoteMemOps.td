@@ -151,8 +151,8 @@ def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
 def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   let summary = "remote memory allocation counterpart for llvm malloc";
   let arguments = (ins
+    I32: $poolId,
     I64: $memSize
-    // I64: $memSpace
   );
   let results = (outs 
     Res<RemoteMemRef,"",[MemAlloc]>: $rmemref);
@@ -160,7 +160,7 @@ def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   // let hasVerifier = 1;
   // let hasCustomAssemblyFormat = 1;
   let assemblyFormat = [{
-    $memSize attr-dict `:` functional-type(operands, results)
+    $poolId`,` $memSize attr-dict `:` functional-type(operands, results)
   }];
 }
 

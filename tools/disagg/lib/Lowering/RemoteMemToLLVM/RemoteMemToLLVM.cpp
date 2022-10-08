@@ -3,6 +3,7 @@
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
 #include "Dialect/RemoteMemOps.h"
+#include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/DataLayout.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -51,8 +52,6 @@ class RemoteMemLLVMGlobalLowering : public RemoteMemOpLoweringPattern<rmem::LLVM
     }
 
     Type convertedGlobTy = getTypeConverter()->convertType(op.getGlobalType());
-    op.getGlobalType().dump();
-    convertedGlobTy.dump();
     auto newGlob = rewriter.create<LLVM::GlobalOp>(
       op.getLoc(),
       convertedGlobTy,
@@ -93,6 +92,149 @@ class RemoteMemLLVMAddressOfLowering : public RemoteMemOpLoweringPattern<rmem::L
   }
 };
 
+class RemoteMemMallocPtrLowering : public RemoteMemOpLoweringPattern<rmem::LLVMMallocOp> {
+  using RemoteMemOpLoweringPattern<rmem::LLVMMallocOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::LLVMMallocOp op, rmem::LLVMMallocOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    auto rallocOp = rmem::lookupOrCreateAllocFn(op->getParentOfType<ModuleOp>());
+    Type resultType = getTypeConverter()->convertType(op.getResult().getType());
+
+    auto newPtr = rmem::createLLVMCall(rewriter, op.getLoc(), rallocOp,
+     adaptor.getOperands(),
+     resultType);
+    rewriter.replaceOp(op, newPtr);
+    return mlir::success();
+  }
+};
+
+class RemoteMemBitCastLowering : public RemoteMemOpLoweringPattern<rmem::BitCastOp> {
+  using RemoteMemOpLoweringPattern<rmem::BitCastOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::BitCastOp op, rmem::BitCastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Type ptrType = getTypeConverter()->convertType(op.getResult().getType());
+    auto newPtr = rewriter.create<LLVM::BitcastOp>(
+      op.getLoc(),
+      ptrType,
+      adaptor.getOperands()
+    );
+    rewriter.replaceOp(op, {newPtr});
+    return mlir::success();
+  }
+};
+
+class RemoteMemStoreLowering : public RemoteMemOpLoweringPattern<rmem::StoreOp> {
+  using RemoteMemOpLoweringPattern<rmem::StoreOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::StoreOp op, rmem::StoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // If the remote addr is remote memref
+    //   - if true remote 
+    //     need to first materialize to local addr before store
+    // Else the addr is a local addr, just store
+    Value newAddr = adaptor.getAddr();
+    if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
+      if (rmrefType.getCanRemote()) {
+        // call request 
+        auto cacheReqOp = rmem::lookupOrCreateCacheRequestFn(op->getParentOfType<ModuleOp>());
+        Value tk = rmem::cacheRequestCallWrapper(
+          rewriter, op.getLoc(),
+          cacheReqOp,
+          adaptor.getAddr()
+        );
+        // call _cache_access_mut
+        auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessMutFn(op->getParentOfType<ModuleOp>());
+        newAddr = rmem::cacheAccessCallWrapper(
+          rewriter, op.getLoc(),
+          cacheAccMutOp,
+          tk,
+          adaptor.getAddr().getType()
+        );
+      }
+    }
+    rewriter.replaceOpWithNewOp<LLVM::StoreOp>(op, 
+      adaptor.getValue(),
+      newAddr,
+      adaptor.getAccessGroupsAttr(),
+      adaptor.getAliasScopesAttr(),
+      adaptor.getNoaliasScopesAttr(),
+      adaptor.getAlignmentAttr(),
+      adaptor.getVolatile_Attr(),
+      adaptor.getNontemporalAttr()
+    );
+    return mlir::success();
+  }
+};
+
+class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
+  using RemoteMemOpLoweringPattern<rmem::LoadOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::LoadOp op, rmem::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // If the remote addr is remote memref
+    //   - if true remote 
+    //     need to first materialize to local addr 
+    // Else the addr is a local addr, just load
+    Value newAddr = adaptor.getAddr();
+    if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
+      if (rmrefType.getCanRemote()) {
+        // call request 
+        auto cacheReqOp = rmem::lookupOrCreateCacheRequestFn(op->getParentOfType<ModuleOp>());
+        Value tk = rmem::cacheRequestCallWrapper(
+          rewriter, op.getLoc(),
+          cacheReqOp,
+          adaptor.getAddr()
+        );
+        // call _cache_access
+        auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessFn(op->getParentOfType<ModuleOp>());
+        newAddr = rmem::cacheAccessCallWrapper(
+          rewriter, op.getLoc(),
+          cacheAccMutOp,
+          tk,
+          adaptor.getAddr().getType()
+        );
+      }
+    }
+    Value newLoad = rewriter.create<LLVM::LoadOp>(
+      op.getLoc(),
+      getTypeConverter()->convertType(op.getRes().getType()),
+      newAddr,
+      adaptor.getAccessGroupsAttr(),
+      adaptor.getAliasScopesAttr(),
+      adaptor.getNoaliasScopesAttr(),
+      adaptor.getAlignmentAttr(),
+      adaptor.getVolatile_Attr(),
+      adaptor.getNontemporalAttr()
+    );
+    rewriter.replaceOp(op, newLoad);
+    return mlir::success();
+  }
+};
+
+class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
+  using RemoteMemOpLoweringPattern<rmem::GEPOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::GEPOp op, rmem::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // LLVM GEPOP
+    // basePtr Indices = op.indices
+    // struct Indices = kDynamicIndex + op.structIndices
+    SmallVector<int32_t, 2> structIndices(1, LLVM::GEPOp::kDynamicIndex);
+    for (int32_t i : adaptor.getStructIndices().getValues<int32_t>()) {
+      structIndices.push_back(i);
+    }
+
+    SmallVector<NamedAttribute, 2> newAttr;
+    for (auto &attr : adaptor.getAttributes().getValue()) {
+      if (attr.getName() == "structIndices") continue;
+      newAttr.push_back(attr);
+    }
+
+    Type basePtrType = getTypeConverter()->convertType(op.getRes().getType());
+    Value newGEPRel = rewriter.create<LLVM::GEPOp>(
+      op.getLoc(),
+      basePtrType,
+      adaptor.getBase(),
+      adaptor.getIndices(),
+      structIndices,
+      newAttr
+    );
+
+    rewriter.replaceOp(op, newGEPRel);
+    return success();
+  }
+};
 // =================================================================
 }
 
@@ -114,6 +256,7 @@ public:
       signalPassFailure();
   }
 };
+
 } // namespace
 
 void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
@@ -121,7 +264,12 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemUndefLowering,
   RemoteMemLLVMGlobalLowering,
   RemoteMemReturnLowering,
-  RemoteMemLLVMAddressOfLowering
+  RemoteMemLLVMAddressOfLowering,
+  RemoteMemMallocPtrLowering,
+  RemoteMemBitCastLowering,
+  RemoteMemStoreLowering,
+  RemoteMemLoadLowering,
+  RemoteMemGEPOpLowering
   >(converter, &converter.getContext());
 }
 

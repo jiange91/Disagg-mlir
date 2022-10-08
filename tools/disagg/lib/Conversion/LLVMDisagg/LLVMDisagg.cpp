@@ -3,6 +3,7 @@
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
 #include "Dialect/RemoteMemOps.h"
+#include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/DataLayout.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -37,8 +38,9 @@ class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
       return mlir::failure();
 
     if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
+      auto poolId = rmem::createIntConstant(rewriter, op.getLoc(), 0, rmem::getIntBitType(op.getContext(), 32));
       auto newPtr = rewriter.create<rmem::LLVMMallocOp>(
-        op.getLoc(), rType.getValue(), adaptor.getOperands()[0]
+        op.getLoc(), rType.getValue(), poolId, adaptor.getOperands()[0]
       );
       rewriter.replaceOp(op, {newPtr});
       return mlir::success();
@@ -91,29 +93,29 @@ class LLVMStoreDisagg : public OpConversionPattern<LLVM::StoreOp> {
 class LLVMLoadDisagg : public OpConversionPattern<LLVM::LoadOp> {
   using OpConversionPattern<LLVM::LoadOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::LoadOp op, LLVM::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type")) {
-      auto newLoad = rewriter.create<rmem::LoadOp>(
-        op.getLoc(),
-        rType.getValue(),
-        adaptor.getOperands()[0],
-        op.getAccessGroupsAttr(),
-        op.getAliasScopesAttr(),
-        op.getNoaliasScopesAttr(),
-        op.getAlignmentAttr(),
-        op.getVolatile_Attr(),
-        op.getNontemporalAttr()
-      );
-      rewriter.replaceOp(op, {newLoad});
-      return mlir::success();
-    }
-    return mlir::failure();
+    Type relType = op.getRes().getType(); 
+    if (auto rType = op->getAttrOfType<TypeAttr>("rel_type"))
+      relType = rType.getValue();
+    auto newLoad = rewriter.create<rmem::LoadOp>(
+      op.getLoc(),
+      relType,
+      adaptor.getOperands()[0],
+      op.getAccessGroupsAttr(),
+      op.getAliasScopesAttr(),
+      op.getNoaliasScopesAttr(),
+      op.getAlignmentAttr(),
+      op.getVolatile_Attr(),
+      op.getNontemporalAttr()
+    );
+    rewriter.replaceOp(op, {newLoad});
+    return mlir::success();
   }
 };
 
 class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
   using OpConversionPattern<LLVM::GEPOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::GEPOp op, LLVM::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    // filter dummy separator GEPOp::kdynamicindex
+
     SmallVector<int32_t> filteredStructIndices;
     for (auto i : adaptor.getStructIndices().getValues<int32_t>()) {
       if (i == LLVM::GEPOp::kDynamicIndex) continue;
@@ -125,6 +127,9 @@ class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
       resultType = rType.getValue();
     }
 
+    // If the bast pointer is remote memref and the result type is raw pointer
+    // Update the result type to anotehr address space
+
     auto newGEPOp = rewriter.create<rmem::GEPOp>(
       op.getLoc(),
       resultType,
@@ -133,6 +138,8 @@ class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
       rewriter.getI32TensorAttr(filteredStructIndices),
       adaptor.getElemTypeAttr()
     );
+
+
     rewriter.replaceOp(op, {newGEPOp});
     return mlir::success();
   }

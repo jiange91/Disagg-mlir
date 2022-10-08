@@ -10,4 +10,5 @@ add_mlir_conversion_library(MLIRRemoteMemLowerCommonConversion
   MLIRLLVMIR
   MLIRSupport
   MLIRTransforms
+  MLIRRemoteMem
   )

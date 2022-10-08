@@ -92,7 +92,7 @@ struct MLIRASTConsumer : public ASTConsumer {
         llvmFunctions(llvmFunctions), PP(PP), astContext(astContext),
         module(module), SM(SM), lcontext(), llvmMod("tmp", lcontext),
         codegenops(codegenops),
-        CGM(astContext, PP.getHeaderSearchInfo().getHeaderSearchOpts(),
+        CGM(astContext, nullptr, PP.getHeaderSearchInfo().getHeaderSearchOpts(),
             PP.getPreprocessorOpts(), codegenops, llvmMod, PP.getDiagnostics()),
         error(false), typeTranslator(*module->getContext()),
         reverseTypeTranslator(lcontext),
@@ -108,8 +108,9 @@ struct MLIRASTConsumer : public ASTConsumer {
                                              bool getDeviceStub = false);
 
   mlir::LLVM::LLVMFuncOp GetOrCreateLLVMFunction(const FunctionDecl *FD);
-  mlir::LLVM::LLVMFuncOp GetOrCreateMallocFunction();
   mlir::LLVM::LLVMFuncOp GetOrCreateFreeFunction();
+  mlir::Value CallMalloc(mlir::OpBuilder &builder, mlir::Location loc,
+                         mlir::Value arg);
 
   mlir::LLVM::GlobalOp GetOrCreateLLVMGlobal(const ValueDecl *VD,
                                              std::string prefix = "");
@@ -212,9 +213,9 @@ private:
 
 public:
   const FunctionDecl *EmittingFunctionDecl;
-  std::map<const VarDecl *, ValueCategory> params;
-  llvm::DenseMap<const VarDecl *, FieldDecl *> Captures;
-  llvm::DenseMap<const VarDecl *, LambdaCaptureKind> CaptureKinds;
+  std::map<const ValueDecl *, ValueCategory> params;
+  llvm::DenseMap<const ValueDecl *, FieldDecl *> Captures;
+  llvm::DenseMap<const ValueDecl *, LambdaCaptureKind> CaptureKinds;
   FieldDecl *ThisCapture;
   std::vector<mlir::Value> arrayinit;
   ValueCategory ThisVal;

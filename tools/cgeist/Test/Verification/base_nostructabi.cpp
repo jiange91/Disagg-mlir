@@ -34,22 +34,21 @@ void a() {
 // CHECK-NEXT:     return
 // CHECK-NEXT:   }
 // CHECK:   func @_ZN19basic_ostringstreamC1Ev(%arg0: !llvm.ptr<struct<(struct<(i8)>)>>) attributes {llvm.linkage = #llvm.linkage<linkonce_odr>} {
-// CHECK-NEXT:     %c0_i32 = arith.constant 0 : i32
-// CHECK-NEXT:     %0 = llvm.getelementptr %arg0[%c0_i32, 0] : (!llvm.ptr<struct<(struct<(i8)>)>>, i32) -> !llvm.ptr<struct<(i8)>>
+// CHECK-NEXT:     %0 = llvm.getelementptr %arg0[0, 0] : (!llvm.ptr<struct<(struct<(i8)>)>>) -> !llvm.ptr<struct<(i8)>>
 // CHECK-NEXT:     call @_ZN12_Alloc_hiderC1Ev(%0) : (!llvm.ptr<struct<(i8)>>) -> ()
-// CHECK-NEXT:     %1 = llvm.bitcast %arg0 : !llvm.ptr<struct<(struct<(i8)>)>> to !llvm.ptr<i8>
-// CHECK-NEXT:     call @_Z4run2Pv(%1) : (!llvm.ptr<i8>) -> ()
+// CHECK-NEXT:     %1 = "polygeist.pointer2memref"(%arg0) : (!llvm.ptr<struct<(struct<(i8)>)>>) -> memref<?xi8> 
+// CHECK-NEXT:     call @_Z4run2Pv(%1) : (memref<?xi8>) -> ()
 // CHECK-NEXT:     return
 // CHECK-NEXT:   }
 // CHECK:   func @_ZN12_Alloc_hiderC1Ev(%arg0: !llvm.ptr<struct<(i8)>>) attributes {llvm.linkage = #llvm.linkage<linkonce_odr>} {
 // CHECK-NEXT:     call @_ZN1MC1Ev(%arg0) : (!llvm.ptr<struct<(i8)>>) -> ()
-// CHECK-NEXT:     %0 = llvm.bitcast %arg0 : !llvm.ptr<struct<(i8)>> to !llvm.ptr<i8>
-// CHECK-NEXT:     call @_Z4run1Pv(%0) : (!llvm.ptr<i8>) -> ()
+// CHECK-NEXT:     %0 = "polygeist.pointer2memref"(%arg0) : (!llvm.ptr<struct<(i8)>>) -> memref<?xi8> 
+// CHECK-NEXT:     call @_Z4run1Pv(%0) : (memref<?xi8>) -> ()
 // CHECK-NEXT:     return
 // CHECK-NEXT:   }
-// CHECK:   func private @_Z4run2Pv(!llvm.ptr<i8>) attributes {llvm.linkage = #llvm.linkage<external>}
+// CHECK:   func private @_Z4run2Pv(memref<?xi8>) attributes {llvm.linkage = #llvm.linkage<external>}
 // CHECK-NEXT:   func @_ZN1MC1Ev(%arg0: !llvm.ptr<struct<(i8)>>) attributes {llvm.linkage = #llvm.linkage<linkonce_odr>} {
-// CHECK-NEXT:     %0 = llvm.bitcast %arg0 : !llvm.ptr<struct<(i8)>> to !llvm.ptr<i8>
-// CHECK-NEXT:     call @_Z4run0Pv(%0) : (!llvm.ptr<i8>) -> ()
+// CHECK-NEXT:     %0 = "polygeist.pointer2memref"(%arg0) : (!llvm.ptr<struct<(i8)>>) -> memref<?xi8>
+// CHECK-NEXT:     call @_Z4run0Pv(%0) : (memref<?xi8>) -> ()
 // CHECK-NEXT:     return
 // CHECK-NEXT:   }

@@ -12,6 +12,7 @@
 include "Dialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/Interfaces/ViewLikeInterface.td"
+include "mlir/IR/SymbolInterfaces.td"
 
 include "mlir/Dialect/LLVMIR/LLVMOpBase.td"
 include "mlir/Dialect/LLVMIR/LLVMOpsInterfaces.td"
@@ -61,7 +62,7 @@ def SubIndexOp : Polygeist_Op<"subindex", [
   let hasCanonicalizer = 1;
 
   let extraClassDeclaration = [{
-    ::mlir::Value getViewSource() { return source(); }
+    ::mlir::Value getViewSource() { return getSource(); }
   }];
 }
 
@@ -91,7 +92,7 @@ def Memref2PointerOp : Polygeist_Op<"memref2pointer", [
   let hasCanonicalizer = 1;
   
   let extraClassDeclaration = [{
-    ::mlir::Value getViewSource() { return source(); }
+    ::mlir::Value getViewSource() { return getSource(); }
   }];
 }
 
@@ -107,8 +108,16 @@ def Pointer2MemrefOp : Polygeist_Op<"pointer2memref", [
   let hasCanonicalizer = 1;
   
   let extraClassDeclaration = [{
-    ::mlir::Value getViewSource() { return source(); }
+    ::mlir::Value getViewSource() { return getSource(); }
   }];
+}
+
+def GetFuncOp : Polygeist_Op<"get_func",
+    [NoSideEffect, DeclareOpInterfaceMethods<SymbolUserOpInterface>]> {
+  let summary = "get the pointer pointing to a function";
+  let arguments = (ins FlatSymbolRefAttr:$name);
+  let results = (outs LLVM_AnyPointer : $result);
+  let assemblyFormat = "$name `:` type($result) attr-dict";
 }
 
 def TrivialUseOp : Polygeist_Op<"trivialuse"> {

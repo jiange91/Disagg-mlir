@@ -11,7 +11,7 @@ class RemoteMem_Op<string mnemonic, list<Trait> traits = []>:
 
 def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
   let summary = "Create an undefined value of remote memref wrapping llvm ptr";
-  let results = (outs RemoteMemRef: $rmemref);
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $undef);
   let assemblyFormat = [{
     attr-dict `:` type(results)
   }];
@@ -19,7 +19,7 @@ def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
 
 def RemoteMem_NullRefOp: RemoteMem_Op<"nullref"> {
   let summary = "Create a Null remote memref: its virtual address is 0";
-  let results = (outs RemoteMemRef: $rmemref);
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $nullRef);
   let assemblyFormat = [{
     attr-dict `:` functional-type(operands, results)
   }];
@@ -151,7 +151,7 @@ def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
 def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   let summary = "remote memory allocation counterpart for llvm malloc";
   let arguments = (ins
-    I32: $poolId,
+    DefaultValuedAttr<Confined<I32Attr, [IntNonNegative]>, "0">:$poolId,
     I64: $memSize
   );
   let results = (outs 

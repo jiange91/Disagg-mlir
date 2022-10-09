@@ -29,16 +29,28 @@ LLVM::LLVMFuncOp lookupOrCreateAllocFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateFreeFn(ModuleOp moduleOp);
 // cache_token_t = _cache_request(virt_ptr);
 LLVM::LLVMFuncOp lookupOrCreateCacheRequestFn(ModuleOp moduleOp);
-// void local_ptr = _cache_access_mut(cache_token_t); 
+// void local_ptr = _cache_access_mut(*cache_token_t); 
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp);
-// void local_ptr = _cache_access(cache_token_t);
+// void local_ptr = _cache_access(*cache_token_t);
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessFn(ModuleOp moduleOp);
+// void init_device();
+LLVM::LLVMFuncOp lookupOrCreateInitDeviceFn(ModuleOp moduleOp);
+// void init_bufs(); /* init sbuf and rbuf */
+LLVM::LLVMFuncOp lookupOrCreateInitBuffersFn(ModuleOp moduleOp);
+// void cache_init(); /* config linebase to use sbuf */
+LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
+// unsigned cache_create(unsigned cache_size, unsigned cache_line_size);
+LLVM::LLVMFuncOp lookupOrCreateCacheCreateFn(ModuleOp moduleOp);
+// void shutdown_device();
+LLVM::LLVMFuncOp lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp);
+// global cacehs[n]
+LLVM::GlobalOp lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n);
 
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);
 
 Value cacheAccessCallWrapper(OpBuilder &builder, Location loc, 
   LLVM::LLVMFuncOp accFn, 
-  Value token, 
+  Value token_ptr /* int128_t* */, 
   Type castPtrType);
 
 LLVM::LLVMFuncOp lookupOrCreateFn(ModuleOp moduleOp, 

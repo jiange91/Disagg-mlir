@@ -3,20 +3,10 @@
 
 include "mlir/Pass/PassBase.td"
 
-def MemRefDisaggregation: Pass<"convert-memrefmem-to-remote", "func::FuncOp"> {
-  let summary = "Convert memref operations that involve memory side effects to remotemem ops";
-  let constructor = "mlir::disagg::createMemRefDisaggPass()";
-}
-
-def LLVMDisaggregation : Pass<"convert-llvm-to-remote", "ModuleOp"> {
-  let summary = "Currently only convert llvm function call to malloc";
-  let constructor = "mlir::disagg::createLLVMDisaggregationPass()";
-  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect"];
-}
-
-def BltFuncSigDisaggregation : Pass<"convert-builtin-func-to-remote", "ModuleOp"> {
-  let summary = "Convert builtin function op, call, return op that involve pointer/memref types to remote memref type";
-  let constructor = "mlir::disagg::createBltFuncSigDisaggregationPass()";
+def MemDisaggregation : Pass<"convert-target-to-remote", "ModuleOp"> {
+  let summary = "Will convert everthing marked `remote_target` to remote dialect";
+  let description = "Dialect conversion has poor dependency inspection support, so we convert everything in one pass. However, the optimization can be separated.";
+  let constructor = "mlir::disagg::createMemDisaggregationPass()";
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect"];
 }
 

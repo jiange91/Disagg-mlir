@@ -10,11 +10,11 @@ using namespace mlir;
 mlir::RemoteMemConversionTarget::RemoteMemConversionTarget(MLIRContext &ctx) : ConversionTarget(ctx) {
   // addLegalDialect<rmem::RemoteMemDialect, BuiltinDialect, LLVM::LLVMDialect, memref::MemRefDialect, func::FuncDialect>();
   addLegalDialect<rmem::RemoteMemDialect>();
-  markUnknownOpDynamicallyLegal([](Operation *op) { 
+  addLegalOp<UnrealizedConversionCastOp>();
+  markUnknownOpDynamicallyLegal([](Operation *op) {
     if (auto remoteAttr = op->getAttrOfType<IntegerAttr>("remote_target")) {
       if (!remoteAttr.getValue().isZero()) return false;
     }
     return true;
   });
-  addLegalOp<UnrealizedConversionCastOp>();
 }

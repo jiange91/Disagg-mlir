@@ -24,7 +24,13 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     [&](FunctionType type) { return convertFunctionType(type); });
   addConversion(
     [&](MemRefType type) { return convertMemRefType(type); });
-  
+  addConversion([&](Type type) { return type; });
+    // addConversion([&](Type type, SmallVectorImpl<Type> &results) -> Optional<LogicalResult> { 
+    //   results.push_back(type);
+    //   results.push_back(type);
+    //   return mlir::success();
+    // });
+
   // convert block argument from remotememref to raw pointer / memref
   addArgumentMaterialization(
     [&](OpBuilder &builder, Type type, ValueRange inputs, Location loc) -> llvm::Optional<Value> {
@@ -35,12 +41,6 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
       convOp->setAttr("conv_arg_mat", builder.getBoolAttr(true));
       return convOp.getResult(0);
 
-      // Value unpacked = inputs[0];
-      // if (auto t = unpacked.getType().dyn_cast<LLVM::LLVMStructType>()) {
-      //   return builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]).getResult();
-      // }
-      // return llvm::None;
-      // return builder.create<MaterializeOp>(loc, type, unpacked).getResult();
     }
   );
   addSourceMaterialization([&](OpBuilder &builder, Type resultType,
@@ -52,11 +52,6 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     convOp->setAttr("conv_src_mat", builder.getBoolAttr(true));
     return convOp.getResult(0);
 
-    // Value unpacked = inputs[0];
-    //   if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
-    //     unpacked = builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]);
-    //   }
-    //   return builder.create<MaterializeOp>(loc, resultType, unpacked).getResult();
   });
   addTargetMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
@@ -66,18 +61,8 @@ RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ct
     auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
     convOp->setAttr("conv_tgt_mat", builder.getBoolAttr(true));
     return convOp.getResult(0);
-    // Value unpacked = inputs[0];
-    // if (auto t = inputs[0].getType().dyn_cast<LLVM::LLVMStructType>()) {
-    //     unpacked = builder.create<UnpackFromLLVMStruct>(loc, t.getBody()[0], inputs[0]);
-    //   } 
-    // return builder.create<VirtualizeOp>(loc, resultType, unpacked).getResult();
     });
 
-    addConversion([&](Type type, SmallVectorImpl<Type> &results) -> Optional<LogicalResult> { 
-      results.push_back(type);
-      results.push_back(type);
-      return mlir::success();
-    });
 }
 
 

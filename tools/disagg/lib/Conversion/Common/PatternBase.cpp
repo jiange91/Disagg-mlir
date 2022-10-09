@@ -91,8 +91,8 @@ Value ConvertToRemoteMemPattern::allocateBuffer(ConversionPatternRewriter &rewri
       assert(calleeName == "malloc" && "expect malloc call to be remoted");
     }
     RemoteMemRefType resultType = RemoteMemRefType::get(llvmCall.getResult(0).getType());
-    auto poolId = rmem::createIntConstant(rewriter, loc, 0, rmem::getIntBitType(loc.getContext(), 32));
-    return rewriter.create<LLVMMallocOp>(loc, resultType, poolId, op->getOperand(0));
+    // auto poolId = rmem::createIntConstant(rewriter, loc, 0, rmem::getIntBitType(loc.getContext(), 32));
+    return rewriter.create<LLVMMallocOp>(loc, resultType, rewriter.getI32IntegerAttr(0), op->getOperand(0));
   }
   llvm::errs() << "alloc for " << op->getName() << " is not supported\n";
   return nullptr;

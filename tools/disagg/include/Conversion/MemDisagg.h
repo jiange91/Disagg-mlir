@@ -1,5 +1,5 @@
-#ifndef LLVM_FUNCSIG_TO_REMOTE_MEM_H
-#define LLVM_FUNCSIG_TO_REMOTE_MEM_H
+#ifndef REMOTE_TARGET_TO_REMOTE_MEM_H
+#define REMOTE_TARGET_TO_REMOTE_MEM_H
 
 #include <memory>
 #include "llvm/ADT/StringSet.h"
@@ -17,9 +17,9 @@ class RemoteMemTypeConverter;
 
 namespace disagg {
 
-void populateLLVMDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateMemDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 
-std::unique_ptr<Pass> createLLVMDisaggregationPass();
+std::unique_ptr<Pass> createMemDisaggregationPass();
 }
 }
 

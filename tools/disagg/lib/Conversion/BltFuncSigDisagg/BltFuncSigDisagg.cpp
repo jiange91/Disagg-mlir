@@ -25,16 +25,39 @@ class FuncOpDisagg : public ConvertOpToRemoteMemPattern<func::FuncOp> {
   func::FuncOp disaggBltFuncSignature(func::FuncOp funcOp, ConversionPatternRewriter &rewriter) const {
     // Convert funcOp using typeconverter
     TypeConverter::SignatureConversion result(funcOp.getNumArguments());
-    auto newFuncOpType = getTypeConverter()->convertFunctionSignature(funcOp.getFunctionType(), result);
+
+    // Remap funcOp signature inputs
+    if (auto its = funcOp->getAttrOfType<mlir::ArrayAttr>("operand_types")) {
+      for (auto &en : llvm::enumerate(its.getAsValueRange<mlir::TypeAttr>())) {
+        result.addInputs(en.index(), en.value());
+      }
+    } else {
+      for (auto &en : llvm::enumerate(funcOp.getArgumentTypes())) {
+        result.addInputs(en.index(), en.value());
+      }
+    }
+
+    // Create resultTypes for new funcOp
+    SmallVector<Type, 4> resultTypes;
+    if (auto its = funcOp->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+      for (Type en : its.getAsValueRange<mlir::TypeAttr>())
+        resultTypes.push_back(en);
+    } else {
+      for (Type en : funcOp.getResultTypes())
+        resultTypes.push_back(en);
+    }
+
+    auto newFuncOpType = mlir::FunctionType::get(funcOp.getContext(), result.getConvertedTypes(), resultTypes);
     if (!newFuncOpType) return nullptr;
 
     // propagate attributes ?
-    // newFuncOpType.dump();
+    newFuncOpType.dump();
 
     auto newFuncOp = rewriter.create<func::FuncOp>(funcOp.getLoc(), funcOp.getName(), newFuncOpType);
     rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
-    if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result)))
-      return nullptr;
+    rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
+    // if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result)))
+    //   return nullptr;
     return newFuncOp;
   }
 
@@ -70,7 +93,7 @@ class FuncReturnOpDisagg : public ConvertOpToRemoteMemPattern<func::ReturnOp> {
   using ConvertOpToRemoteMemPattern<func::ReturnOp>::ConvertOpToRemoteMemPattern;
 
   LogicalResult matchAndRewrite(func::ReturnOp op, func::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    rewriter.replaceOpWithNewOp<func::ReturnOp>(op, TypeRange(), adaptor.getOperands(), op->getAttrs());
+    rewriter.replaceOpWithNewOp<rmem::ReturnOp>(op, adaptor.getOperands());
     return mlir::success();
   }
 };
@@ -87,16 +110,12 @@ public:
     populateBltFuncSigDisaggPatterns(typeConverter, patterns);
     RemoteMemConversionTarget target(getContext());
 
-    target.addDynamicallyLegalOp<func::FuncOp>([](func::FuncOp op) {
-      return !rmem::hasRemotableSignature(op);
+    target.addDynamicallyLegalDialect<mlir::func::FuncDialect>([](Operation *op) { 
+      if (auto remoteAttr = op->getAttrOfType<IntegerAttr>("remote_target")) {
+        if (!remoteAttr.getValue().isZero()) return false;
+      }
+      return true;
     });
-    target.addDynamicallyLegalOp<func::CallOp>([](func::CallOp op) {
-      return !rmem::hasRemotableSignature(op);
-    });
-    target.addDynamicallyLegalOp<func::ReturnOp>([](func::ReturnOp op) { 
-      return !rmem::hasRemotableSignature(op);
-    });
-
     if (failed(applyPartialConversion(op, target, std::move(patterns)))) {
       signalPassFailure();
     }

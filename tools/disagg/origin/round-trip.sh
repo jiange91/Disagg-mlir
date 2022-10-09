@@ -25,14 +25,28 @@ function c_llvm-dialect_obj() {
 # cmd [opt-level] [src.c]
 function c_high_obj() {
   mkd_out
-  cgeist -v -S -O$1 -memref-abi=0 $2 -o out/base.mlir
+  cgeist -v -S -std=c11 -O$1 -g -memref-abi=0 $2 -o out/base.mlir
 
   # lower to llvm dialect
   polygeist-opt --convert-polygeist-to-llvm out/base.mlir -o out/base_llvm.mlir
 
   # Translate to llvm ir
-  mlir-translate -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
+  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
 
-  llc -filetype=obj out/base.ll -o ./out/base.o
+  llc -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
   echo "Compile $2 complete"
+}
+
+# cmd [lowered.mlir]
+function c_from_lowered() {
+  mkd_out
+
+  # lower to llvm dialect
+  polygeist-opt --convert-polygeist-to-llvm $1 -o out/base_llvm.mlir
+
+  # Translate to llvm ir
+  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
+
+  llc -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
+  echo "Compile $1 complete"
 }

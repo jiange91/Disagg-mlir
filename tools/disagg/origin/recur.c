@@ -22,34 +22,28 @@ A *expand(A* node, int v) {
   return new_node;
 }
 
-void visit(A *head) {
-  A *hn = (A*) ((char *)head + sizeof(A));
-  printf("struct chasing\n");
+void visit(int n) {
+  A *head = glob[n];
+  printf("struct chasing from %d\n", n);
   while (head) {
-    printf("%d\n", hn->n.v);
+    printf("%d\n", head->n.v);
     head = head->next;
   }
 }
 
-void visit_glob(int n) {
-  printf("array chaing\n");
-  for (int i = 0; i < n; i++) {
-    printf("%d\n", glob[i]->n.v);
-  }
-}
-
 int main(int argc, char **argv) {
+  int l = atoi(argv[1]);
+  int n = atoi(argv[2]);
+
   A head;
-  int n = atoi(argv[1]);
-  glob = malloc(sizeof(A*) * n);
+  glob = malloc(sizeof(A*) * l);
   A *prev = &head;
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < l; ++i) {
     A *an = expand(prev, i);
     glob[i] = an;
     prev = an;
   }
 
-  visit(head.next);
-  visit_glob(n);
+  visit(n);
   return 0;
 }

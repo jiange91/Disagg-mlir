@@ -27,7 +27,7 @@ class RemoteMemUndefLowering : public RemoteMemOpLoweringPattern<rmem::UndefOp> 
   using RemoteMemOpLoweringPattern<rmem::UndefOp>::RemoteMemOpLoweringPattern;
 
   LogicalResult matchAndRewrite(rmem::UndefOp op, rmem::UndefOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    Type ptr = getTypeConverter()->convertType(op.getRmemref().getType());
+    Type ptr = getTypeConverter()->convertType(op.getUndef().getType());
     auto newUndef = rewriter.create<LLVM::UndefOp>(op.getLoc(), ptr);
     rewriter.replaceOp(op, {newUndef});
     return mlir::success();
@@ -99,7 +99,8 @@ class RemoteMemMallocPtrLowering : public RemoteMemOpLoweringPattern<rmem::LLVMM
     Type resultType = getTypeConverter()->convertType(op.getResult().getType());
 
     auto newPtr = rmem::createLLVMCall(rewriter, op.getLoc(), rallocOp,
-     adaptor.getOperands(),
+     {rmem::createIntConstant(rewriter, op.getLoc(), adaptor.getPoolId(), rmem::getIntBitType(op.getContext(), 32)),
+     adaptor.getMemSize()},
      resultType);
     rewriter.replaceOp(op, newPtr);
     return mlir::success();
@@ -137,12 +138,20 @@ class RemoteMemStoreLowering : public RemoteMemOpLoweringPattern<rmem::StoreOp> 
           cacheReqOp,
           adaptor.getAddr()
         );
+        // allocate token pointer on stack and store
+        auto tkPtr = rewriter.create<LLVM::AllocaOp>(
+          op.getLoc(),
+          LLVM::LLVMPointerType::get(rmem::getIntBitType(op.getContext(), 128)),
+          rmem::createIntConstant(rewriter, op.getLoc(), 1, rmem::getIntBitType(op.getContext(), 64)),
+          0
+        );
+        rewriter.create<LLVM::StoreOp>(op.getLoc(), tk, tkPtr);
         // call _cache_access_mut
         auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessMutFn(op->getParentOfType<ModuleOp>());
         newAddr = rmem::cacheAccessCallWrapper(
           rewriter, op.getLoc(),
           cacheAccMutOp,
-          tk,
+          tkPtr,
           adaptor.getAddr().getType()
         );
       }
@@ -178,12 +187,20 @@ class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
           cacheReqOp,
           adaptor.getAddr()
         );
+        // allocate token pointer on stack and store
+        auto tkPtr = rewriter.create<LLVM::AllocaOp>(
+          op.getLoc(),
+          LLVM::LLVMPointerType::get(rmem::getIntBitType(op.getContext(), 128)),
+          rmem::createIntConstant(rewriter, op.getLoc(), 1, rmem::getIntBitType(op.getContext(), 64)),
+          0
+        );
+        rewriter.create<LLVM::StoreOp>(op.getLoc(), tk, tkPtr);
         // call _cache_access
         auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessFn(op->getParentOfType<ModuleOp>());
         newAddr = rmem::cacheAccessCallWrapper(
           rewriter, op.getLoc(),
           cacheAccMutOp,
-          tk,
+          tkPtr,
           adaptor.getAddr().getType()
         );
       }
@@ -243,7 +260,7 @@ class ConvertRemoteMemToLLVMPass : public ConvertRemoteMemToLLVMBase<ConvertRemo
 public:
   ConvertRemoteMemToLLVMPass() = default;
   void runOnOperation() override {
-    Operation *op = getOperation();
+    ModuleOp m = getOperation();
     RemoteMemTypeLowerer typeConverter(&getContext());
     RewritePatternSet patterns(&getContext());
     populateRemoteMemToLLVMPatterns(typeConverter, patterns);
@@ -252,7 +269,29 @@ public:
     target.addLegalDialect<LLVM::LLVMDialect>();
     target.addLegalOp<UnrealizedConversionCastOp>();
 
-    if (failed(applyPartialConversion(op, target, std::move(patterns))))
+    /* add disagg env init */
+    auto mainFunc = m.lookupSymbol<func::FuncOp>("main");
+    if (mainFunc) {
+      /* call inits and shutdown */
+      auto initDeviceOp = rmem::lookupOrCreateInitDeviceFn(m);
+      auto initBufsOp = rmem::lookupOrCreateInitBuffersFn(m);
+      auto initCacheOp = rmem::lookupOrCreateCacheInitFn(m);
+      auto cacheCreateOp = rmem::lookupOrCreateCacheCreateFn(m);
+      auto shutdown_device = rmem::lookupOrCreateShutdownDeviceFn(m);
+      OpBuilder b(mainFunc.getBody());
+      rmem::createLLVMCall(b, mainFunc.getLoc(), initDeviceOp);
+      rmem::createLLVMCall(b, mainFunc.getLoc(), initBufsOp);
+      rmem::createLLVMCall(b, mainFunc.getLoc(), initCacheOp);
+      rmem::createLLVMCall(b, mainFunc.getLoc(), cacheCreateOp, 
+        {rmem::createIntConstant(b, mainFunc.getLoc(), 64, rmem::getIntBitType(mainFunc.getContext(), 32)),
+        rmem::createIntConstant(b, mainFunc.getLoc(), 16, rmem::getIntBitType(mainFunc.getContext(), 32))},
+        rmem::getIntBitType(mainFunc.getContext(), 32)
+      );
+      b.setInsertionPoint(&mainFunc.getBody().back().back());
+      rmem::createLLVMCall(b, mainFunc.getLoc(), shutdown_device);
+    }
+
+    if (failed(applyPartialConversion(m, target, std::move(patterns))))
       signalPassFailure();
   }
 };

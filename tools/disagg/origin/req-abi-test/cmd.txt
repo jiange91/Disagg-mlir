@@ -1,0 +1,15 @@
+# cmd [opt-level] [src.c]
+
+function c_high_obj() {
+  # mkd_out
+  cgeist -v -S -std=c11 -O$1 -g -memref-abi=0 $2 -o out/base.mlir
+
+  # lower to llvm dialect
+  polygeist-opt --convert-polygeist-to-llvm out/base.mlir -o out/base_llvm.mlir
+
+  # Translate to llvm ir
+  mlir-translate --disable-i2p-p2i-opt --opaque-pointers -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
+
+  llc -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
+  echo "Compile $2 complete"
+}

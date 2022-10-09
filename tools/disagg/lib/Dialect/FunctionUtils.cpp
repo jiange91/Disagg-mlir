@@ -10,9 +10,14 @@ using namespace mlir::rmem;
 
 static constexpr llvm::StringRef kAlloc = "_disagg_alloc";
 static constexpr llvm::StringRef kFree = "_disagg_free";
-static constexpr llvm::StringRef kCacheRequest = "_cache_request";
-static constexpr llvm::StringRef kCacheAccessMut = "_cache_access_mut";
-static constexpr llvm::StringRef kCacheAccess = "_cache_access";
+static constexpr llvm::StringRef kCacheRequest = "cache_request";
+static constexpr llvm::StringRef kCacheAccessMut = "cache_access_mut";
+static constexpr llvm::StringRef kCacheAccess = "cache_access";
+static constexpr llvm::StringRef kInitDevice = "init_device";
+static constexpr llvm::StringRef kInitBuffers = "init_bufs";
+static constexpr llvm::StringRef kCacheInit = "cache_init";
+static constexpr llvm::StringRef kCacheCreate = "cache_create";
+static constexpr llvm::StringRef kShutdownDevice = "shutdown_device";
 
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateFn(ModuleOp moduleOp, 
                                               StringRef name,
@@ -52,6 +57,7 @@ Value mlir::rmem::createIntConstant(OpBuilder &builder, Location loc, int64_t va
 }
 
 LLVM::LLVMStructType mlir::rmem::getCacheTokenType(MLIRContext *ctx) {
+  llvm_unreachable("Should use int128_t for abi compatibility");
   /*
   typedef struct cache_token_t {
     // key for pointer
@@ -109,7 +115,7 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheRequestFn(ModuleOp moduleOp) {
     moduleOp,
     kCacheRequest,
     getIntBitType(moduleOp->getContext(), 64),
-    getCacheTokenType(moduleOp->getContext())
+    getIntBitType(moduleOp->getContext(), 128)
   );
 }
 
@@ -117,7 +123,7 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheAccessMut,
-    getCacheTokenType(moduleOp->getContext()),
+    LLVM::LLVMPointerType::get(getIntBitType(moduleOp->getContext(), 128)),
     getVoidPtrType(moduleOp->getContext())
   );
 }
@@ -126,10 +132,85 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheAccess,
-    getCacheTokenType(moduleOp->getContext()),
+    LLVM::LLVMPointerType::get(getIntBitType(moduleOp->getContext(), 128)),
     getVoidPtrType(moduleOp->getContext())
   );
 }
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitDeviceFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kInitDevice,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitBuffersFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kInitBuffers,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheInitFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kCacheInit,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheCreateFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kCacheCreate,
+    {getIntBitType(moduleOp->getContext(), 32), 
+     getIntBitType(moduleOp->getContext(), 32)},
+    getIntBitType(moduleOp->getContext(), 32)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kShutdownDevice,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+
+LLVM::GlobalOp mlir::rmem::lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n) {
+  llvm_unreachable("now using static cache id");
+  auto globalCaches = moduleOp.lookupSymbol<LLVM::GlobalOp>("caches");
+  if (globalCaches) return globalCaches;
+  OpBuilder b(moduleOp.getBodyRegion());
+  globalCaches = b.create<LLVM::GlobalOp>(
+    moduleOp->getLoc(),
+    LLVM::LLVMArrayType::get(getIntBitType(moduleOp.getContext(), 32), n),
+    false,
+    LLVM::Linkage::External,
+    "caches",
+    nullptr
+  ); 
+  
+  b.setInsertionPointToStart(&globalCaches.getInitializerRegion().emplaceBlock());
+  Value ary = b.create<LLVM::UndefOp>(
+    globalCaches.getLoc(),
+    LLVM::LLVMArrayType::get(getIntBitType(moduleOp.getContext(), 32), n)
+  );
+  b.create<LLVM::ReturnOp>(
+    globalCaches.getLoc(),
+    ary
+  );
+  return globalCaches;
+}
+
+// ==============================================================
+// Helper Wrapper for type casting
+// ==============================================================
 
 Value mlir::rmem::cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr) {
   /*
@@ -143,12 +224,12 @@ Value mlir::rmem::cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM
   );
   auto result = createLLVMCall(builder, loc, reqFn, 
     {addr},
-    rmem::getCacheTokenType(loc.getContext())
+    rmem::getIntBitType(loc.getContext(), 128)
   );
   return result.front();
 }
 
-Value mlir::rmem::cacheAccessCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp accFn, Value token, Type castPtrType) {
+Value mlir::rmem::cacheAccessCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp accFn, Value token_ptr, Type castPtrType) {
   /*
   The wrapper provide a postprocess routine for calls to cache_access
   access a token T with expected pointer type P:
@@ -157,7 +238,7 @@ Value mlir::rmem::cacheAccessCallWrapper(OpBuilder &builder, Location loc, LLVM:
   */
 
   auto voidPtr = createLLVMCall(builder, loc, accFn, 
-    token, 
+    token_ptr, 
     getVoidPtrType(loc.getContext())
   );
   auto result = builder.create<LLVM::BitcastOp>(
@@ -165,5 +246,3 @@ Value mlir::rmem::cacheAccessCallWrapper(OpBuilder &builder, Location loc, LLVM:
   );
   return result;
 }
-
-

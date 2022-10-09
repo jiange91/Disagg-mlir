@@ -2,9 +2,7 @@
 #define MLIR_REMOTE_MEM_LOWERING_PASSES_H
 
 #include "mlir/Pass/Pass.h"
-#include "Conversion/LLVMDisagg/LLVMDisagg.h"
-#include "Conversion/MemRefDisagg/MemRefDisagg.h"
-#include "Conversion/BltFuncSigDisagg/BltFuncSigDisagg.h"
+#include "Conversion/MemDisagg.h"
 namespace mlir {
 namespace disagg {
 // class DisaggregationPass;

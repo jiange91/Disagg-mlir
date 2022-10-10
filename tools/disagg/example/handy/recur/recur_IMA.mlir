@@ -45,7 +45,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     llvm.store %arg1, %3 {"remote_target"=1} : !llvm.ptr<i32>
     %4 = llvm.getelementptr %1[%c0_i32, 1] {
       "remote_target" = 1,
-      "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
+      "rel_types" = [!rmem.rmref<1, !llvm.ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>]
     } : (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>, i32) -> !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
     %5 = llvm.mlir.null {
       "remote_target" = 1,
@@ -94,11 +94,86 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
       scf.condition(%13) {"remote_target"=1} %arg1 : !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
     } do {
     ^bb0(%arg1: !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>):
-      scf.yield %arg1 : !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
+      %13 = llvm.getelementptr %arg1[%c0_i32, 0] {
+        "remote_target" = 1,
+        "rel_type" = [!rmem.rmref<1, !llvm.ptr<struct<(i32)>>>]
+      } : (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>, i32) -> !llvm.ptr<struct<(i32)>>
+      %14 = llvm.getelementptr %13[%c0_i32, 0] {
+        "remote_target" = 1,
+        "rel_types" = [!rmem.rmref<1, !llvm.ptr<i32>>]
+      } : (!llvm.ptr<struct<(i32)>>, i32) -> !llvm.ptr<i32>
+      %15 = llvm.load %14 {"remote_target"=1} : !llvm.ptr<i32>
+      %16 = llvm.call @printf(%11, %15) : (!llvm.ptr<i8>, i32) -> i32
+      %17 = llvm.getelementptr %arg1[%c0_i32, 1] {
+        "remote_target" = 1,
+        "rel_types" = [!rmem.rmref<1, !llvm.ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>]
+      } : (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>, i32) -> !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
+      %18 = llvm.load %17 {
+        "remote_target" = 1,
+        "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
+      } : !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
+      scf.yield {"remote_target"=1} %18 : !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
     } attributes {
       "remote_target" = 1,
       "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
     } 
     return 
+  }
+  func.func @main(%arg0: i32, %arg1: !llvm.ptr<ptr<i8>>) -> i32 attributes {llvm.linkage = #llvm.linkage<external>} {
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c2_i64 = arith.constant 2 : i64
+    %c8_i64 = arith.constant 8 : i64
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i64 = arith.constant 1 : i64
+    %0 = llvm.alloca %c1_i64 x !llvm.struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)> {
+      "remote_target" = 1,
+      "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
+    } : (i64) -> !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
+    %1 = llvm.getelementptr %arg1[%c1_i64] : (!llvm.ptr<ptr<i8>>, i64) -> !llvm.ptr<ptr<i8>>
+    %2 = llvm.load %1 : !llvm.ptr<ptr<i8>>
+    %3 = llvm.call @atoi(%2) : (!llvm.ptr<i8>) -> i32
+    %4 = llvm.getelementptr %arg1[%c2_i64] : (!llvm.ptr<ptr<i8>>, i64) -> !llvm.ptr<ptr<i8>>
+    %5 = llvm.load %4 : !llvm.ptr<ptr<i8>>
+    %6 = llvm.call @atoi(%5) : (!llvm.ptr<i8>) -> i32
+    %7 = llvm.mlir.addressof @glob {
+      "remote_target" = 1,
+      "rel_types" = [!llvm.ptr<ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>]
+    } : !llvm.ptr<ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>> 
+    %8 = arith.extsi %3 : i32 to i64
+    %9 = arith.muli %8, %c8_i64 : i64
+    %10 = llvm.call @malloc(%9) : (i64) -> !llvm.ptr<i8>
+    %11 = llvm.bitcast %10 {
+      "remote_target" = 1,
+      "rel_types" = [!llvm.ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>]  
+    } : !llvm.ptr<i8> to !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
+    llvm.store %11, %7 {"remote_target"=1} : !llvm.ptr<ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>>
+    %12 = arith.index_cast %3 : i32 to index
+    %13 = scf.for %arg2 = %c0 to %12 step %c1 iter_args(%arg3 = %0) -> (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>) {
+      %14 = arith.index_cast %arg2 : index to i32
+      %15 = func.call @expand(%0, %c0_i32) {
+        "remote_target" = 1,
+        "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
+      } : (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>, i32) -> !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
+      %16 = llvm.mlir.addressof @glob {
+        "remote_target" = 1,
+        "rel_types" = [!llvm.ptr<ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>]
+      } : !llvm.ptr<ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>>
+      %17 = llvm.load %16 {
+        "remote_target" = 1,
+        "rel_types" = [!llvm.ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>]
+      } : !llvm.ptr<ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>>
+      %18 = arith.index_cast %arg2 : index to i64
+      %19 = llvm.getelementptr %17[%18] {
+        "remote_target" = 1,
+        "rel_types" = [!llvm.ptr<!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>>]
+      } : (!llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>, i64) -> !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
+      llvm.store %15, %19 {"remote_target"=1} : !llvm.ptr<ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>>
+      scf.yield {"remote_target"=1} %15 : !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
+    } {
+      "remote_target" = 1,
+      "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
+    }
+    return %c0_i32 : i32
   }
 }

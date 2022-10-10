@@ -153,54 +153,28 @@ LogicalResult MaterializeOp::verify() {
 
 // ==============================================================
 // RemoteMem LLVMAddressOfOP
+// ==============================================================
 LLVMGlobalOp LLVMAddressOfOp::getGlobal() {
   return lookupSymbolInModule<LLVMGlobalOp>((*this)->getParentOp(), getGlobalName());
 }
-// ==============================================================
+//==============================================================================
+// RemoteMem LLVMAllocaOp
+//==============================================================================
+// void LLVMAllocaOp::build(OpBuilder &b, OperationState &s, Type resultType, Value arraySize, unsigned alignment){
+//   LLVM::LLVMPointerType ptrTy = resultType.cast<RemoteMemRefType>().getElementType().cast<LLVM::LLVMPointerType>();
 
-// // RemoteMem GEPop format
-// static ParseResult
-// parseGEPIndices(OpAsmParser &parser,
-//                 SmallVectorImpl<OpAsmParser::UnresolvedOperand> &indices,
-//                 DenseIntElementsAttr &structIndices) {
-//   SmallVector<int32_t> constantIndices;
-
-//   auto idxParser = [&]() -> ParseResult {
-//     int32_t constantIndex;
-//     OptionalParseResult parsedInteger =
-//         parser.parseOptionalInteger(constantIndex);
-//     if (parsedInteger.hasValue()) {
-//       if (failed(parsedInteger.getValue()))
-//         return failure();
-//       constantIndices.push_back(constantIndex);
-//       return success();
-//     }
-
-//     constantIndices.push_back(rmem::GEPOp::kDynamicIndex);
-//     return parser.parseOperand(indices.emplace_back());
-//   };
-//   if (parser.parseCommaSeparatedList(idxParser))
-//     return failure();
-
-//   structIndices = parser.getBuilder().getI32TensorAttr(constantIndices);
-//   return success();
+//   assert(!ptrTy.isOpaque() && "If result is opaque, pass element type explicitly");
+//   if (alignment == 0)
+//     return build(b, s, resultType, arraySize, IntegerAttr(), TypeAttr::get(ptrTy.getElementType()));
+//   build(b, s, resultType, arraySize, b.getI64IntegerAttr(alignment), TypeAttr::get(ptrTy.getElementType()));
 // }
 
-// static void printGEPIndices(OpAsmPrinter &printer,
-//                             rmem::GEPOp gepOp,
-//                             OperandRange indices,
-//                             DenseIntElementsAttr structIndices) {
-//   unsigned operandIdx = 0;
-//   llvm::interleaveComma(structIndices.getValues<int32_t>(), printer,
-//                         [&](int32_t cst) {
-//                           if (cst == LLVM::GEPOp::kDynamicIndex)
-//                             printer.printOperand(indices[operandIdx++]);
-//                           else
-//                             printer << cst;
-//                         });
+// void LLVMAllocaOp::build(OpBuilder &b, OperationState &s, Type resultType, Type elementType, Value arraySize, unsigned alignment = 0) {
+//   LLVM::LLVMPointerType ptrTy = resultType.cast<RemoteMemRefType>().getElementType().cast<LLVM::LLVMPointerType>(); 
+//   TypeAttr eleTyAttr = ptrTy.isOpaque() ? TypeAttr::get(elementType) : TypeAttr::get(ptrTy.getElementType());
+//   build(b, s, resultType, arraySize, 
+//     alignment == 0 ? IntegerAttr() : b.getI64IntegerAttr(alignment), eleTyAttr);
 // }
-//================================================================
-
 //================================================================
 // RemoteMem Dialect
 //================================================================

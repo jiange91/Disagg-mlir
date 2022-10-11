@@ -3,6 +3,8 @@
 
 #include "mlir/Pass/Pass.h"
 #include "Lowering/RemoteMemToLLVM/RemoteMemToLLVM.h"
+#include "Lowering/RFuncToLLVM/RFuncToLLVM.h"
+#include "Lowering/RSCFToLLVM/RSCFToLLVM.h"
 namespace mlir {
 
 #define GEN_PASS_REGISTRATION

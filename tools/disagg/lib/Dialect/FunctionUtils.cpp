@@ -9,6 +9,7 @@ using namespace mlir;
 using namespace mlir::rmem;
 
 static constexpr llvm::StringRef kAlloc = "_disagg_alloc";
+static constexpr llvm::StringRef kStackAlloca = "_disagg_stack_alloc";
 static constexpr llvm::StringRef kFree = "_disagg_free";
 static constexpr llvm::StringRef kCacheRequest = "cache_request";
 static constexpr llvm::StringRef kCacheAccessMut = "cache_access_mut";
@@ -18,6 +19,10 @@ static constexpr llvm::StringRef kInitBuffers = "init_bufs";
 static constexpr llvm::StringRef kCacheInit = "cache_init";
 static constexpr llvm::StringRef kCacheCreate = "cache_create";
 static constexpr llvm::StringRef kShutdownDevice = "shutdown_device";
+
+//==============================================================================
+// Utility functions
+//==============================================================================
 
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateFn(ModuleOp moduleOp, 
                                               StringRef name,
@@ -87,6 +92,19 @@ LLVM::LLVMPointerType mlir::rmem::getVoidPtrType(MLIRContext *ctx) {
   return LLVM::LLVMPointerType::get(getIntBitType(ctx, 8));
 }
 
+Value mlir::rmem::calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize) {
+  auto elePtrType = LLVM::LLVMPointerType::get(elemType, 0);
+  Value nullPtr = builder.create<LLVM::NullOp>(loc, elePtrType);
+  Value gepPtr = builder.create<LLVM::GEPOp>(loc, 
+    elePtrType, nullPtr, arraySize);
+  return builder.create<LLVM::PtrToIntOp>(loc, rmem::getIntBitType(loc.getContext(), 64), gepPtr);
+}
+
+
+//===----------------------------------------------------------------------===
+// Func creation
+//===----------------------------------------------------------------------===
+
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateAllocFn(ModuleOp moduleOp) {
   MLIRContext *ctx = moduleOp.getContext();
   return rmem::lookupOrCreateFn(
@@ -96,6 +114,16 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateAllocFn(ModuleOp moduleOp) {
     rmem::getVoidPtrType(ctx)
   );
 }
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateStackAllocaFn(ModuleOp moduleOp) {
+  MLIRContext *ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kStackAlloca,
+    getIntBitType(ctx, 64),
+    rmem::getVoidPtrType(ctx)
+  );
+} 
 
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateFreeFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(

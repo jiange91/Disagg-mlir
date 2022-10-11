@@ -34,7 +34,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %6 = llvm.mlir.addressof @as : !llvm.ptr<ptr<struct<(i32, i32)>>>
     %7 = arith.extsi %5 : i32 to i64
     %8 = arith.muli %7, %c8_i64 : i64
-    %9 = llvm.mlir.constant(0 : i32) : i32
+    %9 = llvm.mlir.constant(1 : i32) : i32
     %10 = llvm.call @_disagg_alloc(%9, %8) : (i32, i64) -> !llvm.ptr<i8>
     %11 = llvm.bitcast %10 : !llvm.ptr<i8> to !llvm.ptr<struct<(i32, i32)>>
     llvm.store %11, %6 : !llvm.ptr<ptr<struct<(i32, i32)>>>

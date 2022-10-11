@@ -9,12 +9,15 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Analysis/DataLayoutAnalysis.h"
 #include "Lowering/Common/PatternBase.h"
 #include "Lowering/Common/RMemTypeLowerer.h"
 #include "Lowering/RemoteMemToLLVM/RemoteMemToLLVM.h"
+#include "Lowering/RFuncToLLVM/RFuncToLLVM.h"
+#include "Lowering/RSCFToLLVM/RSCFToLLVM.h"
 #include "../PassDetail.h"
 
 namespace mlir {
@@ -30,6 +33,16 @@ class RemoteMemUndefLowering : public RemoteMemOpLoweringPattern<rmem::UndefOp> 
     Type ptr = getTypeConverter()->convertType(op.getUndef().getType());
     auto newUndef = rewriter.create<LLVM::UndefOp>(op.getLoc(), ptr);
     rewriter.replaceOp(op, {newUndef});
+    return mlir::success();
+  }
+};
+
+class RemoteMemNullOpLowering : public RemoteMemOpLoweringPattern<rmem::NullRefOp> {
+  using RemoteMemOpLoweringPattern<rmem::NullRefOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::NullRefOp op, rmem::NullRefOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Type newPtr = getTypeConverter()->convertType(op.getNullRef().getType());
+    Value newNull = rewriter.create<LLVM::NullOp>(op.getLoc(), newPtr);
+    rewriter.replaceOp(op, newNull);
     return mlir::success();
   }
 };
@@ -253,12 +266,43 @@ class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
   }
 };
 
-// class RemoteMemAllocaOpLowering : public RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp> {
-//   using RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp>::RemoteMemOpLoweringPattern;
-//   LogicalResult matchAndRewrite(rmem::LLVMAllocaOp op, rmem::LLVMAllocaOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+class RemoteMemAllocaOpLowering : public RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp> {
+  using RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::LLVMAllocaOp op, rmem::LLVMAllocaOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    auto stkAllocaOp = rmem::lookupOrCreateStackAllocaFn(op->getParentOfType<ModuleOp>());
+    Type resultType = getTypeConverter()->convertType(op.getResult().getType());
 
-//   }
-// };
+    // calculate alloca size using gepop
+    Value sizeInBytes = rmem::calculateBufferSize(rewriter, op.getLoc(), *adaptor.getElemType(), adaptor.getArraySize());
+    
+    if (adaptor.getAlignment().hasValue() && *adaptor.getAlignment() != 0) {
+      llvm::errs() << "current alloca does not take alignment into account, check\n";
+      op.dump();
+      return mlir::failure();
+    } 
+
+    auto vaddr = rmem::createLLVMCall(rewriter, op.getLoc(), stkAllocaOp,
+      sizeInBytes,
+      rmem::getVoidPtrType(op.getContext())
+    );
+    Value newPtr = rewriter.create<LLVM::BitcastOp>(op.getLoc(), resultType, vaddr);
+
+    rewriter.replaceOp(op, newPtr);
+    return mlir::success();
+  }
+};
+
+class RemoteMemAddrCmpLowering : public RemoteMemOpLoweringPattern<rmem::AddrCmpOp> {
+  using RemoteMemOpLoweringPattern<rmem::AddrCmpOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::AddrCmpOp op, rmem::AddrCmpOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    auto pred = *LLVM::symbolizeICmpPredicate(static_cast<uint64_t>(adaptor.getPredicate()));
+    Value newCmp = rewriter.create<LLVM::ICmpOp>(op.getLoc(),
+      pred, adaptor.getLhs(), adaptor.getRhs());
+    rewriter.replaceOp(op, newCmp);
+    return mlir::success();
+  }
+};
+
 // =================================================================
 }
 
@@ -273,8 +317,14 @@ public:
     populateRemoteMemToLLVMPatterns(typeConverter, patterns);
     
     ConversionTarget target(getContext());
-    target.addLegalDialect<LLVM::LLVMDialect>();
-    target.addLegalOp<UnrealizedConversionCastOp>();
+    target.addIllegalDialect<rmem::RemoteMemDialect>();
+    // Generic target that fileter out most of operations
+    target.markUnknownOpDynamicallyLegal([](Operation *op) {
+      return !(llvm::any_of(op->getOperandTypes(), rmem::hasRemoteTarget) || llvm::any_of(op->getResultTypes(), rmem::hasRemoteTarget));
+    });
+    target.addDynamicallyLegalOp<func::FuncOp>([](func::FuncOp op) {
+      return (!llvm::any_of(op.getArgumentTypes(), rmem::hasRemoteTarget)) && (!llvm::any_of(op.getResultTypes(), rmem::hasRemoteTarget));
+    });
 
     /* add disagg env init */
     auto mainFunc = m.lookupSymbol<func::FuncOp>("main");
@@ -306,8 +356,11 @@ public:
 } // namespace
 
 void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
+  populateRemoteFuncToLLVM(converter, patterns);
+  populateRemoteSCFToLLVM(converter, patterns);
   patterns.add<
   RemoteMemUndefLowering,
+  RemoteMemNullOpLowering,
   RemoteMemLLVMGlobalLowering,
   RemoteMemReturnLowering,
   RemoteMemLLVMAddressOfLowering,
@@ -315,7 +368,9 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemBitCastLowering,
   RemoteMemStoreLowering,
   RemoteMemLoadLowering,
-  RemoteMemGEPOpLowering
+  RemoteMemGEPOpLowering,
+  RemoteMemAllocaOpLowering,
+  RemoteMemAddrCmpLowering
   >(converter, &converter.getContext());
 }
 

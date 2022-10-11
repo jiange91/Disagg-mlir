@@ -34,6 +34,7 @@ static llvm::StringSet<> allowedFuncSyms = {
 // LLVM operation conversion
 //============================================================================
 
+// Default cache id is 1
 class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
   using OpConversionPattern<LLVM::CallOp>::OpConversionPattern;
 
@@ -43,14 +44,13 @@ class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
       return mlir::failure();
     
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
-      // auto poolId = rmem::createIntConstant(rewriter, op.getLoc(), 0, rmem::getIntBitType(op.getContext(), 32));
       if (rts.empty() || rts.size() != 1) {
         llvm::errs() << "Malloc remote target expects one `rel_types` annotation"; 
         return mlir::failure();
       }
       TypeAttr rType = rts[0].dyn_cast<mlir::TypeAttr>();
       auto newPtr = rewriter.create<rmem::LLVMMallocOp>(
-        op.getLoc(), rType.getValue(), rewriter.getI32IntegerAttr(0), adaptor.getOperands()[0]
+        op.getLoc(), rType.getValue(), rewriter.getI32IntegerAttr(1), adaptor.getOperands()[0]
       );
       rewriter.replaceOp(op, {newPtr});
       return mlir::success();

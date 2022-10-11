@@ -1,11 +1,11 @@
-add_mlir_conversion_library(MLIRBltFuncSigDisagg
-  BltFuncSigDisagg.cpp
+add_mlir_conversion_library(MLIRRSCFToLLVM
+  RSCFToLLVM.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include
 
   DEPENDS
-  RemoteMemConversionPassIncGen
+  RemoteMemLoweringPassIncGen 
 
   LINK_COMPONENTS
   Core
@@ -13,8 +13,10 @@ add_mlir_conversion_library(MLIRBltFuncSigDisagg
   LINK_LIBS PUBLIC
   MLIRAnalysis
   MLIRDataLayoutInterfaces
-  MLIRRemoteMemCommonConversion
   MLIRMemRef
   MLIRLLVMIR
+  MLIRSCF
+  MLIRRemoteMem
+  MLIRRemoteMemLowerCommonConversion
   MLIRTransforms
 )

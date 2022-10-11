@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   cache_create(64, 16);
 
   int n = atoi(argv[1]);
-  as = _disagg_alloc(0, sizeof(*as) * n);
+  as = _disagg_alloc(1, sizeof(*as) * n);
   for (int i = 0; i < n; i++) {
     __int128_t token = cache_request((uint64_t) (as + i));
     A *ai = (A *) cache_access_mut(&token);
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < n; i++) {
     __int128_t token = cache_request((uint64_t) (as + i));
     A *ai = (A *) cache_access(&token);
-    // printf("%d: %d = %d * %d\n",i, ai->y, ai->x, ai->x);
-    assert(ai->y == ai->x * ai->x);
+    printf("%d: %d = %d * %d\n",i, ai->y, ai->x, ai->x);
+    // assert(ai->y == ai->x * ai->x);
   }
 
   shutdown_device();

@@ -11,7 +11,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
   func.func @expand(%arg0: !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>, %arg1: i32) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>> {
     %c16_i64 = arith.constant 16 : i64
     %c0_i32 = arith.constant 0 : i32
-    %0 = rmem.malloc_ptr 0, %c16_i64 : (i64) -> !rmem.rmref<1, !llvm.ptr<i8>>
+    %0 = rmem.malloc_ptr 1, %c16_i64 : (i64) -> !rmem.rmref<1, !llvm.ptr<i8>>
     %1 = rmem.bitcast %0 : (!rmem.rmref<1, !llvm.ptr<i8>>) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>
     %2 = rmem.llvm.getelementptr %1[%c0_i32 dense<0> : tensor<1xi32>] : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>, i32) -> !rmem.rmref<1, !llvm.ptr<struct<(i32)>>>
     %3 = rmem.llvm.getelementptr %2[%c0_i32 dense<0> : tensor<1xi32>] : (!rmem.rmref<1, !llvm.ptr<struct<(i32)>>>, i32) -> !rmem.rmref<1, !llvm.ptr<i32>>
@@ -75,7 +75,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %12 = arith.index_cast %3 : i32 to index
     %13 = scf.for %arg2 = %c0 to %12 step %c1 iter_args(%arg3 = %0) -> (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>) {
       %14 = arith.index_cast %arg2 : index to i32
-      %15 = func.call @expand(%0, %c0_i32) : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>, i32) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>
+      %15 = func.call @expand(%arg3, %14) : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>, i32) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>
       %16 = rmem.llvm.addressof @glob : !llvm.ptr<!llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>
       %17 = rmem.llvm.load %16 : (!llvm.ptr<!llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>>>) -> !llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>>
       %18 = arith.index_cast %arg2 : index to i64
@@ -83,6 +83,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
       rmem.llvm.store %15 -> %19 : !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>, !llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>>
       scf.yield %15 : !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@polygeist@mlir@struct.A">>>)>>>
     }
+    call @visit(%6) : (i32) -> ()
     return %c0_i32 : i32
   }
 }

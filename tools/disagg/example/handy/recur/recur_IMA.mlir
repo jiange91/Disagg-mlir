@@ -151,7 +151,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %12 = arith.index_cast %3 : i32 to index
     %13 = scf.for %arg2 = %c0 to %12 step %c1 iter_args(%arg3 = %0) -> (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>) {
       %14 = arith.index_cast %arg2 : index to i32
-      %15 = func.call @expand(%0, %c0_i32) {
+      %15 = func.call @expand(%arg3, %14) {
         "remote_target" = 1,
         "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
       } : (!llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>, i32) -> !llvm.ptr<struct<"polygeist@mlir@struct.A", (struct<(i32)>, ptr<struct<"polygeist@mlir@struct.A">>)>>
@@ -174,6 +174,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
       "remote_target" = 1,
       "rel_types" = [!rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A", (struct<(i32)>, !rmem.rmref<1, !llvm.ptr<struct<"disagg@polygeist@mlir@struct.A">>>)>>>]
     }
+    call @visit(%6) : (i32) -> ()
     return %c0_i32 : i32
   }
 }

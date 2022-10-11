@@ -50,8 +50,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
 
   addArgumentMaterialization(
     [&](OpBuilder &builder, Type type, ValueRange inputs, Location loc) -> llvm::Optional<Value> {
-      if (inputs.size() != 1)
-        return llvm::None;
       auto convOp = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
       convOp->setAttr("lower_arg_mat", builder.getBoolAttr(true));
       return convOp.getResult(0);
@@ -60,7 +58,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
   addSourceMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
                                Location loc) -> Optional<Value> {
-    if (inputs.size() != 1) return llvm::None;
     auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
     convOp->setAttr("lower_src_mat", builder.getBoolAttr(true));
     return convOp.getResult(0);
@@ -68,7 +65,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
   addTargetMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
                                Location loc) -> Optional<Value> {
-  if (inputs.size() != 1) return llvm::None;
   auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
   convOp->setAttr("lower_tgt_mat", builder.getBoolAttr(true));
   return convOp.getResult(0);

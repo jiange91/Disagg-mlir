@@ -23,8 +23,14 @@ Value createIntConstant(OpBuilder &builder, Location loc, int64_t value, Type re
 LLVM::LLVMStructType getCacheTokenType(MLIRContext *ctx);
 LLVM::LLVMPointerType getVoidPtrType(MLIRContext *ctx);
 
-// virt_ptr = _disagg_alloc(cid = 0, size);
+// calcualte sizeof(elemType) * arraySize in bytes
+// not considering 
+Value calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize);
+
+// virt_ptr = _disagg_alloc(cid = 1, size);
 LLVM::LLVMFuncOp lookupOrCreateAllocFn(ModuleOp moduleOp);
+// ptr = _disagg_stack_alloc(size);
+LLVM::LLVMFuncOp lookupOrCreateStackAllocaFn(ModuleOp moduleOp);
 // void _disagg_free(virt_ptr);
 LLVM::LLVMFuncOp lookupOrCreateFreeFn(ModuleOp moduleOp);
 // cache_token_t = _cache_request(virt_ptr);

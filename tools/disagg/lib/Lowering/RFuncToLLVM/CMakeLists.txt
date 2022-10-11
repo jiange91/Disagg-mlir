@@ -1,5 +1,5 @@
-add_mlir_conversion_library(MLIRRemoteMemToLLVM
-  RemoteMemToLLVM.cpp
+add_mlir_conversion_library(MLIRRFuncToLLVM
+  RFuncToLLVM.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include
@@ -15,10 +15,7 @@ add_mlir_conversion_library(MLIRRemoteMemToLLVM
   MLIRDataLayoutInterfaces
   MLIRMemRef
   MLIRLLVMIR
-  MLIRSCF
   MLIRRemoteMem
   MLIRRemoteMemLowerCommonConversion
-  MLIRRSCFToLLVM
-  MLIRRFuncToLLVM
   MLIRTransforms
 )

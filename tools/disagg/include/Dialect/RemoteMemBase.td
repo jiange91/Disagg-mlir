@@ -17,6 +17,8 @@ def RemoteMem_Dialect : Dialect {
   public:
   }];
   let emitAccessorPrefix = kEmitAccessorPrefix_Prefixed;
+//   let useDefaultAttributePrinterParser = 1;
+  let useDefaultTypePrinterParser = 1;
 }
 
 // Address compare predicates

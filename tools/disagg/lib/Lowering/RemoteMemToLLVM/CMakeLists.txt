@@ -15,7 +15,10 @@ add_mlir_conversion_library(MLIRRemoteMemToLLVM
   MLIRDataLayoutInterfaces
   MLIRMemRefDialect
   MLIRLLVMDialect
+  MLIRSCFDialect
   MLIRRemoteMem
   MLIRRemoteMemLowerCommonConversion
+  MLIRRSCFToLLVM
+  MLIRRFuncToLLVM
   MLIRTransforms
 )

@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
   });
 
   return mlir::asMainReturnCode(mlir::MlirOptMain(
-    argc, argv, "Remote Mem opt driver", registry, true 
+    argc, argv, "Remote Mem opt driver", registry
   ));
 
 

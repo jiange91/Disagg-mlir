@@ -8,6 +8,7 @@ namespace mlir {
 class PatternRewriter;
 class RewritePatternSet;
 class DominanceInfo;
+class LLVMTypeConverter;
 namespace polygeist {
 std::unique_ptr<Pass> createParallelLICMPass();
 std::unique_ptr<Pass> createMem2RegPass();
@@ -23,6 +24,8 @@ std::unique_ptr<Pass> createBarrierRemovalContinuation();
 std::unique_ptr<Pass> detectReductionPass();
 std::unique_ptr<Pass> createRemoveTrivialUsePass();
 std::unique_ptr<Pass> createParallelLowerPass();
+std::unique_ptr<Pass> createCleanUpPolygeistOpPass();
+std::unique_ptr<Pass> createCleanUpPolygeistOpPass(const LowerToLLVMOptions &options, bool useCStyleMemRef);
 std::unique_ptr<Pass>
 createConvertPolygeistToLLVMPass(const LowerToLLVMOptions &options,
                                  bool useCStyleMemRef);
@@ -30,6 +33,7 @@ std::unique_ptr<Pass> createConvertPolygeistToLLVMPass();
 std::unique_ptr<Pass> createForBreakToWhilePass();
 
 void populateForBreakToWhilePatterns(RewritePatternSet &patterns);
+void populatePolygeistToLLVMConversionPatterns(LLVMTypeConverter &converter, RewritePatternSet &patterns);
 } // namespace polygeist
 } // namespace mlir
 

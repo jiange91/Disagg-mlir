@@ -90,6 +90,28 @@ def RemoveTrivialUse : Pass<"trivialuse"> {
   let constructor = "mlir::polygeist::createRemoveTrivialUsePass()";
 }
 
+def CleanUpPolygeist : Pass<"clean-polygeist", "mlir::ModuleOp"> {
+  let constructor = "mlir::polygeist::createCleanUpPolygeistOpPass()";
+  let dependentDialects = ["LLVM::LLVMDialect"];
+  let options = [
+    Option<"useBarePtrCallConv", "use-bare-ptr-memref-call-conv", "bool",
+           /*default=*/"false",
+           "Replace FuncOp's MemRef arguments with bare pointers to the MemRef "
+           "element types">,
+    Option<"indexBitwidth", "index-bitwidth", "unsigned",
+           /*default=kDeriveIndexBitwidthFromDataLayout*/"0",
+           "Bitwidth of the index type, 0 to use size of machine word">,
+    Option<"dataLayout", "data-layout", "std::string",
+           /*default=*/"\"\"",
+           "String description (LLVM format) of the data layout that is "
+           "expected on the produced module">,
+    Option<"useCStyleMemRef", "use-c-style-memref", "bool",
+           /*default=*/"true",
+           "Use C-style nested-array lowering of memref instead of "
+           "the default MLIR descriptor structure">
+  ];
+}
+
 def ConvertPolygeistToLLVM : Pass<"convert-polygeist-to-llvm", "mlir::ModuleOp"> {
   let summary = "Convert scalar and vector operations from the Standard to the "
                 "LLVM dialect";

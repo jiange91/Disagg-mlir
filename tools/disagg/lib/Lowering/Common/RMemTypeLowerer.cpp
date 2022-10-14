@@ -50,8 +50,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
 
   addArgumentMaterialization(
     [&](OpBuilder &builder, Type type, ValueRange inputs, Location loc) -> llvm::Optional<Value> {
-      if (inputs.size() != 1)
-        return llvm::None;
       auto convOp = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
       convOp->setAttr("lower_arg_mat", builder.getBoolAttr(true));
       return convOp.getResult(0);
@@ -60,7 +58,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
   addSourceMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
                                Location loc) -> Optional<Value> {
-    if (inputs.size() != 1) return llvm::None;
     auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
     convOp->setAttr("lower_src_mat", builder.getBoolAttr(true));
     return convOp.getResult(0);
@@ -68,7 +65,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
   addTargetMaterialization([&](OpBuilder &builder, Type resultType,
                                ValueRange inputs,
                                Location loc) -> Optional<Value> {
-  if (inputs.size() != 1) return llvm::None;
   auto convOp = builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs);
   convOp->setAttr("lower_tgt_mat", builder.getBoolAttr(true));
   return convOp.getResult(0);
@@ -107,10 +103,10 @@ llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToMemRef(RemoteMem
 }
 
 llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVMStructType type, SmallVectorImpl<Type> &results, ArrayRef<Type> callStack) {
-  // if (!hasRemoteTarget(type)) {
-  //   results.push_back(type);
-  //   return mlir::success();
-  // }
+  if (!hasRemoteTarget(type)) {
+    results.push_back(type);
+    return mlir::success();
+  }
 
   if (type.isIdentified()) {
     auto convertedType = LLVM::LLVMStructType::getIdentified(
@@ -121,7 +117,6 @@ llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVM
       convertedType = LLVM::LLVMStructType::getIdentified(
         type.getContext(), ("_Lowered_" + std::to_string(counter) + type.getName()).str());
     }
-
     // recursive type, the given type has been converted
     if (llvm::count(callStack, type) > 1) {
       results.push_back(convertedType);
@@ -131,10 +126,11 @@ llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVM
     // first encounter
     SmallVector<Type> convertedElementTypes;
     convertedElementTypes.reserve(type.getBody().size());
-    if (failed(convertTypes(type.getBody(), convertedElementTypes))) 
+    if (failed(convertTypes(type.getBody(), convertedElementTypes)))
       return llvm::None;
     if (failed(convertedType.setBody(convertedElementTypes, type.isPacked())))
       return mlir::failure();
+    results.push_back(convertedType);
     return mlir::success();
   } else {
     SmallVector<Type> convertedElementTypes; 

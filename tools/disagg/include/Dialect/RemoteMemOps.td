@@ -11,17 +11,17 @@ class RemoteMem_Op<string mnemonic, list<Trait> traits = []>:
 
 def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
   let summary = "Create an undefined value of remote memref wrapping llvm ptr";
-  let results = (outs RemoteMemRef: $rmemref);
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $undef);
   let assemblyFormat = [{
-    attr-dict `:` type(results)
+    attr-dict `:` type($undef)
   }];
 }
 
 def RemoteMem_NullRefOp: RemoteMem_Op<"nullref"> {
   let summary = "Create a Null remote memref: its virtual address is 0";
-  let results = (outs RemoteMemRef: $rmemref);
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $nullRef);
   let assemblyFormat = [{
-    attr-dict `:` functional-type(operands, results)
+    attr-dict `:` type($nullRef)
   }];
 }
 
@@ -78,6 +78,8 @@ def RemoteMem_LoadOp: RemoteMem_Op<"llvm.load"> {
   let assemblyFormat = [{
     $addr attr-dict `:` functional-type(operands, results)
   }];
+  // let hasVerifier = 1;
+
 }
 
 def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
@@ -94,6 +96,8 @@ def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
   let assemblyFormat = [{
     $value `->` $addr attr-dict `:` type(operands)
   }];
+
+  // let hasVerifier = 1;
 }
 
 def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [NoSideEffect]> {
@@ -151,7 +155,7 @@ def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
 def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   let summary = "remote memory allocation counterpart for llvm malloc";
   let arguments = (ins
-    I32: $poolId,
+    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "0">:$poolId,
     I64: $memSize
   );
   let results = (outs 
@@ -164,10 +168,24 @@ def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   }];
 }
 
+def RemoteMem_LLVMAllocaOp : RemoteMem_Op<"alloca_ptr"> {
+  let arguments = (ins AnyInteger:$arraySize,
+                   OptionalAttr<I64Attr>:$alignment,
+                   OptionalAttr<TypeAttr>:$elem_type);
+  let results = (outs Res<RemoteMemRef,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $rmemref);
+  // let builders = [
+  //   OpBuilder<(ins "Type":$resultType, "Value":$arraySize, "unsigned":$alignment)>,
+  //   OpBuilder<(ins "Type":$resultType, "Type":$elementType, "Value":$arraySize, CArg<"unsigned", "0">:$alignment)>
+  // ];
+  let assemblyFormat = [{
+    $arraySize `x` $elem_type attr-dict `:` functional-type(operands, results)
+  }];
+}
+
 def RemoteMem_BitCastOp : RemoteMem_Op<"bitcast", [NoSideEffect]> {
   let summary = "Dummy bitcast, only for type unification";
-  let arguments = (ins RemoteMemRef:$arg);
-  let results = (outs RemoteMemRef:$res);
+  let arguments = (ins AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]> :$arg);
+  let results = (outs AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]>:$res);
   let assemblyFormat = "$arg attr-dict `:` functional-type(operands, results)";
 }
 

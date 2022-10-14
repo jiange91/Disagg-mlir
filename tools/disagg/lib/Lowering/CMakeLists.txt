@@ -1,2 +1,4 @@
 add_subdirectory(Common)
 add_subdirectory(RemoteMemToLLVM)
+add_subdirectory(RFuncToLLVM)
+add_subdirectory(RSCFToLLVM)

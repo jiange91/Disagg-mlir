@@ -152,7 +152,6 @@ struct Memref2PointerOpLowering
   matchAndRewrite(Memref2PointerOp op, OpAdaptor transformed,
                   ConversionPatternRewriter &rewriter) const override {
     auto loc = op.getLoc();
-
     if (transformed.getSource().getType().isa<LLVM::LLVMPointerType>()) {
       auto ptr = rewriter.create<LLVM::BitcastOp>(loc, op.getType(),
                                                   transformed.getSource());
@@ -305,7 +304,7 @@ struct TypeAlignOpLowering : public ConvertOpToLLVMPattern<TypeAlignOp> {
   }
 };
 
-void populatePolygeistToLLVMConversionPatterns(LLVMTypeConverter &converter,
+void mlir::polygeist::populatePolygeistToLLVMConversionPatterns(LLVMTypeConverter &converter,
                                                RewritePatternSet &patterns) {
   // clang-format off
   patterns.add<TypeSizeOpLowering>(converter);

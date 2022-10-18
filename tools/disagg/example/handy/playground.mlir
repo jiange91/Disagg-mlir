@@ -10,8 +10,11 @@ module {
     %1 = call @memref_reshape(%0, %s1) : (memref<2x3xi32>, memref<1xi32>) -> memref<6xi32>
 
     memref.dealloc %1 : memref<6xi32>
-    %r = rmem.constant { eleTy = !llvm.ptr<i8> } : () -> !rmem.rmref<!llvm.ptr<i8>>
-    %null = rmem.nullref : () -> !rmem.rmref<!llvm.ptr<i8>>
+    %null = rmem.nullref : !rmem.rmref<1, !llvm.ptr<i8>>
     return
   }
+}
+
+module @nest {
+  
 }

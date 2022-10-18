@@ -14,3 +14,5 @@ MLIRIR
 MLIRMemRefDialect
 MLIRInferTypeOpInterface
 )
+
+add_subdirectory(Transforms)

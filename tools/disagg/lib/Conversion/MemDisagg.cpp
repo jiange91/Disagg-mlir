@@ -17,9 +17,11 @@
 #include "Conversion/Common/PatternBase.h"
 #include "Conversion/Common/ConversionTarget.h"
 #include "Conversion/MemDisagg.h"
-#include "./PassDetail.h"
 
 namespace mlir {
+#define GEN_PASS_DEF_MEMDISAGGREGATION
+#include "Conversion/Passes.h.inc"
+
 namespace {
 static llvm::StringSet<> allowedFuncSyms = {
 /*"malloc", */ 
@@ -469,7 +471,7 @@ class SCFYieldOpDisagg : public OpConversionPattern<scf::YieldOp> {
 // =================================================================================================================
 
 namespace disagg {
-class MemDisaggregationPass: public MemDisaggregationBase<MemDisaggregationPass> {
+class MemDisaggregationPass: public impl::MemDisaggregationBase<MemDisaggregationPass> {
 public:
   MemDisaggregationPass() = default;
   void runOnOperation() override {

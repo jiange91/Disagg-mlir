@@ -18,9 +18,10 @@
 #include "Lowering/RemoteMemToLLVM/RemoteMemToLLVM.h"
 #include "Lowering/RFuncToLLVM/RFuncToLLVM.h"
 #include "Lowering/RSCFToLLVM/RSCFToLLVM.h"
-#include "../PassDetail.h"
 
 namespace mlir {
+#define GEN_PASS_DEF_CONVERTREMOTEMEMTOLLVM
+#include "Lowering/Passes.h.inc"
 using namespace mlir::rmem;
 namespace {
 // =================================================================
@@ -307,7 +308,7 @@ class RemoteMemAddrCmpLowering : public RemoteMemOpLoweringPattern<rmem::AddrCmp
 }
 
 namespace {
-class ConvertRemoteMemToLLVMPass : public ConvertRemoteMemToLLVMBase<ConvertRemoteMemToLLVMPass> {
+class ConvertRemoteMemToLLVMPass : public impl::ConvertRemoteMemToLLVMBase<ConvertRemoteMemToLLVMPass> {
 public:
   ConvertRemoteMemToLLVMPass() = default;
   void runOnOperation() override {

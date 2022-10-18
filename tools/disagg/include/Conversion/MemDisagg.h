@@ -11,6 +11,9 @@ class Location;
 class RewritePatternSet;
 class ConversionPatternRewriter;
 
+#define GEN_PASS_DECL
+#include "Conversion/Passes.h.inc"
+
 namespace rmem {
 class RemoteMemTypeConverter;
 }

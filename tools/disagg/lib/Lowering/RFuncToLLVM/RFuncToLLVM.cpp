@@ -15,9 +15,10 @@
 #include "Lowering/Common/PatternBase.h"
 #include "Lowering/Common/RMemTypeLowerer.h"
 #include "Lowering/RFuncToLLVM/RFuncToLLVM.h"
-#include "../PassDetail.h"
 
 namespace mlir {
+#define GEN_PASS_DEF_CONVERTREMOTEFUNCTOLLVM
+#include "Lowering/Passes.h.inc"
 using namespace mlir::rmem;
 
 namespace {
@@ -71,7 +72,7 @@ class RemoteFuncReturnOpLowering : public RemoteMemOpLoweringPattern<func::Retur
 };
 }
 
-class ConvertRemoteFuncToLLVMPass : public ConvertRemoteFuncToLLVMBase<ConvertRemoteFuncToLLVMPass> {
+class ConvertRemoteFuncToLLVMPass : public impl::ConvertRemoteFuncToLLVMBase<ConvertRemoteFuncToLLVMPass> {
 public:
   ConvertRemoteFuncToLLVMPass() = default;
   void runOnOperation() override {

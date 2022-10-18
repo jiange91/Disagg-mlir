@@ -159,7 +159,7 @@ def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
     I64: $memSize
   );
   let results = (outs 
-    Res<RemoteMemRef,"",[MemAlloc]>: $rmemref);
+    Res<RemoteMemRefOf<[LLVM_AnyPointer]>,"",[MemAlloc]>: $rmemref);
   
   // let hasVerifier = 1;
   // let hasCustomAssemblyFormat = 1;
@@ -172,7 +172,7 @@ def RemoteMem_LLVMAllocaOp : RemoteMem_Op<"alloca_ptr"> {
   let arguments = (ins AnyInteger:$arraySize,
                    OptionalAttr<I64Attr>:$alignment,
                    OptionalAttr<TypeAttr>:$elem_type);
-  let results = (outs Res<RemoteMemRef,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $rmemref);
+  let results = (outs Res<RemoteMemRefOf<[ LLVM_AnyPointer]>,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $rmemref);
   // let builders = [
   //   OpBuilder<(ins "Type":$resultType, "Value":$arraySize, "unsigned":$alignment)>,
   //   OpBuilder<(ins "Type":$resultType, "Type":$elementType, "Value":$arraySize, CArg<"unsigned", "0">:$alignment)>

@@ -4,6 +4,9 @@
 #include <memory>
 
 namespace mlir {
+#define GEN_PASS_DECL_CONVERTREMOTEFUNCTOLLVM
+#include "Lowering/Passes.h.inc"
+
 class Pass;
 class RewritePatternSet;
 namespace rmem {

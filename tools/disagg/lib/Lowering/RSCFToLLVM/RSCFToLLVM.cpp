@@ -16,9 +16,10 @@
 #include "Lowering/Common/PatternBase.h"
 #include "Lowering/Common/RMemTypeLowerer.h"
 #include "Lowering/RSCFToLLVM/RSCFToLLVM.h"
-#include "../PassDetail.h"
 
 namespace mlir {
+#define GEN_PASS_DEF_CONVERTREMOTESCFTOLLVM
+#include "Lowering/Passes.h.inc"
 using namespace mlir::rmem;
 
 namespace {
@@ -104,7 +105,7 @@ class RemoteSCFCondLowering : public RemoteMemOpLoweringPattern<scf::ConditionOp
 };
 }
 
-class ConvertRemoteSCFToLLVMPass : public ConvertRemoteSCFToLLVMBase<ConvertRemoteSCFToLLVMPass> {
+class ConvertRemoteSCFToLLVMPass : public impl::ConvertRemoteSCFToLLVMBase<ConvertRemoteSCFToLLVMPass> {
 public:
   ConvertRemoteSCFToLLVMPass() = default;
   void runOnOperation() override {

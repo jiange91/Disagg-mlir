@@ -331,22 +331,24 @@ public:
     auto mainFunc = m.lookupSymbol<func::FuncOp>("main");
     if (mainFunc) {
       /* call inits and shutdown */
-      auto initDeviceOp = rmem::lookupOrCreateInitDeviceFn(m);
-      auto initBufsOp = rmem::lookupOrCreateInitBuffersFn(m);
+      // auto initDeviceOp = rmem::lookupOrCreateInitDeviceFn(m);
+      // auto initBufsOp = rmem::lookupOrCreateInitBuffersFn(m);
+      auto initClientOp = rmem::lookupOrCreateInitClientFn(m);
       auto initCacheOp = rmem::lookupOrCreateCacheInitFn(m);
       auto cacheCreateOp = rmem::lookupOrCreateCacheCreateFn(m);
-      auto shutdown_device = rmem::lookupOrCreateShutdownDeviceFn(m);
+      // auto shutdown_device = rmem::lookupOrCreateShutdownDeviceFn(m);
       OpBuilder b(mainFunc.getBody());
-      rmem::createLLVMCall(b, mainFunc.getLoc(), initDeviceOp);
-      rmem::createLLVMCall(b, mainFunc.getLoc(), initBufsOp);
+      rmem::createLLVMCall(b, mainFunc.getLoc(), initClientOp);
+      // rmem::createLLVMCall(b, mainFunc.getLoc(), initDeviceOp);
+      // rmem::createLLVMCall(b, mainFunc.getLoc(), initBufsOp);
       rmem::createLLVMCall(b, mainFunc.getLoc(), initCacheOp);
       rmem::createLLVMCall(b, mainFunc.getLoc(), cacheCreateOp, 
         {rmem::createIntConstant(b, mainFunc.getLoc(), 64, rmem::getIntBitType(mainFunc.getContext(), 32)),
         rmem::createIntConstant(b, mainFunc.getLoc(), 16, rmem::getIntBitType(mainFunc.getContext(), 32))},
         rmem::getIntBitType(mainFunc.getContext(), 32)
       );
-      b.setInsertionPoint(&mainFunc.getBody().back().back());
-      rmem::createLLVMCall(b, mainFunc.getLoc(), shutdown_device);
+      // b.setInsertionPoint(&mainFunc.getBody().back().back());
+      // rmem::createLLVMCall(b, mainFunc.getLoc(), shutdown_device);
     }
 
     if (failed(applyPartialConversion(m, target, std::move(patterns))))

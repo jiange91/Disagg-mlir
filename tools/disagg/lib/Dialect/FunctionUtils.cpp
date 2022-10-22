@@ -19,6 +19,7 @@ static constexpr llvm::StringRef kInitBuffers = "init_bufs";
 static constexpr llvm::StringRef kCacheInit = "cache_init";
 static constexpr llvm::StringRef kCacheCreate = "cache_create";
 static constexpr llvm::StringRef kShutdownDevice = "shutdown_device";
+static constexpr llvm::StringRef kInitClient= "init_client";
 
 //==============================================================================
 // Utility functions
@@ -205,6 +206,15 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kShutdownDevice,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitClientFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kInitClient,
     {},
     LLVM::LLVMVoidType::get(moduleOp->getContext())
   );

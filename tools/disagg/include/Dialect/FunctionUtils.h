@@ -49,8 +49,11 @@ LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateCacheCreateFn(ModuleOp moduleOp);
 // void shutdown_device();
 LLVM::LLVMFuncOp lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp);
-// global cacehs[n]
+// Deprecated global cacehs[n]
 LLVM::GlobalOp lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n);
+// void init_client();
+LLVM::LLVMFuncOp lookupOrCreateInitClientFn(ModuleOp moduleOp);
+
 
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);
 

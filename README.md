@@ -25,6 +25,10 @@ cmake -G Ninja ../llvm \
   -DLLVM_TARGETS_TO_BUILD="host" \
   -DLLVM_ENABLE_ASSERTIONS=ON \
   -DCMAKE_BUILD_TYPE=RELEASE \
+  -DLLVM_INSTALL_UTILS=ON \
+  -DLLVM_BINUTILS_INCDIR=/path/to/binutils/include \
+  -DCMAKE_C_COMPILER="clang" \
+  -DCMAKE_CXX_COMPILER="clang++" \
   -DC_INCLUDE_DIRS="{include_dir}"\
   -DDEFAULT_SYSROOT="{root_dir}"
 ninja

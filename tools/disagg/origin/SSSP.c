@@ -58,6 +58,7 @@ int main(int argc, char const *argv[])
   FILE *out = fopen("solution.txt", "w");
   for (int i = 0; i < total_v; ++ i)
   {
+    // printf("%d - %d\n", i, total_v);
     fprintf(out, "%lf\n", solution[i]);
   }
   fclose(out);

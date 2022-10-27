@@ -5,15 +5,76 @@ include "RemoteMemBase.td"
 include "RemoteMemTypes.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
+include "ROps/RAffineOps.td"
 
-class RemoteMem_Op<string mnemonic, list<Trait> traits = []>:
-  Op<RemoteMem_Dialect, mnemonic, traits>;
 
 def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
   let summary = "Create an undefined value of remote memref wrapping llvm ptr";
   let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $undef);
   let assemblyFormat = [{
     attr-dict `:` type($undef)
+  }];
+}
+
+//===----------------------------------------------------------------------===//
+// MemRefGetGlobalOp
+//===----------------------------------------------------------------------===//
+
+def RemoteMem_MemRefLoadOp : RemoteMem_Op<"memref.load"> {
+  let arguments = (ins 
+    Arg<AnyTypeOf<[RemoteMemRefOf<[AnyMemRef]>, AnyMemRef]>, "", [MemRead]>:$memref, 
+    Variadic<Index>:$indices);
+  let results = (outs AnyType:$result);
+  let assemblyFormat = "$memref `[` $indices `]` attr-dict `:` functional-type(operands, results)";
+}
+
+def RemoteMem_MemRefStoreOp : RemoteMem_Op<"memref.store"> {
+  let arguments = (ins
+    AnyType:$value,
+    Arg<AnyTypeOf<[RemoteMemRefOf<[AnyMemRef]>, AnyMemRef]>, "", [MemWrite]>:$memref, 
+    Variadic<Index>:$indices
+  );
+  let assemblyFormat = [{
+    $value `->` $memref `[` $indices `]` attr-dict `:` functional-type(operands, results)
+  }]; 
+}
+
+def RemoteMem_MemRefGetGlobalOp : RemoteMem_Op<"memref.get_global",
+    [NoSideEffect, DeclareOpInterfaceMethods<SymbolUserOpInterface>]> {
+  let summary = "get the rmemref pointing to a global variable";
+  let arguments = (ins FlatSymbolRefAttr:$name);
+  let results = (outs AnyStaticShapeMemRef:$result);
+  let assemblyFormat = "attr-dict `:` functional-type(operands, results)";
+}
+
+def RemoteMem_MemRefGlobalOp: RemoteMem_Op<"memref.global", [Symbol]> {
+  let summary = "Remote Memref global rountine for memref";
+  let arguments = (ins SymbolNameAttr:$sym_name,
+                       OptionalAttr<StrAttr>:$sym_visibility,
+                       TypeAttr:$type,
+                       OptionalAttr<AnyAttr>:$initial_value,
+                       UnitAttr:$constant,
+                       OptionalAttr<I64Attr>:$alignment);
+  let extraClassDeclaration = [{
+    bool isExternal() { return !getInitialValue(); }
+    bool isUninitialized() {
+      return !isExternal() && getInitialValue()->isa<UnitAttr>();
+    }
+    /// Returns the constant initial value if the rmem.memref.global is a constant,
+    /// or null otherwise.
+    ElementsAttr getConstantInitValue() {
+      auto initVal = getInitialValue();
+      if (getConstant() && initVal.has_value())
+        return initVal.value().cast<ElementsAttr>();
+      return {};
+    }
+  }];
+  let assemblyFormat = [{
+    ($sym_visibility^)?
+    (`constant` $constant^)?
+    $sym_name `:`
+    attr-dict
+    functional-type(operands, results)
   }];
 }
 
@@ -191,23 +252,18 @@ def RemoteMem_BitCastOp : RemoteMem_Op<"bitcast", [NoSideEffect]> {
 
 def RemoteMem_MemRefAllocOp: RemoteMem_Op<
   "alloc_memref", [AttrSizedOperandSegments]> {
-  let summary = "remote memory allocation counter for memref alloc op";
+  let summary = "remote memory allocation for memref";
   let arguments = (ins
     Variadic<Index>: $dynamicSizes,
     Variadic<Index>: $symbolOperands,
     ConfinedAttr<OptionalAttr<I64Attr>, [IntMinValue<0>]>: $alignment
   );
   let results = (outs
-    Res<RemoteMemRef,"",[MemAlloc]>: $rmemref
+    Res<RemoteMemRefOf<[AnyMemRef]>,"",[MemAlloc]>: $rmemref
   );
-  // let builders = [
-  //   OpBuilder<(ins "MemRefType":$memref, CArg<"IntegerAttr", "IntegerAttr()">:$alignment), [{
-  //     return build($_builder, $_state, )
-  //   }]>
-  // ]
 
   let assemblyFormat = [{
-    `(`$dynamicSizes`)` (`` `[` $symbolOperands^ `]`)? attr-dict `:` type(results)
+    `(`$dynamicSizes`)` (`` `[` $symbolOperands^ `]`)? attr-dict `:` type($rmemref)
   }];
 }
 

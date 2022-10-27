@@ -1,6 +1,11 @@
 add_subdirectory(Common)
 
 add_mlir_conversion_library(MLIRMemDisagg
+  LLVMDisaggPatterns.cpp
+  SCFDisaggPatterns.cpp
+  FuncDisaggPatterns.cpp
+  MemRefDisaggPatterns.cpp
+  AffineDisaggPatterns.cpp
   MemDisagg.cpp
 
   ADDITIONAL_HEADER_DIRS

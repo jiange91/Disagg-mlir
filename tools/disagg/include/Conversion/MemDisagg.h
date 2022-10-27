@@ -20,7 +20,15 @@ class RemoteMemTypeConverter;
 
 namespace disagg {
 
+// aggregate pattens below
 void populateMemDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+
+// separate conversion patterns
+void populateMemRefDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateLLVMDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateSCFDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateFuncDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateAffineDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 
 std::unique_ptr<Pass> createMemDisaggregationPass();
 }

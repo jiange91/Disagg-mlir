@@ -21,6 +21,9 @@ def RemoteMem_Dialect : Dialect {
   let useDefaultTypePrinterParser = 1;
 }
 
+class RemoteMem_Op<string mnemonic, list<Trait> traits = []>:
+  Op<RemoteMem_Dialect, mnemonic, traits>;
+
 // Address compare predicates
 def AddrCmpPredicateEQ  : I64EnumAttrCase< "EQ", 0, "eq">;
 def AddrCmpPredicateNE  : I64EnumAttrCase< "NE", 1, "ne">;

@@ -103,6 +103,14 @@ static OpTy lookupSymbolInModule(Operation *parent, StringRef name) {
 }
 
 //================================================================
+// Memref global op
+//================================================================
+
+LogicalResult rmem::MemRefGetGlobalOp::verifySymbolUses(mlir::SymbolTableCollection&) {
+  return mlir::success();
+}
+
+//================================================================
 // LLVM Mlloc Operation
 //================================================================
 

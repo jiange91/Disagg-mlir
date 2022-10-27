@@ -4,10 +4,12 @@
 #include "mlir/Pass/Pass.h"
 #include "Conversion/MemDisagg.h"
 namespace mlir {
+class RewritePatternSet;
 namespace disagg {
 // class DisaggregationPass;
 
 } // namespace disagg
+
 
 #define GEN_PASS_REGISTRATION
 #include "Conversion/Passes.h.inc"

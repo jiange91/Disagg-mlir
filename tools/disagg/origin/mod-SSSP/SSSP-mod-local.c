@@ -14,7 +14,8 @@ void dijkstra(Graph* graph, int src, double *solution)
   for (int vid = 0; vid < graph->V; ++vid)
   {
     solution[vid] = MAX_D;
-    heap->array[vid] = (MinHeapNode){ vid, solution[vid] };
+    heap->array[vid].v = vid;
+    heap->array[vid].dist = solution[vid];
     heap->pos[vid] = vid;
   }
   heap->size = graph->V;

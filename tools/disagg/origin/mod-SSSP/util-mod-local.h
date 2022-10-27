@@ -33,7 +33,8 @@ void add_edge(struct Graph *g, int s, int t, float w)
     printf("Too many neighbours for node %d\n", s);
     exit(1);
   }
-  g->l[s].neighbours[g->l[s].length++] = (GraphNode){ t, w };
+  g->l[s].neighbours[g->l[s].length].dest = t;
+  g->l[s].neighbours[g->l[s].length++].w = w;
 }
 
 struct Graph* init_graph(uint8_t redundant, uint8_t need_fake, const char *fpath, int *total_v)

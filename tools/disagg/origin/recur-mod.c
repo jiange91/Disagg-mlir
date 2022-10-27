@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdint.h>
 
+extern int a;
+
 extern void * _disagg_alloc(unsigned cache, size_t size);
 extern void * _disagg_stack_alloc(size_t size);
 extern unsigned cache_create(unsigned cache_size, unsigned cache_line_size);
@@ -67,6 +69,6 @@ int main(int argc, char **argv) {
     prev = an;
   }
 
-  visit(n);
+  visit(a);
   return 0;
 }

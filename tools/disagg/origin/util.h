@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/mman.h>
+
 
 #define MAX_V 2000000
 #define NO_EDGE 0.0
@@ -48,6 +50,7 @@ struct Graph* init_graph(uint8_t redundant, uint8_t need_fake, const char *fpath
 {
   struct Graph *g = malloc(sizeof(*g));
   g->l = malloc(sizeof(struct AdjList) * MAX_V);
+  // g->l = mmap(NULL, sizeof(struct AdjList) * MAX_V, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, 0, 0);
   for (int i = 0; i < MAX_V; ++ i)
   {
     g->l[i].length = 0;

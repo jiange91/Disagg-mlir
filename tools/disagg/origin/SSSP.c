@@ -62,6 +62,6 @@ int main(int argc, char const *argv[])
     fprintf(out, "%lf\n", solution[i]);
   }
   fclose(out);
-
+  while (1) {};
   return 0;
 }

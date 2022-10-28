@@ -1,5 +1,6 @@
 #include "PassDetails.h"
 
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/OpenMP/OpenMPDialect.h"
@@ -9,8 +10,8 @@
 #include "mlir/IR/Dominance.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "polygeist/Ops.h"
 #include "polygeist/Passes/Passes.h"
-#include <mlir/Dialect/Arith/IR/Arith.h>
 
 using namespace mlir;
 using namespace mlir::func;
@@ -39,74 +40,13 @@ struct OpenMPOpt : public OpenMPOptPassBase<OpenMPOpt> {
 ///       omp.barrier
 ///       codeB();
 ///    }
-bool isReadOnly(Operation *op) {
-  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveSideEffects>();
-  if (hasRecursiveEffects) {
-    for (Region &region : op->getRegions()) {
-      for (auto &block : region) {
-        for (auto &nestedOp : block)
-          if (!isReadOnly(&nestedOp))
-            return false;
-      }
-    }
-    return true;
-  }
-
-  // If the op has memory effects, try to characterize them to see if the op
-  // is trivially dead here.
-  if (auto effectInterface = dyn_cast<MemoryEffectOpInterface>(op)) {
-    // Check to see if this op either has no effects, or only allocates/reads
-    // memory.
-    SmallVector<MemoryEffects::EffectInstance, 1> effects;
-    effectInterface.getEffects(effects);
-    if (!llvm::all_of(effects, [op](const MemoryEffects::EffectInstance &it) {
-          return isa<MemoryEffects::Read>(it.getEffect());
-        })) {
-      return false;
-    }
-    return true;
-  }
-  return false;
-}
-
-bool isReadNone(Operation *op) {
-  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveSideEffects>();
-  if (hasRecursiveEffects) {
-    for (Region &region : op->getRegions()) {
-      for (auto &block : region) {
-        for (auto &nestedOp : block)
-          if (!isReadNone(&nestedOp))
-            return false;
-      }
-    }
-    return true;
-  }
-
-  // If the op has memory effects, try to characterize them to see if the op
-  // is trivially dead here.
-  if (auto effectInterface = dyn_cast<MemoryEffectOpInterface>(op)) {
-    // Check to see if this op either has no effects, or only allocates/reads
-    // memory.
-    SmallVector<MemoryEffects::EffectInstance, 1> effects;
-    effectInterface.getEffects(effects);
-    if (llvm::any_of(effects, [op](const MemoryEffects::EffectInstance &it) {
-          return isa<MemoryEffects::Read>(it.getEffect()) ||
-                 isa<MemoryEffects::Write>(it.getEffect());
-        })) {
-      return false;
-    }
-    return true;
-  }
-  return false;
-}
-
 Value getBase(Value v);
 bool isStackAlloca(Value v);
 bool isCaptured(Value v, Operation *potentialUser = nullptr,
                 bool *seenuse = nullptr);
 
 bool mayReadFrom(Operation *op, Value val) {
-  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveSideEffects>();
+  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveMemoryEffects>();
   if (hasRecursiveEffects) {
     for (Region &region : op->getRegions()) {
       for (auto &block : region) {
@@ -144,7 +84,7 @@ bool mayReadFrom(Operation *op, Value val) {
 }
 
 bool mayWriteTo(Operation *op, Value val, bool ignoreBarrier) {
-  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveSideEffects>();
+  bool hasRecursiveEffects = op->hasTrait<OpTrait::HasRecursiveMemoryEffects>();
   if (hasRecursiveEffects) {
     for (Region &region : op->getRegions()) {
       for (auto &block : region) {

@@ -1,6 +1,7 @@
 add_mlir_conversion_library(MLIRRemoteMemLowerCommonConversion
   PatternBase.cpp
   RMemTypeLowerer.cpp
+  RMemRefBuilder.cpp
 
   LINK_COMPONENTS
   Core
@@ -11,4 +12,5 @@ add_mlir_conversion_library(MLIRRemoteMemLowerCommonConversion
   MLIRSupport
   MLIRTransforms
   MLIRRemoteMem
+  MLIRLLVMCommonConversion
   )

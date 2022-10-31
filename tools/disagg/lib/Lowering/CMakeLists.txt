@@ -1,4 +1,6 @@
 add_subdirectory(Common)
 add_subdirectory(RemoteMemToLLVM)
-add_subdirectory(RFuncToLLVM)
-add_subdirectory(RSCFToLLVM)
+add_subdirectory(FuncRemote)
+add_subdirectory(SCFRemote)
+add_subdirectory(MemRefRemote)
+add_subdirectory(AffineRemote)

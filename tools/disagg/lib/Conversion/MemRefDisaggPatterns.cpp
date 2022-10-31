@@ -2,7 +2,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/DataLayout.h"
@@ -111,7 +110,8 @@ class MemRefAllocOpDisagg : public OpConversionPattern<memref::AllocOp> {
           rType,
           adaptor.getDynamicSizes(),
           adaptor.getSymbolOperands(),
-          adaptor.getAlignmentAttr()
+          adaptor.getAlignmentAttr(),
+          rewriter.getI32IntegerAttr(2)
         );
         rewriter.replaceOp(op, newRmemref);
         return mlir::success();

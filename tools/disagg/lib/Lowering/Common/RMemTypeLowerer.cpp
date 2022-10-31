@@ -1,34 +1,49 @@
-#include "Lowering/Common/RMemTypeLowerer.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemTypes.h"
-#include "Dialect/RemoteMemOps.h"
+#include "Lowering/Common/RMemTypeLowerer.h"
+// #include "Lowering/Common/RMemRefBuilder.h"
+#include "mlir/Conversion/LLVMCommon/MemRefBuilder.h"
 
 using namespace mlir;
 using namespace mlir::rmem;
 
-RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
-  rmemDialect(ctx->getOrLoadDialect<RemoteMemDialect>()) {
+RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx, const DataLayoutAnalysis *analysis) :
+  RemoteMemTypeLowerer(ctx, LowerToLLVMOptions(ctx), analysis) {}
+
+RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx, const LowerToLLVMOptions &options, const DataLayoutAnalysis *analysis):
+  rmemDialect(ctx->getOrLoadDialect<RemoteMemDialect>()) ,
+  options(options), dataLayoutAnalysis(analysis) {
   assert(rmemDialect && "Remote Mem Dialect is not loaded");
 
-  addConversion([&](RemoteMemRefType type) { 
-    return convertRemoteMemRefToPtr(type);
+    // Register conversions for the builtin types.
+  addConversion([&](ComplexType type) { return convertComplexType(type); });
+  addConversion([&](FloatType type) { return convertFloatType(type); });
+  addConversion([&](FunctionType type) { return convertFunctionType(type); });
+  addConversion([&](IndexType type) { return convertIndexType(type); });
+  addConversion([&](IntegerType type) { return convertIntegerType(type); });
+  addConversion([&](VectorType type) { return convertVectorType(type); });
+  addConversion([&](MemRefType type) -> llvm::Optional<Type> {
+    // Convert raw memref to descriptor as well
+    SmallVector<Type, 5> types =
+    getMemRefDescriptorFields(type, /*unpackAggregates=*/false);
+    if (types.empty())
+      return {};
+    return LLVM::LLVMStructType::getLiteral(&getContext(), types);
   });
-  addConversion([&](RemoteMemRefType type) { 
-    return convertRemoteMemRefToMemRef(type);
+  addConversion([](Type type) {
+    return LLVM::isCompatibleType(type) ? llvm::Optional<Type>(type)
+                                        : llvm::None;
   });
+  addConversion([&](RemoteMemRefType type) { return convertRemoteMemRefToPtr(type); });
+  addConversion([&](RemoteMemRefType type) { return convertRemoteMemRefToMemRefDesc(type); });
   addConversion([&](LLVM::LLVMPointerType type) -> llvm::Optional<Type> {
+    if (type.isOpaque())
+      return type;
     if (auto pointee = convertType(type.getElementType())) {
       return LLVM::LLVMPointerType::get(pointee, type.getAddressSpace());
-    }
-    return llvm::None;
-  });
-  addConversion([&](MemRefType type) -> llvm::Optional<Type> {
-    if (auto elemType = convertType(type.getElementType())) {
-      return MemRefType::get(type.getShape(), elemType, type.getLayout(), type.getMemorySpace());
     }
     return llvm::None;
   });
@@ -70,14 +85,58 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx):
   return convOp.getResult(0);
   });
 
-  // default rountine 
-  addConversion([&](Type type) {
-    return rmem::hasRemoteTarget(type) ? llvm::None : llvm::Optional<Type>(type);
-  });
+  // // default rountine 
+  // addConversion([&](Type type) {
+  //   return rmem::hasRemoteTarget(type) ? llvm::None : llvm::Optional<Type>(type);
+  // });
 }
 
 MLIRContext &RemoteMemTypeLowerer::getContext() {
   return *getDialect()->getContext();
+}
+
+Type RemoteMemTypeLowerer::getIndexType() {
+  return IntegerType::get(&getContext(), getIndexTypeBitwidth());
+}
+
+unsigned RemoteMemTypeLowerer::getPointerBitwidth(unsigned addressSpace) {
+  return options.dataLayout.getPointerSizeInBits(addressSpace);
+}
+
+Type RemoteMemTypeLowerer::convertIndexType(IndexType type) {
+  return getIndexType();
+}
+
+Type RemoteMemTypeLowerer::convertIntegerType(IntegerType type) {
+  return IntegerType::get(&getContext(), type.getWidth());
+}
+
+Type RemoteMemTypeLowerer::convertFloatType(FloatType type) { return type; }
+
+Type RemoteMemTypeLowerer::convertVectorType(VectorType type) {
+  auto elementType = convertType(type.getElementType());
+  if (!elementType)
+    return {};
+  if (type.getShape().empty())
+    return VectorType::get({1}, elementType);
+  Type vectorType = VectorType::get(type.getShape().back(), elementType,
+                                    type.getNumScalableDims());
+  assert(LLVM::isCompatibleVectorType(vectorType) &&
+         "expected vector type compatible with the LLVM dialect");
+  auto shape = type.getShape();
+  for (int i = shape.size() - 2; i >= 0; --i)
+    vectorType = LLVM::LLVMArrayType::get(vectorType, shape[i]);
+  return vectorType;
+}
+
+// Convert a `ComplexType` to an LLVM type. The result is a complex number
+// struct with entries for the
+//   1. real part and for the
+//   2. imaginary part.
+Type RemoteMemTypeLowerer::convertComplexType(ComplexType type) {
+  auto elementType = convertType(type.getElementType());
+  return LLVM::LLVMStructType::getLiteral(&getContext(),
+                                          {elementType, elementType});
 }
 
 llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToPtr(RemoteMemRefType type) {
@@ -93,17 +152,20 @@ llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToPtr(RemoteMemRef
   if (auto pointee = convertType(ptrType.getElementType())) {
     return LLVM::LLVMPointerType::get(pointee, 0);
   }
-  return llvm::None;
+  return {};
 }
 
-llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToMemRef(RemoteMemRefType type) {
+llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToMemRefDesc(RemoteMemRefType type) {
   if (type.getElementType().isa<LLVM::LLVMPointerType>()) 
     return llvm::None;
-  return type;
+  SmallVector<Type, 5> types =
+      getMemRefDescriptorFields(type.getElementType().cast<MemRefType>(), /*unpackAggregates=*/false);
+  if (types.empty()) return {};
+  return LLVM::LLVMStructType::getLiteral(&getContext(), types);
 }
 
 llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVMStructType type, SmallVectorImpl<Type> &results, ArrayRef<Type> callStack) {
-  if (!hasRemoteTarget(type)) {
+  if (!hasRemoteTarget(type) && LLVM::isCompatibleType(type)) {
     results.push_back(type);
     return mlir::success();
   }
@@ -174,4 +236,57 @@ Type RemoteMemTypeLowerer::convertFunctionSignature(FunctionType funcTy, Signatu
 
 Type RemoteMemTypeLowerer::convertCallingConventionType(Type type) {
   return convertType(type);
+}
+
+/// Convert a memref type into a list of LLVM IR types that will form the
+/// memref descriptor. The result contains the following types:
+///  1. The pointer to the allocated data buffer, followed by
+///  2. The pointer to the aligned data buffer, followed by
+///  3. A lowered `index`-type integer containing the distance between the
+///  beginning of the buffer and the first element to be accessed through the
+///  view, followed by
+///  4. An array containing as many `index`-type integers as the rank of the
+///  MemRef: the array represents the size, in number of elements, of the memref
+///  along the given dimension. For constant MemRef dimensions, the
+///  corresponding size entry is a constant whose runtime value must match the
+///  static value, followed by
+///  5. A second array containing as many `index`-type integers as the rank of
+///  the MemRef: the second array represents the "stride" (in tensor abstraction
+///  sense), i.e. the number of consecutive elements of the underlying buffer.
+///  TODO: add assertions for the static cases.
+///
+///  If `unpackAggregates` is set to true, the arrays described in (4) and (5)
+///  are expanded into individual index-type elements.
+///
+///  template <typename Elem, typename Index, size_t Rank>
+///  struct {
+///    Elem *allocatedPtr;
+///    Elem *alignedPtr;
+///    Index offset;
+///    Index sizes[Rank]; // omitted when rank == 0
+///    Index strides[Rank]; // omitted when rank == 0
+///  };
+SmallVector<Type, 5>
+RemoteMemTypeLowerer::getMemRefDescriptorFields(MemRefType type,
+                                             bool unpackAggregates) {
+  assert(isStrided(type) &&
+         "Non-strided layout maps must have been normalized away");
+
+  Type elementType = convertType(type.getElementType());
+  if (!elementType)
+    return {};
+  auto ptrTy =
+      LLVM::LLVMPointerType::get(elementType, type.getMemorySpaceAsInt());
+  auto indexTy = getIndexType();
+
+  SmallVector<Type, 5> results = {ptrTy, ptrTy, indexTy};
+  auto rank = type.getRank();
+  if (rank == 0)
+    return results;
+
+  if (unpackAggregates)
+    results.insert(results.end(), 2 * rank, indexTy);
+  else
+    results.insert(results.end(), 2, LLVM::LLVMArrayType::get(indexTy, rank));
+  return results;
 }

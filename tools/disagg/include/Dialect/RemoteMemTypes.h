@@ -8,13 +8,14 @@
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/LLVMIR/LLVMTypes.h"
-#include "llvm/ADT/TypeSwitch.h"
 
 namespace mlir {
 namespace rmem {
 // find if the type contains remote memref type
 // this function is used to detect if need type conversion during the lowering process
 bool hasRemoteTarget(Type type);
+
+Type getRawTypeFromRemotedType(Type type);
 }
 }
 

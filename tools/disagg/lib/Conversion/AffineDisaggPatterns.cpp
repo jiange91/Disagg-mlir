@@ -2,9 +2,9 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/IR/DataLayout.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
@@ -25,11 +25,15 @@ using namespace mlir::rmem;
 class AffineStoreDisagg : public OpConversionPattern<AffineStoreOp> {
   using OpConversionPattern<AffineStoreOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(AffineStoreOp op, mlir::AffineStoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    rewriter.replaceOpWithNewOp<rmem::RAffineStoreOp>(op,
-      adaptor.getValue(),
-      adaptor.getMemref(),
-      adaptor.getIndices()
+    SmallVector<NamedAttribute, 4> attributes;
+    rmem::filterTargetAttributes(op->getAttrs(), attributes);
+    auto newStoreOp = rewriter.replaceOpWithNewOp<rmem::RAffineStoreOp>(op,
+      mlir::TypeRange(),
+      adaptor.getOperands(),
+      attributes
     );
+    (void) newStoreOp;
+
     return mlir::success();
   }
 };
@@ -43,17 +47,18 @@ class AffineLoadDisagg : public OpConversionPattern<AffineLoadOp> {
         relType = rts[0].dyn_cast<mlir::TypeAttr>().getValue();
       }
     }
+    SmallVector<NamedAttribute, 4> attributes;
+    rmem::filterTargetAttributes(op->getAttrs(), attributes);
     Value loadRef = rewriter.create<rmem::RAffineLoadOp>(
       op.getLoc(), 
       relType,
-      adaptor.getMemref(),
-      adaptor.getIndices()
+      adaptor.getOperands(),
+      attributes
     );
     rewriter.replaceOp(op, loadRef);
     return mlir::success();
   }
 };
-
 
 void mlir::disagg::populateAffineDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns) {
   patterns.add<

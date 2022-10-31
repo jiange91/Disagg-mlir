@@ -6,85 +6,9 @@ include "RemoteMemTypes.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
 include "ROps/RAffineOps.td"
+include "ROps/RMemRefOps.td"
+include "ROps/RLLVMOps.td"
 
-
-def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [NoSideEffect]> {
-  let summary = "Create an undefined value of remote memref wrapping llvm ptr";
-  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $undef);
-  let assemblyFormat = [{
-    attr-dict `:` type($undef)
-  }];
-}
-
-//===----------------------------------------------------------------------===//
-// MemRefGetGlobalOp
-//===----------------------------------------------------------------------===//
-
-def RemoteMem_MemRefLoadOp : RemoteMem_Op<"memref.load"> {
-  let arguments = (ins 
-    Arg<AnyTypeOf<[RemoteMemRefOf<[AnyMemRef]>, AnyMemRef]>, "", [MemRead]>:$memref, 
-    Variadic<Index>:$indices);
-  let results = (outs AnyType:$result);
-  let assemblyFormat = "$memref `[` $indices `]` attr-dict `:` functional-type(operands, results)";
-}
-
-def RemoteMem_MemRefStoreOp : RemoteMem_Op<"memref.store"> {
-  let arguments = (ins
-    AnyType:$value,
-    Arg<AnyTypeOf<[RemoteMemRefOf<[AnyMemRef]>, AnyMemRef]>, "", [MemWrite]>:$memref, 
-    Variadic<Index>:$indices
-  );
-  let assemblyFormat = [{
-    $value `->` $memref `[` $indices `]` attr-dict `:` functional-type(operands, results)
-  }]; 
-}
-
-def RemoteMem_MemRefGetGlobalOp : RemoteMem_Op<"memref.get_global",
-    [NoSideEffect, DeclareOpInterfaceMethods<SymbolUserOpInterface>]> {
-  let summary = "get the rmemref pointing to a global variable";
-  let arguments = (ins FlatSymbolRefAttr:$name);
-  let results = (outs AnyStaticShapeMemRef:$result);
-  let assemblyFormat = "attr-dict `:` functional-type(operands, results)";
-}
-
-def RemoteMem_MemRefGlobalOp: RemoteMem_Op<"memref.global", [Symbol]> {
-  let summary = "Remote Memref global rountine for memref";
-  let arguments = (ins SymbolNameAttr:$sym_name,
-                       OptionalAttr<StrAttr>:$sym_visibility,
-                       TypeAttr:$type,
-                       OptionalAttr<AnyAttr>:$initial_value,
-                       UnitAttr:$constant,
-                       OptionalAttr<I64Attr>:$alignment);
-  let extraClassDeclaration = [{
-    bool isExternal() { return !getInitialValue(); }
-    bool isUninitialized() {
-      return !isExternal() && getInitialValue()->isa<UnitAttr>();
-    }
-    /// Returns the constant initial value if the rmem.memref.global is a constant,
-    /// or null otherwise.
-    ElementsAttr getConstantInitValue() {
-      auto initVal = getInitialValue();
-      if (getConstant() && initVal.has_value())
-        return initVal.value().cast<ElementsAttr>();
-      return {};
-    }
-  }];
-  let assemblyFormat = [{
-    ($sym_visibility^)?
-    (`constant` $constant^)?
-    $sym_name `:`
-    attr-dict
-    functional-type(operands, results)
-  }];
-}
-
-def RemoteMem_NullRefOp: RemoteMem_Op<"nullref"> {
-  let summary = "Create a Null remote memref: its virtual address is 0";
-  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $nullRef);
-  let assemblyFormat = [{
-    attr-dict `:` type($nullRef)
-  }];
-}
 
 def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   let summary = "Get the virtual pointer from a remote memref that can be used for `getelemptr` operations";
@@ -114,54 +38,8 @@ def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   }];
 }
 
-def RemoteMem_LoadOp: RemoteMem_Op<"llvm.load"> {
-  let summary = "Load from memory";
-  let description = [{
-    The orignal operands of load operation may be converted to remote memref, use this operation to maintain correctness symbolically.
 
-    Will be lowered according to the input:
-      1. If the mapped operand is !llvm.ptr<(!rmem.rmref)+>
-         No special operation needed, just convert the rmref type to pointer type
-      2. If the mapped operand is !rmref.rmref
-         Need to convert the type as well as materialize
-  }];
-  let arguments = (ins 
-    Arg<AnyTypeOf<
-      [LLVM_PointerTo<LLVM_LoadableType>, 
-      RemoteMemRef]>,"",[MemRead]>:$addr,
-      OptionalAttr<SymbolRefArrayAttr>:$access_groups,
-      OptionalAttr<SymbolRefArrayAttr>:$alias_scopes,
-      OptionalAttr<SymbolRefArrayAttr>:$noalias_scopes,
-      OptionalAttr<I64Attr>:$alignment, UnitAttr:$volatile_,
-      UnitAttr:$nontemporal
-    );
-  let results = (outs LLVM_LoadableType:$res);
-  let assemblyFormat = [{
-    $addr attr-dict `:` functional-type(operands, results)
-  }];
-  // let hasVerifier = 1;
-
-}
-
-def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
-  let arguments = (ins LLVM_LoadableType:$value,
-      Arg<AnyTypeOf<
-        [LLVM_PointerTo<LLVM_LoadableType>, 
-        RemoteMemRef]>,"",[MemWrite]>:$addr,
-      OptionalAttr<SymbolRefArrayAttr>:$access_groups,
-      OptionalAttr<SymbolRefArrayAttr>:$alias_scopes,
-      OptionalAttr<SymbolRefArrayAttr>:$noalias_scopes,
-      OptionalAttr<I64Attr>:$alignment, UnitAttr:$volatile_,
-      UnitAttr:$nontemporal);
-  
-  let assemblyFormat = [{
-    $value `->` $addr attr-dict `:` type(operands)
-  }];
-
-  // let hasVerifier = 1;
-}
-
-def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [NoSideEffect]> {
+def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [Pure]> {
   let arguments = (ins 
     RemoteMemRef:$base,
     Variadic<LLVM_ScalarOrVectorOf<AnyInteger>>:$indices);
@@ -183,17 +61,6 @@ def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [NoSideEffect]> {
   }];
 } 
 
-def RemoteMem_AddrCmpOp: RemoteMem_Op<"addrcmp"> {
-  let summary = "Compare the address of two remote mem refs";
-  let arguments = (ins RemoteMemRef: $lhs,
-                       RemoteMemRef: $rhs,
-                       RemoteMem_AddrCmpPredicate:$predicate
-  );
-  let results = (outs I1: $rel);
-  let assemblyFormat = [{
-    $predicate $lhs`,` $rhs attr-dict `:` functional-type(operands, results)
-  }];
-}
 
 def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
   let summary = "Convert a remote memory ref to raw pointer/memref at the local site";
@@ -212,64 +79,9 @@ def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
   // let hasCanonicalizer = 1;
 }
 
-
-def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
-  let summary = "remote memory allocation counterpart for llvm malloc";
-  let arguments = (ins
-    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "0">:$poolId,
-    I64: $memSize
-  );
-  let results = (outs 
-    Res<RemoteMemRefOf<[LLVM_AnyPointer]>,"",[MemAlloc]>: $rmemref);
-  
-  // let hasVerifier = 1;
-  // let hasCustomAssemblyFormat = 1;
-  let assemblyFormat = [{
-    $poolId`,` $memSize attr-dict `:` functional-type(operands, results)
-  }];
-}
-
-def RemoteMem_LLVMAllocaOp : RemoteMem_Op<"alloca_ptr"> {
-  let arguments = (ins AnyInteger:$arraySize,
-                   OptionalAttr<I64Attr>:$alignment,
-                   OptionalAttr<TypeAttr>:$elem_type);
-  let results = (outs Res<RemoteMemRefOf<[ LLVM_AnyPointer]>,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $rmemref);
-  // let builders = [
-  //   OpBuilder<(ins "Type":$resultType, "Value":$arraySize, "unsigned":$alignment)>,
-  //   OpBuilder<(ins "Type":$resultType, "Type":$elementType, "Value":$arraySize, CArg<"unsigned", "0">:$alignment)>
-  // ];
-  let assemblyFormat = [{
-    $arraySize `x` $elem_type attr-dict `:` functional-type(operands, results)
-  }];
-}
-
-def RemoteMem_BitCastOp : RemoteMem_Op<"bitcast", [NoSideEffect]> {
-  let summary = "Dummy bitcast, only for type unification";
-  let arguments = (ins AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]> :$arg);
-  let results = (outs AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]>:$res);
-  let assemblyFormat = "$arg attr-dict `:` functional-type(operands, results)";
-}
-
-def RemoteMem_MemRefAllocOp: RemoteMem_Op<
-  "alloc_memref", [AttrSizedOperandSegments]> {
-  let summary = "remote memory allocation for memref";
-  let arguments = (ins
-    Variadic<Index>: $dynamicSizes,
-    Variadic<Index>: $symbolOperands,
-    ConfinedAttr<OptionalAttr<I64Attr>, [IntMinValue<0>]>: $alignment
-  );
-  let results = (outs
-    Res<RemoteMemRefOf<[AnyMemRef]>,"",[MemAlloc]>: $rmemref
-  );
-
-  let assemblyFormat = [{
-    `(`$dynamicSizes`)` (`` `[` $symbolOperands^ `]`)? attr-dict `:` type($rmemref)
-  }];
-}
-
 def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
   Terminator,
-  NoSideEffect]> {
+  Pure]> {
     let summary = "general terminator for remote mem op";
     let description = "currently only used in llvm.global";
     let arguments = (ins Variadic<AnyType>:$result);
@@ -278,84 +90,6 @@ def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
     }];
 }
 
-def RemoteMem_LLVMGlobalOp : RemoteMem_Op<"llvm.global", [IsolatedFromAbove,
-SingleBlock,
-// SingleBlockImplicitTerminator<"ReturnOp">, 
-Symbol]> {
-  let arguments = (ins
-    TypeAttr:$global_type,
-    UnitAttr:$constant,
-    StrAttr:$sym_name,
-    RemoteMem_Linkage:$linkage,
-    UnitAttr:$dso_local,
-    UnitAttr:$thread_local_,
-    OptionalAttr<AnyAttr>:$value,
-    OptionalAttr<I64Attr>:$alignment,
-    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "0">:$addr_space,
-    OptionalAttr<RemoteMem_RUnnamedAddr>:$unnamed_addr,
-    OptionalAttr<StrAttr>:$section
-  );
-  let summary = "Remote mem version of llvm global";
-  let regions = (region AnyRegion:$initializer);
-  // let builders = [
-  //   OpBuilder<(ins "Type":$type, "bool":$isConstant, "RLinkageType":$linkage,
-  //     "StringRef":$name, "Attribute":$value,
-  //     CArg<"uint64_t", "0">:$alignment,
-  //     CArg<"unsigned", "0">:$addrSpace,
-  //     CArg<"bool", "false">:$dsoLocal,
-  //     CArg<"bool", "false">:$thread_local_,
-  //     CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs)>
-  // ];
-  let assemblyFormat = [{
-    attr-dict `:` regions
-  }];
-}
 
-def RemoteMem_LLVMAddressOfOp : RemoteMem_Op<"llvm.addressof", [NoSideEffect]> {
-  let arguments = (ins FlatSymbolRefAttr:$global_name);
-  let results = (outs LLVM_AnyPointer:$res);
-  let summary = "Creates a pointer pointing to a remote mem global or a remote mem function";
-  let builders = [
-    // TODO: support llvm function, memref global (potentially)
-    OpBuilder<(ins "LLVMGlobalOp":$global,
-      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs),
-      [{
-        build($_builder, $_state, 
-          LLVM::LLVMPointerType::get(
-            global.getGlobalType(), 
-            global.getAddrSpace()),
-          global.getSymName());
-        $_state.addAttributes(attrs);
-      }]>
-  ];
-  let extraClassDeclaration = [{
-    /// Return the rmem.llvm.global operation that defined the value referenced
-    /// here.
-    LLVMGlobalOp getGlobal();
-  }];
-  let assemblyFormat = [{
-    $global_name attr-dict `:` type($res)
-  }];
-}
-
-def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [NoSideEffect]> {
-  let summary = "LLVM getelementptr on remote memref";
-  let description = "Not supporting vector GEPop now, llvmvcector not compatible with remote memref";
-  let arguments = (ins 
-    AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$base,
-    Variadic<AnyInteger>:$indices,
-    DenseI32ArrayAttr:$structIndices,
-    OptionalAttr<TypeAttr>:$elem_type);
-  let results = (outs 
-    AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$res);
-  let assemblyFormat = [{
-    $base `[`$indices $structIndices`]` attr-dict
-    `:` functional-type(operands, results) (`,` $elem_type^)?
-  }];
-  let extraClassDeclaration = [{
-    /// Returns the type pointed to by the pointer argument of this GEP.
-    Type getSourceElementType();
-  }];
-}
 
 #endif

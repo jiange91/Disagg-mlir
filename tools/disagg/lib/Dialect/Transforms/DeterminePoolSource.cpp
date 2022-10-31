@@ -7,7 +7,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/Support/TypeName.h"

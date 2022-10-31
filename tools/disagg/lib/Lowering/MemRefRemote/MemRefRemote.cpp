@@ -1,0 +1,250 @@
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/Operation.h"
+#include "mlir/Pass/Pass.h"
+#include "Dialect/RemoteMem.h"
+#include "Dialect/FunctionUtils.h"
+#include "llvm/ADT/SmallBitVector.h"
+#include "llvm/IR/DataLayout.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Conversion/LLVMCommon/Pattern.h"
+#include "mlir/Transforms/DialectConversion.h"
+#include "mlir/Analysis/DataLayoutAnalysis.h"
+#include "Lowering/Common/PatternBase.h"
+#include "Lowering/Common/RMemTypeLowerer.h"
+#include "Lowering/MemRefRemote/MemRefRemote.h"
+#include "Lowering/MemRefRemote/AllocLikeConversion.h"
+
+namespace mlir {
+#define GEN_PASS_DEF_LOWERRMEMINMEMREF
+#include "Lowering/Passes.h.inc"
+using namespace mlir::rmem;
+
+namespace {
+
+//========================================
+// Patterns
+//========================================
+
+/// Returns the LLVM type of the global variable given the memref type `type`.
+static Type convertGlobalMemrefTypeToLLVM(MemRefType type,
+                                          RemoteMemTypeLowerer &typeConverter) {
+  // LLVM type for a global memref will be a multi-dimension array. For
+  // declarations or uninitialized global memrefs, we can potentially flatten
+  // this to a 1D array. However, for memref.global's with an initial value,
+  // we do not intend to flatten the ElementsAttribute when going from std ->
+  // LLVM dialect, so the LLVM type needs to be a multi-dimension array.
+  Type elementType = typeConverter.convertType(type.getElementType());
+  Type arrayTy = elementType;
+  // Shape has the outermost dim at index 0, so need to walk it backwards
+  for (int64_t dim : llvm::reverse(type.getShape()))
+    arrayTy = LLVM::LLVMArrayType::get(arrayTy, dim);
+  return arrayTy;
+}
+
+class RMemRefGlobalOpLowering : public RemoteMemOpLoweringPattern<rmem::MemRefGlobalOp> {
+  using RemoteMemOpLoweringPattern<rmem::MemRefGlobalOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::MemRefGlobalOp global, rmem::MemRefGlobalOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    MemRefType type = rmem::getRawTypeFromRemotedType(global.getType()).cast<MemRefType>();
+    if (!isConvertibleAndHasIdentityMaps(type))
+      return failure();
+
+    Type arrayTy = convertGlobalMemrefTypeToLLVM(type, *getTypeConverter());
+
+    LLVM::Linkage linkage =
+        global.isPublic() ? LLVM::Linkage::External : LLVM::Linkage::Private;
+
+    Attribute initialValue = nullptr;
+    if (!global.isExternal() && !global.isUninitialized()) {
+      auto elementsAttr = global.getInitialValue()->cast<ElementsAttr>();
+      initialValue = elementsAttr;
+
+      // For scalar memrefs, the global variable created is of the element type,
+      // so unpack the elements attribute to extract the value.
+      if (type.getRank() == 0)
+        initialValue = elementsAttr.getSplatValue<Attribute>();
+    }
+
+    uint64_t alignment = global.getAlignment().value_or(0);
+
+    auto newGlobal = rewriter.replaceOpWithNewOp<LLVM::GlobalOp>(
+        global, arrayTy, global.getConstant(), linkage, global.getSymName(),
+        initialValue, alignment, type.getMemorySpaceAsInt());
+    if (!global.isExternal() && global.isUninitialized()) {
+      Block *blk = new Block();
+      newGlobal.getInitializerRegion().push_back(blk);
+      rewriter.setInsertionPointToStart(blk);
+      Value undef[] = {
+          rewriter.create<LLVM::UndefOp>(global.getLoc(), arrayTy)};
+      rewriter.create<LLVM::ReturnOp>(global.getLoc(), undef);
+    }
+    return success();
+  }
+};
+
+class RMemRefGetGlobalOpLowering : public RMemAllocLikeOpLLVMLowering {
+public:
+  RMemRefGetGlobalOpLowering(RemoteMemTypeLowerer &typeConverter, MLIRContext *ctx) : RMemAllocLikeOpLLVMLowering(rmem::MemRefGetGlobalOp::getOperationName(), typeConverter, ctx) {}
+
+  std::tuple<Value, Value> allocateBuffer(ConversionPatternRewriter &rewriter, Location loc, Value sizeInBytes, Operation *op) const override {
+    auto getGlobalOp = dyn_cast<rmem::MemRefGetGlobalOp>(op);
+    MemRefType globType = getGlobalOp.getResult().getType().cast<MemRefType>();
+    MemRefType rawType = rmem::getRawTypeFromRemotedType(globType).dyn_cast<MemRefType>();
+    unsigned memSpace = globType.getMemorySpaceAsInt();
+
+    Type arrayTy = convertGlobalMemrefTypeToLLVM(rawType, *getTypeConverter());
+    auto addressOf = rewriter.create<LLVM::AddressOfOp>(
+        loc, LLVM::LLVMPointerType::get(arrayTy, memSpace),
+        getGlobalOp.getName());
+
+    // Get the address of the first element in the array by creating a GEP with
+    // the address of the GV as the base, and (rank + 1) number of 0 indices.
+    Type elementType = typeConverter->convertType(globType.getElementType());
+    Type elementPtrType = LLVM::LLVMPointerType::get(elementType, memSpace);
+
+    auto gep = rewriter.create<LLVM::GEPOp>(
+        loc, elementPtrType, addressOf,
+        SmallVector<LLVM::GEPArg>(rawType.getRank() + 1, 0));
+
+    // We do not expect the memref obtained using `memref.get_global` to be
+    // ever deallocated. Set the allocated pointer to be known bad value to
+    // help debug if that ever happens.
+    auto intPtrType = getIntPtrType(memSpace);
+    Value deadBeefConst =
+        createIndexAttrConstant(rewriter, loc, intPtrType, 0xdeadbeef);
+    auto deadBeefPtr =
+        rewriter.create<LLVM::IntToPtrOp>(loc, elementPtrType, deadBeefConst);
+
+    // Both allocated and aligned pointers are same. We could potentially stash
+    // a nullptr for the allocated pointer since we do not expect any dealloc.
+    return std::make_tuple(deadBeefPtr, gep); 
+  }
+};
+
+class RMemRefAllocOpLowering : public RMemAllocLikeOpLLVMLowering {
+public:
+  RMemRefAllocOpLowering(RemoteMemTypeLowerer &typeConverter, MLIRContext *ctx) : RMemAllocLikeOpLLVMLowering(rmem::MemRefAllocOp::getOperationName(), typeConverter, ctx) {}
+
+  std::tuple<Value, Value> allocateBuffer(ConversionPatternRewriter &rewriter, Location loc, Value sizeBytes, Operation *op) const override {
+    rmem::MemRefAllocOp allocOp = cast<rmem::MemRefAllocOp>(op);
+    return allocateBufferManuallyAlign(
+        rewriter, loc, 
+        sizeBytes, rmem::createIntConstant(rewriter, allocOp.getLoc(), allocOp.getPoolId(), rmem::getIntBitType(allocOp.getContext(), 32)),
+        op, getAlignment(rewriter, loc, cast<rmem::MemRefAllocOp>(op)));
+  }
+};
+
+
+/// Common base for load and store operations on MemRefs. Restricts the match
+/// to supported MemRef types. Provides functionality to emit code accessing a
+/// specific element of the underlying data buffer.
+template <typename Derived>
+struct LoadStoreOpLowering : public RemoteMemOpLoweringPattern<Derived> {
+  using RemoteMemOpLoweringPattern<Derived>::RemoteMemOpLoweringPattern;
+  using RemoteMemOpLoweringPattern<Derived>::isConvertibleAndHasIdentityMaps;
+  using Base = LoadStoreOpLowering<Derived>;
+
+  LogicalResult match(Derived op) const override {
+    MemRefType type = rmem::getRawTypeFromRemotedType(op.getMemRefType()).template cast<MemRefType>();
+    return isConvertibleAndHasIdentityMaps(type) ? success() : failure();
+  }
+};
+
+// Load operation is lowered to obtaining a pointer to the indexed element
+// and loading it.
+struct RMemRefLoadOpLowering : public LoadStoreOpLowering<rmem::MemRefLoadOp> {
+  using Base::Base;
+
+  LogicalResult
+  matchAndRewrite(rmem::MemRefLoadOp loadOp, rmem::MemRefLoadOpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto type = rmem::getRawTypeFromRemotedType(loadOp.getMemRefType()).template cast<MemRefType>();
+
+    Value dataPtr =
+        getStridedElementPtr(loadOp.getLoc(), type, adaptor.getMemref(),
+                             adaptor.getIndices(), rewriter);
+    if (auto rmrefType = loadOp.getMemRefType().dyn_cast<rmem::RemoteMemRefType>()) {
+      if (rmrefType.getCanRemote()) {
+        dataPtr = materializeDisaggVirtualAddress(rewriter, loadOp, dataPtr, dataPtr.getType(), ACCESS);
+      }
+    } 
+    rewriter.replaceOpWithNewOp<LLVM::LoadOp>(loadOp, dataPtr);
+    return success();
+  }
+};
+
+// Store operation is lowered to obtaining a pointer to the indexed element,
+// and storing the given value to it.
+struct RMemRefStoreOpLowering : public LoadStoreOpLowering<rmem::MemRefStoreOp> {
+  using Base::Base;
+
+  LogicalResult
+  matchAndRewrite(rmem::MemRefStoreOp op, rmem::MemRefStoreOpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto type = rmem::getRawTypeFromRemotedType(op.getMemRefType()).template cast<MemRefType>();
+    Value dataPtr = getStridedElementPtr(op.getLoc(), type, adaptor.getMemref(),
+                                         adaptor.getIndices(), rewriter);
+    if (auto rmrefType = op.getMemRefType().dyn_cast<rmem::RemoteMemRefType>()) {
+      if (rmrefType.getCanRemote()) {
+        dataPtr = materializeDisaggVirtualAddress(rewriter, op, dataPtr, dataPtr.getType(), ACCESS_MUT);
+      }
+    }
+    rewriter.replaceOpWithNewOp<LLVM::StoreOp>(op, adaptor.getValue(), dataPtr);
+    return success();
+  }
+};
+
+}
+
+class LowerRMemInMemRefPass : public impl::LowerRMemInMemRefBase<LowerRMemInMemRefPass> {
+public:
+  LowerRMemInMemRefPass() = default;
+  void runOnOperation() override {
+    Operation *op = getOperation();
+    const auto &dataLayoutAnalysis = getAnalysis<DataLayoutAnalysis>();
+    LowerToLLVMOptions options(&getContext(),
+                               dataLayoutAnalysis.getAtOrAbove(op));
+    options.allocLowering =
+        (useAlignedAlloc ? LowerToLLVMOptions::AllocLowering::AlignedAlloc
+                         : LowerToLLVMOptions::AllocLowering::Malloc); 
+    options.useGenericFunctions = useGenericFunctions;
+
+    if (indexBitwidth != kDeriveIndexBitwidthFromDataLayout)
+      options.overrideIndexBitwidth(indexBitwidth);
+
+    RemoteMemTypeLowerer typeConverter(&getContext(), options, &dataLayoutAnalysis);
+    RewritePatternSet patterns(&getContext());
+    populateLowerMemRefRMemPatterns(typeConverter, patterns);
+
+    ConversionTarget target(getContext());
+    target.addLegalDialect<LLVM::LLVMDialect>();
+    // target.addIllegalDialect<rmem::RemoteMemDialect>();
+    target.addIllegalOp<
+      rmem::MemRefGlobalOp, 
+      rmem::MemRefGetGlobalOp,
+      rmem::MemRefAllocOp
+    >();
+    target.addLegalOp<UnrealizedConversionCastOp>();
+
+    if (failed(applyPartialConversion(op, target, std::move(patterns))))
+      signalPassFailure();
+  }
+};
+
+
+void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
+  patterns.add<
+    RMemRefGlobalOpLowering,
+    RMemRefGetGlobalOpLowering,
+    RMemRefAllocOpLowering,
+    RMemRefLoadOpLowering,
+    RMemRefStoreOpLowering
+  >(converter, &converter.getContext());
+}
+
+std::unique_ptr<Pass> createConvertMemRefRemotePass() {
+  return std::make_unique<LowerRMemInMemRefPass>();
+}
+
+}//namespace mlir

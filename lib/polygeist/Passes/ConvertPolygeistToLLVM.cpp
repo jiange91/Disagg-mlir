@@ -1269,7 +1269,8 @@ struct ConvertPolygeistToLLVMPass
   void runOnOperation() override {
     ModuleOp m = getOperation();
     const auto &dataLayoutAnalysis = getAnalysis<DataLayoutAnalysis>();
-
+    if (useCStyleMemRef)
+      llvm::errs() << "Using cstyle memref\n";
     if (useCStyleMemRef && useBarePtrCallConv) {
       emitError(m.getLoc()) << "C-style memref lowering is not compatible with "
                                "bare-pointer calling convention";
@@ -1312,8 +1313,9 @@ struct ConvertPolygeistToLLVMPass
             return Type();
 
           if (type.getRank() > 0) {
-            for (int64_t size : llvm::reverse(type.getShape().drop_front()))
+            for (int64_t size : llvm::reverse(type.getShape().drop_front())) {
               converted = LLVM::LLVMArrayType::get(converted, size);
+            }
           }
           return LLVM::LLVMPointerType::get(converted,
                                             type.getMemorySpaceAsInt());

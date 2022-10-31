@@ -2,7 +2,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/DataLayout.h"
@@ -16,8 +15,9 @@
 #include "Lowering/Common/PatternBase.h"
 #include "Lowering/Common/RMemTypeLowerer.h"
 #include "Lowering/RemoteMemToLLVM/RemoteMemToLLVM.h"
-#include "Lowering/RFuncToLLVM/RFuncToLLVM.h"
-#include "Lowering/RSCFToLLVM/RSCFToLLVM.h"
+#include "Lowering/FuncRemote/FuncRemote.h"
+#include "Lowering/SCFRemote/SCFRemote.h"
+#include "Lowering/MemRefRemote/MemRefRemote.h"
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTREMOTEMEMTOLLVM
@@ -144,31 +144,8 @@ class RemoteMemStoreLowering : public RemoteMemOpLoweringPattern<rmem::StoreOp> 
     // Else the addr is a local addr, just store
     Value newAddr = adaptor.getAddr();
     if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
-      if (rmrefType.getCanRemote()) {
-        // call request 
-        auto cacheReqOp = rmem::lookupOrCreateCacheRequestFn(op->getParentOfType<ModuleOp>());
-        Value tk = rmem::cacheRequestCallWrapper(
-          rewriter, op.getLoc(),
-          cacheReqOp,
-          adaptor.getAddr()
-        );
-        // allocate token pointer on stack and store
-        auto tkPtr = rewriter.create<LLVM::AllocaOp>(
-          op.getLoc(),
-          LLVM::LLVMPointerType::get(rmem::getIntBitType(op.getContext(), 128)),
-          rmem::createIntConstant(rewriter, op.getLoc(), 1, rmem::getIntBitType(op.getContext(), 64)),
-          0
-        );
-        rewriter.create<LLVM::StoreOp>(op.getLoc(), tk, tkPtr);
-        // call _cache_access_mut
-        auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessMutFn(op->getParentOfType<ModuleOp>());
-        newAddr = rmem::cacheAccessCallWrapper(
-          rewriter, op.getLoc(),
-          cacheAccMutOp,
-          tkPtr,
-          adaptor.getAddr().getType()
-        );
-      }
+      if (rmrefType.getCanRemote()) 
+        newAddr = materializeDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), ACCESS_MUT);
     }
     rewriter.replaceOpWithNewOp<LLVM::StoreOp>(op, 
       adaptor.getValue(),
@@ -193,31 +170,8 @@ class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
     // Else the addr is a local addr, just load
     Value newAddr = adaptor.getAddr();
     if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
-      if (rmrefType.getCanRemote()) {
-        // call request 
-        auto cacheReqOp = rmem::lookupOrCreateCacheRequestFn(op->getParentOfType<ModuleOp>());
-        Value tk = rmem::cacheRequestCallWrapper(
-          rewriter, op.getLoc(),
-          cacheReqOp,
-          adaptor.getAddr()
-        );
-        // allocate token pointer on stack and store
-        auto tkPtr = rewriter.create<LLVM::AllocaOp>(
-          op.getLoc(),
-          LLVM::LLVMPointerType::get(rmem::getIntBitType(op.getContext(), 128)),
-          rmem::createIntConstant(rewriter, op.getLoc(), 1, rmem::getIntBitType(op.getContext(), 64)),
-          0
-        );
-        rewriter.create<LLVM::StoreOp>(op.getLoc(), tk, tkPtr);
-        // call _cache_access
-        auto cacheAccMutOp = rmem::lookupOrCreateCacheAccessFn(op->getParentOfType<ModuleOp>());
-        newAddr = rmem::cacheAccessCallWrapper(
-          rewriter, op.getLoc(),
-          cacheAccMutOp,
-          tkPtr,
-          adaptor.getAddr().getType()
-        );
-      }
+      if (rmrefType.getCanRemote())
+        newAddr = materializeDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), ACCESS);
     }
     Value newLoad = rewriter.create<LLVM::LoadOp>(
       op.getLoc(),
@@ -359,8 +313,9 @@ public:
 } // namespace
 
 void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
-  populateRemoteFuncToLLVM(converter, patterns);
-  populateRemoteSCFToLLVM(converter, patterns);
+  populateLowerFuncRMemPatterns(converter, patterns);
+  populateLowerSCFRMemPatterns(converter, patterns);
+  populateLowerMemRefRMemPatterns(converter, patterns);
   patterns.add<
   RemoteMemUndefLowering,
   RemoteMemNullOpLowering,

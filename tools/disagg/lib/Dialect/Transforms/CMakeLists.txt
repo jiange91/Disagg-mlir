@@ -14,7 +14,5 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   MLIRLLVMDialect
   MLIRSCFDialect
   MLIRRemoteMem
-  MLIRRSCFToLLVM
-  MLIRRFuncToLLVM
   MLIRTransforms 
 )

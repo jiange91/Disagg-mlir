@@ -14,6 +14,9 @@ using namespace mlir::rmem;
 #define GET_TYPEDEF_CLASSES
 #include "Dialect/RemoteMemOpsTypes.cpp.inc"
 
+//====--------------------------------------====
+// Determine if a type contains remote mem type
+//====--------------------------------------====
 bool RemoteMemRefType::isValidElementType(Type elementType) {
   if (!elementType) return false;
   if (!elementType.isa<mlir::MemRefType, mlir::LLVM::LLVMPointerType>()) return false;
@@ -66,6 +69,79 @@ bool mlir::rmem::hasRemoteTarget(Type type) {
   SetVector<Type> callStack;
   return hasRemoteTargetImpl(type, callStack);
 }
+
+//====--------------------------------------====
+// Recursively obtain the raw type
+//====--------------------------------------====
+Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
+  if (!hasRemoteTarget(type))
+    return type;
+  // If is given remote memref, extract nesting llvm.ptr or memref and convert to raw type
+  if (auto rmref = type.dyn_cast<RemoteMemRefType>()) {
+    Type rawRef = rmref.getElementType();
+    return getRawTypeFromRemotedType(rawRef);
+  }
+
+  /* Routines below convert container types that may have rmemref type as the embedded type to raw type */
+  if (auto memref = type.dyn_cast<MemRefType>()) {
+    Type rawElemType = getRawTypeFromRemotedType(memref.getElementType());
+    return MemRefType::get(memref.getShape(), rawElemType, memref.getLayout(), memref.getMemorySpace());
+  }
+
+  if (auto llvmPtr = type.dyn_cast<LLVM::LLVMPointerType>()) {
+    Type rawPointeeType = getRawTypeFromRemotedType(llvmPtr.getElementType());
+    return LLVM::LLVMPointerType::get(rawPointeeType, llvmPtr.getAddressSpace());
+  }
+
+  if (auto structType = type.dyn_cast<LLVM::LLVMStructType>()) {
+    if (structType.isIdentified()) {
+      // get original structType using raw name
+      StringRef sName = structType.getName();
+      if (!sName.contains("disagg@") /* not remoted, raw type */)
+        return structType;
+      size_t rawStartIdx = 7;
+
+      auto rawStructType = LLVM::LLVMStructType::getIdentified(structType.getContext(), sName.drop_front(rawStartIdx));
+      if (rawStructType.isInitialized()) {
+        return rawStructType;
+      } else {
+        llvm::errs() << "Cannot find raw structType for " << sName << "\n";
+        return nullptr;
+      }
+    }
+    
+    // Unamed Struct Type, get new literal
+    SmallVector<Type> rawElemTypes;
+    rawElemTypes.reserve(structType.getBody().size());
+    for (auto &en : structType.getBody()) {
+      rawElemTypes.push_back(getRawTypeFromRemotedType(en));
+    }
+    return LLVM::LLVMStructType::getLiteral(structType.getContext(), rawElemTypes, structType.isPacked());
+  }
+
+  if (auto aryType = type.dyn_cast<LLVM::LLVMArrayType>()) {
+    Type rawEleTy = getRawTypeFromRemotedType(aryType.getElementType());
+    return LLVM::LLVMArrayType::get(rawEleTy, aryType.getNumElements());
+  }
+
+  if (auto fVecType = type.dyn_cast<LLVM::LLVMFixedVectorType>()) {
+    Type rawEleTy = getRawTypeFromRemotedType(fVecType.getElementType());
+    return LLVM::LLVMFixedVectorType::get(rawEleTy, fVecType.getNumElements());
+  }
+
+
+  if (auto fVecType = type.dyn_cast<LLVM::LLVMScalableVectorType>()) {
+    Type rawEleTy = getRawTypeFromRemotedType(fVecType.getElementType());
+    return LLVM::LLVMScalableVectorType::get(rawEleTy, fVecType.getMinNumElements());
+  }
+
+  // TODO: tensor, vector, func, llvm.func
+  llvm::errs() << "Current rawing type: \n";
+  type.print(llvm::errs());
+  llvm::errs() << "\n contains remote but no routine for that\n";
+  return type;
+}
+
 
 // Type RemoteMemRefType::parse(AsmParser &parser) {
 //   FailureOr<Type> elemType;

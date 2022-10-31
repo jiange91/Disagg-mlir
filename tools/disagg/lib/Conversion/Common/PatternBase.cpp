@@ -4,7 +4,6 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "Conversion/Common/PatternBase.h"
 #include "Dialect/RemoteMemTypes.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 
 #include "llvm/ADT/ScopeExit.h"
@@ -13,6 +12,18 @@
 
 using namespace mlir;
 using namespace mlir::rmem;
+
+void mlir::rmem::filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVectorImpl<NamedAttribute> &result, llvm::SmallSet<StringRef, 4> filter) {
+  for (const auto &attr : attrs) {
+    if (attr.getName() == "remote_target" ||
+        attr.getName() == "rel_types" || 
+        attr.getName() == "remote_global_type" ||
+        filter.contains(attr.getName())) {
+          continue;
+        }
+    result.push_back(attr);
+  }
+}
 
 static bool isRemotableTypeImpl(Type type, SetVector<Type> &callStack) {
   if (callStack.contains(type)) return true;
@@ -80,3 +91,4 @@ rmem::RemoteMemDialect &ConvertToRemoteMemPattern::getDialect() const {
 RemoteMemTypeConverter *ConvertToRemoteMemPattern::getTypeConverter() const {
   return ConversionPattern::getTypeConverter<RemoteMemTypeConverter>();
 }
+

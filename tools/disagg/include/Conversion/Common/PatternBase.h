@@ -4,15 +4,18 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "Conversion/Common/TypeConverter.h"
 #include "mlir/IR/OperationSupport.h"
-
+#include "llvm/ADT/SmallSet.h"
 
 namespace mlir {
 namespace rmem {
 bool isRemotableType(Type t);
 bool hasRemotableSignature(Operation *op);
-}
-}
 
+// Strip target attr from the orignal dictionary
+// The result should be copied to disaggregated operations
+void filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVectorImpl<NamedAttribute> &result, llvm::SmallSet<StringRef, 4> filter = {});
+}
+}
 using namespace mlir;
 using namespace mlir::rmem;
 class ConvertToRemoteMemPattern : public ConversionPattern {

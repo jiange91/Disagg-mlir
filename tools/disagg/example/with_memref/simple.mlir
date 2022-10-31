@@ -15,28 +15,28 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %4 = arith.muli %3, %c8_i64 : i64
     %5 = arith.index_cast %4 : i64 to index
     %6 = arith.divui %5, %c8 : index
-    %7 = memref.alloc(%6) : memref<?x2xi32>
-    affine.store %7, %2[0] : memref<1xmemref<?x2xi32>>
-    %8 = arith.index_cast %1 : i32 to index
-    scf.for %arg2 = %c0 to %8 step %c1 {
-      %10 = arith.index_cast %arg2 : index to i32
-      %11 = memref.get_global @as : memref<1xmemref<?x2xi32>>
-      %12 = affine.load %11[0] : memref<1xmemref<?x2xi32>>
-      memref.store %10, %12[%arg2, %c0] : memref<?x2xi32>
-      %13 = memref.get_global @as : memref<1xmemref<?x2xi32>>
-      %14 = affine.load %13[0] : memref<1xmemref<?x2xi32>>
-      %15 = arith.muli %10, %10 : i32
-      memref.store %15, %14[%arg2, %c1] : memref<?x2xi32>
-    }
-    %9 = arith.index_cast %1 : i32 to index
-    scf.for %arg2 = %c0 to %9 step %c1 {
-      %10 = llvm.mlir.addressof @str0 : !llvm.ptr<array<14 x i8>>
-      %11 = llvm.getelementptr %10[0, 0] : (!llvm.ptr<array<14 x i8>>) -> !llvm.ptr<i8>
+    %alloc = memref.alloc(%6) : memref<?x2xi32>
+    affine.store %alloc, %2[0] : memref<1xmemref<?x2xi32>>
+    %7 = arith.index_cast %1 : i32 to index
+    scf.for %arg2 = %c0 to %7 step %c1 {
+      %9 = arith.index_cast %arg2 : index to i32
+      %10 = memref.get_global @as : memref<1xmemref<?x2xi32>>
+      %11 = affine.load %10[0] : memref<1xmemref<?x2xi32>>
+      memref.store %9, %11[%arg2, %c0] : memref<?x2xi32>
       %12 = memref.get_global @as : memref<1xmemref<?x2xi32>>
       %13 = affine.load %12[0] : memref<1xmemref<?x2xi32>>
-      %14 = memref.load %13[%arg2, %c1] : memref<?x2xi32>
-      %15 = memref.load %13[%arg2, %c0] : memref<?x2xi32>
-      %16 = llvm.call @printf(%11, %14, %15, %15) : (!llvm.ptr<i8>, i32, i32, i32) -> i32
+      %14 = arith.muli %9, %9 : i32
+      memref.store %14, %13[%arg2, %c1] : memref<?x2xi32>
+    }
+    %8 = arith.index_cast %1 : i32 to index
+    scf.for %arg2 = %c0 to %8 step %c1 {
+      %9 = llvm.mlir.addressof @str0 : !llvm.ptr<array<14 x i8>>
+      %10 = llvm.getelementptr %9[0, 0] : (!llvm.ptr<array<14 x i8>>) -> !llvm.ptr<i8>
+      %11 = memref.get_global @as : memref<1xmemref<?x2xi32>>
+      %12 = affine.load %11[0] : memref<1xmemref<?x2xi32>>
+      %13 = memref.load %12[%arg2, %c1] : memref<?x2xi32>
+      %14 = memref.load %12[%arg2, %c0] : memref<?x2xi32>
+      %15 = llvm.call @printf(%10, %13, %14, %14) : (!llvm.ptr<i8>, i32, i32, i32) -> i32
     }
     return %c0_i32 : i32
   }

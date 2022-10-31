@@ -27,7 +27,7 @@ LLVM::LLVMPointerType getVoidPtrType(MLIRContext *ctx);
 // not considering 
 Value calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize);
 
-// virt_ptr = _disagg_alloc(cid = 1, size);
+// virt_ptr = _disagg_alloc(cid = 2, size);
 LLVM::LLVMFuncOp lookupOrCreateAllocFn(ModuleOp moduleOp);
 // ptr = _disagg_stack_alloc(size);
 LLVM::LLVMFuncOp lookupOrCreateStackAllocaFn(ModuleOp moduleOp);

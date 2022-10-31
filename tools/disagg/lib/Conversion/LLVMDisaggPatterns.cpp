@@ -2,7 +2,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
 #include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemOps.h"
 #include "Dialect/FunctionUtils.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/DataLayout.h"
@@ -37,7 +36,7 @@ class LLVMCallMallocDisagg : public OpConversionPattern<LLVM::CallOp> {
       }
       TypeAttr rType = rts[0].dyn_cast<mlir::TypeAttr>();
       auto newPtr = rewriter.create<rmem::LLVMMallocOp>(
-        op.getLoc(), rType.getValue(), rewriter.getI32IntegerAttr(1), adaptor.getOperands()[0]
+        op.getLoc(), rType.getValue(), rewriter.getI32IntegerAttr(2), adaptor.getOperands()[0]
       );
       rewriter.replaceOp(op, {newPtr});
       return mlir::success();

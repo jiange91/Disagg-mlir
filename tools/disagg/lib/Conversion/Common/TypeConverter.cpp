@@ -1,14 +1,10 @@
 #include "Conversion/Common/TypeConverter.h"
 #include "Dialect/RemoteMem.h"
 #include "Dialect/RemoteMemTypes.h"
-#include "Dialect/RemoteMemOps.h"
 
 using namespace mlir;
 using namespace mlir::rmem;
 
-Type rejType(Type type) {
-  return {};
-}
 RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()) {
   assert(rmemDialect && "RemoteMem Dialect is not registered");
 

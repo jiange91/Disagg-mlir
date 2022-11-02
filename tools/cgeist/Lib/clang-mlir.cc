@@ -544,10 +544,28 @@ ValueCategory MLIRScanner::VisitTypeTraitExpr(clang::TypeTraitExpr *expr) {
 }
 
 ValueCategory MLIRScanner::VisitGNUNullExpr(clang::GNUNullExpr *expr) {
+  llvm::errs() << "visit gnunull\n";
+  expr->dump();
+  expr->getType()->dump();
   auto ty = getMLIRType(expr->getType()).cast<mlir::IntegerType>();
   return ValueCategory(builder.create<arith::ConstantIntOp>(
                            getMLIRLocation(expr->getExprLoc()), 0, ty),
                        /*isReference*/ false);
+}
+
+ValueCategory MLIRScanner::VisitCXXNullPtrLiteralExpr(clang::CXXNullPtrLiteralExpr *expr) {
+  auto loc = getMLIRLocation(expr->getExprLoc());
+  auto llvmType = getMLIRType(expr->getType());
+  if (llvmType.isa<LLVM::LLVMPointerType>())
+    return ValueCategory(builder.create<mlir::LLVM::NullOp>(loc, llvmType),
+                          /*isReference*/ false);
+  else
+    return ValueCategory(
+        builder.create<polygeist::Pointer2MemrefOp>(
+            loc, llvmType,
+            builder.create<mlir::LLVM::NullOp>(
+                loc, LLVM::LLVMPointerType::get(builder.getI8Type()))),
+        false);
 }
 
 ValueCategory MLIRScanner::VisitIntegerLiteral(clang::IntegerLiteral *expr) {
@@ -645,6 +663,7 @@ MLIRScanner::VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl) {
   assert(0 && "bad");
 }
 
+
 /// Construct corresponding MLIR operations to initialize the given value by a
 /// provided InitListExpr.
 mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
@@ -652,7 +671,8 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
   // Struct initializan requires an extra 0, since the first index
   // is the pointer index, and then the struct index.
   auto PTT = expr->getType()->getUnqualifiedDesugaredType();
-
+  // toInit.dump();
+  // expr->dump();
   bool inner = false;
   if (isa<RecordType>(PTT) || isa<clang::ComplexType>(PTT)) {
     if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
@@ -684,30 +704,33 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
       }
 
       unsigned num = 0;
-      if (initListExpr->hasArrayFiller()) {
-        if (auto MT = toInit.getType().dyn_cast<MemRefType>()) {
-          auto shape = MT.getShape();
-          assert(shape.size() > 0);
-          assert(shape[0] != -1);
-          num = shape[0];
-        } else if (auto PT =
-                       toInit.getType().dyn_cast<LLVM::LLVMPointerType>()) {
-          if (auto AT = PT.getElementType().dyn_cast<LLVM::LLVMArrayType>()) {
-            num = AT.getNumElements();
-          } else if (auto AT =
-                         PT.getElementType().dyn_cast<LLVM::LLVMStructType>()) {
-            num = AT.getBody().size();
-          } else {
-            toInit.getType().dump();
-            assert(0 && "TODO get number of values in array filler expression");
-          }
-        } else {
-          toInit.getType().dump();
-          assert(0 && "TODO get number of values in array filler expression");
-        }
-      } else {
-        num = initListExpr->getNumInits();
-      }
+      num = initListExpr->getNumInits();
+
+      /* TODO: get rest part dynamically */
+      // if (initListExpr->hasArrayFiller()) {
+      //   if (auto MT = toInit.getType().dyn_cast<MemRefType>()) {
+      //     auto shape = MT.getShape();
+      //     assert(shape.size() > 0);
+      //     assert(shape[0] != -1);
+      //     num = shape[0];
+      //   } else if (auto PT =
+      //                  toInit.getType().dyn_cast<LLVM::LLVMPointerType>()) {
+      //     if (auto AT = PT.getElementType().dyn_cast<LLVM::LLVMArrayType>()) {
+      //       num = AT.getNumElements();
+      //     } else if (auto AT =
+      //                    PT.getElementType().dyn_cast<LLVM::LLVMStructType>()) {
+      //       num = AT.getBody().size();
+      //     } else {
+      //       toInit.getType().dump();
+      //       assert(0 && "TODO get number of values in array filler expression");
+      //     }
+      //   } else {
+      //     toInit.getType().dump();
+      //     assert(0 && "TODO get number of values in array filler expression");
+      //   }
+      // } else {
+      //   num = initListExpr->getNumInits();
+      // }
 
       SmallVector<char> attrs;
       bool allSub = true;
@@ -724,7 +747,8 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
         }
       }
 
-      for (unsigned i = 0, e = num; i < e; ++i) {
+      // initialize explicit element
+      for (unsigned i = 0, e = initListExpr->getNumInits(); i < e; ++i) {
 
         mlir::Value next;
         if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
@@ -756,10 +780,10 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
               toInit, idxs);
         }
 
-        auto sub =
-            helper(initListExpr->hasArrayFiller() ? initListExpr->getInit(0)
-                                                  : initListExpr->getInit(i),
-                   next, true);
+        auto sub = helper(initListExpr->getInit(i), next, true);
+        // auto sub = helper(initListExpr->hasArrayFiller() ? initListExpr->getInit(0)
+            //                                       : initListExpr->getInit(i),
+            //        next, true);
         if (sub) {
           size_t n = 1;
           if (sub.isSplat())
@@ -771,6 +795,7 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
           allSub = false;
         }
       }
+      // TODO: array-filler
       if (!allSub)
         return mlir::DenseElementsAttr();
       if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
@@ -778,7 +803,9 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
             RankedTensorType::get(mt.getShape(), mt.getElementType()), attrs);
       }
       return mlir::DenseElementsAttr();
-    } else {
+    } 
+    /* Scalar initialization */
+    else {
       bool isArray = false;
       Glob.getMLIRType(expr->getType(), &isArray);
       ValueCategory sub = Visit(expr);
@@ -826,6 +853,7 @@ ValueCategory MLIRScanner::VisitVarDecl(clang::VarDecl *decl) {
   }
 
   if (auto init = decl->getInit()) {
+    // init->dump();
     if (!isa<InitListExpr>(init) && !isa<CXXConstructExpr>(init)) {
       auto visit = Visit(init);
       if (!visit.val) {
@@ -956,6 +984,7 @@ ValueCategory MLIRScanner::VisitPredefinedExpr(clang::PredefinedExpr *expr) {
 
 ValueCategory MLIRScanner::VisitInitListExpr(clang::InitListExpr *expr) {
   mlir::Type subType = getMLIRType(expr->getType());
+  // expr->dump();
   bool isArray = false;
   bool LLVMABI = false;
 
@@ -969,9 +998,9 @@ ValueCategory MLIRScanner::VisitInitListExpr(clang::InitListExpr *expr) {
       subType = Glob.getMLIRType(
           Glob.CGM.getContext().getLValueReferenceType(expr->getType()));
   }
-  auto op = createAllocOp(subType, nullptr, /*memtype*/ 0, isArray, LLVMABI);
-  InitializeValueByInitListExpr(op, expr);
-  return ValueCategory(op, true);
+  auto mem = createAllocOp(subType, nullptr, /*memtype*/ 0, isArray, LLVMABI);
+  (void)InitializeValueByInitListExpr(mem, expr);
+  return ValueCategory(mem, true); 
 }
 
 ValueCategory MLIRScanner::VisitCXXStdInitializerListExpr(
@@ -1247,21 +1276,23 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
   mlir::Value count;
 
   if (expr->isArray()) {
-    count = Visit(*expr->raw_arg_begin()).getValue(loc, builder);
+    count = Visit(*expr->getArraySize()).getValue(loc, builder);
     count = builder.create<IndexCastOp>(
         loc, mlir::IndexType::get(builder.getContext()), count);
   } else {
     count = getConstantIndex(1);
   }
   assert(count);
-
   auto ty = getMLIRType(expr->getType());
-
+  // llvm::Type *resultType = Glob.CGM.getTypes().ConvertTypeForMem(expr->getType());
+  // resultType->dump();
   mlir::Value alloc;
   mlir::Value arrayCons;
   if (!expr->placement_arguments().empty()) {
-    mlir::Value val =
-        Visit(*expr->placement_arg_begin()).getValue(loc, builder);
+    // Placement address
+    mlir::Value val = Visit(*expr->placement_arg_begin()).getValue(loc, builder);
+
+    // Type cast according to expr result type
     if (auto mt = ty.dyn_cast<mlir::MemRefType>()) {
       if (auto mtin = val.getType().dyn_cast<mlir::MemRefType>()) {
         val = builder.create<polygeist::Memref2PointerOp>(
@@ -1274,6 +1305,7 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
           builder.create<polygeist::Pointer2MemrefOp>(loc, mt, val);
     } else {
       arrayCons = alloc = builder.create<mlir::LLVM::BitcastOp>(loc, ty, val);
+
       auto PT = ty.cast<LLVM::LLVMPointerType>();
       if (expr->isArray())
         arrayCons = builder.create<mlir::LLVM::BitcastOp>(
@@ -1305,11 +1337,23 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
           alloc);
   }
   assert(alloc);
-
   if (expr->getConstructExpr()) {
+    // expr->getConstructExpr()->dump();
     VisitConstructCommon(
         const_cast<CXXConstructExpr *>(expr->getConstructExpr()),
         /*name*/ nullptr, /*memtype*/ 0, arrayCons, count);
+  } 
+  else if (expr->hasInitializer())
+    (void)InitializeValueByInitListExpr(arrayCons, expr->getInitializer());
+  else if (expr->isArray() && expr->hasInitializer()) {
+
+    // else {
+    //   // is scalar new
+    //   auto toStore = Visit(expr->getInitializer());
+    //   // toStore.val.dump();
+    //   (void)ValueCategory(arrayCons, /*isReference*/ true)
+    //       .store(loc, builder, toStore, expr->isArray()); 
+    // }
   }
   return ValueCategory(alloc, /*isRefererence*/ false);
 }
@@ -1984,6 +2028,7 @@ MLIRScanner::VisitPseudoObjectExpr(clang::PseudoObjectExpr *expr) {
 }
 
 ValueCategory MLIRScanner::VisitUnaryOperator(clang::UnaryOperator *U) {
+  
   auto loc = getMLIRLocation(U->getExprLoc());
   auto sub = Visit(U->getSubExpr());
 
@@ -5299,7 +5344,14 @@ mlir::Type MLIRASTConsumer::getMLIRType(clang::QualType qt, bool *implicitRef,
     SmallVector<mlir::Type> Args;
     return LLVM::LLVMFunctionType::get(RT, Args, /*isVariadic*/ true);
   }
-
+  if (t->isNullPtrType()) {
+    llvm::Type *T = CGM.getTypes().ConvertType(QualType(t, 0)); 
+    auto MT /* ptr<i8> */ = typeTranslator.translateType(T); 
+    if (!CStyleMemRef)
+      return MT;
+    else
+      return MemRefType::get( {-1}, MT.cast<LLVM::LLVMPointerType>().getElementType());
+  }
   if (isa<clang::PointerType, clang::ReferenceType>(t)) {
     int64_t outer = (isa<clang::PointerType>(t)) ? -1 : -1;
     auto PTT = isa<clang::PointerType>(t) ? cast<clang::PointerType>(t)
@@ -5380,6 +5432,10 @@ mlir::Type MLIRASTConsumer::getMLIRType(clang::QualType qt, bool *implicitRef,
     if (t->isBooleanType()) {
       OpBuilder builder(module->getContext());
       return builder.getIntegerType(8);
+    }
+    if (t->isNullPtrType()) {
+      OpBuilder builder(module->getContext());
+      return LLVM::LLVMPointerType::get(builder.getI8Type());
     }
     llvm::Type *T = CGM.getTypes().ConvertType(QualType(t, 0));
     mlir::OpBuilder builder(module->getContext());

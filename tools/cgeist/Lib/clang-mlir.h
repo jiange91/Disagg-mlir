@@ -249,6 +249,7 @@ public:
   ValueCategory VisitTypeTraitExpr(clang::TypeTraitExpr *expr);
 
   ValueCategory VisitGNUNullExpr(clang::GNUNullExpr *expr);
+  ValueCategory VisitCXXNullPtrLiteralExpr(clang::CXXNullPtrLiteralExpr *expr);
   ValueCategory VisitIntegerLiteral(clang::IntegerLiteral *expr);
 
   ValueCategory VisitCharacterLiteral(clang::CharacterLiteral *expr);
@@ -397,6 +398,7 @@ public:
 
   mlir::Attribute InitializeValueByInitListExpr(mlir::Value toInit,
                                                 clang::Expr *expr);
+
   ValueCategory VisitInitListExpr(clang::InitListExpr *expr);
   ValueCategory
   VisitCXXStdInitializerListExpr(clang::CXXStdInitializerListExpr *expr);

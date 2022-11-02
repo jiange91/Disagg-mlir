@@ -37,6 +37,8 @@
 
 #include "clang/../../lib/CodeGen/CGRecordLayout.h"
 #include "clang/../../lib/CodeGen/CodeGenModule.h"
+#include "clang/../../lib/CodeGen/CodeGenFunction.h"
+#include "clang/../../lib/CodeGen/ConstantEmitter.h"
 #include "clang/AST/Mangle.h"
 
 using namespace clang;
@@ -397,7 +399,8 @@ public:
   ValueCategory VisitCXXFunctionalCastExpr(clang::CXXFunctionalCastExpr *expr);
 
   mlir::Attribute InitializeValueByInitListExpr(mlir::Value toInit,
-                                                clang::Expr *expr);
+                                                clang::Expr *expr,
+                                                mlir::Value NumElements /* not number of inits */ = nullptr);
 
   ValueCategory VisitInitListExpr(clang::InitListExpr *expr);
   ValueCategory

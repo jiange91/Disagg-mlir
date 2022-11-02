@@ -47,6 +47,9 @@ int main(int argc, char **argv) {
   A *aa = new A(2);
   printf("aa = %d\n", aa->a);
 
+  A saa[2] = {{1}};
+  printf("saa = %d\n", saa[0].a);
+
   A *aaa = new A[n] {{1}, {2}, {3}};
   for (int i = 0; i < n; ++ i) {
     printf("aaa = %d\n", aaa[i].a);

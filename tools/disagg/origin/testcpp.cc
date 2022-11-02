@@ -19,6 +19,11 @@ public:
   A(int a): a(a) {}
 };
 
+struct B {
+  double x;
+  int y;
+};
+
 int main(int argc, char **argv) {
   // vector<int> a;
   // a.reserve(16);
@@ -55,6 +60,7 @@ int main(int argc, char **argv) {
     printf("aaa = %d\n", aaa[i].a);
   }
 
+  B b = {};
   // void *a = NULL;
   // void *b = nullptr;
   // nullptr_t c = nullptr;

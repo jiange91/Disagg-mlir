@@ -736,7 +736,7 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
                           builder.create<MulIOp>(loc, size, RemainingsNums));
     builder.create<LLVM::MemsetOp>(loc, 
       toInit, 
-      builder.create<arith::ConstantIntOp>(loc, 0, 8),
+      builder.create<arith::ConstantIntOp>(loc, 0, 8), /* base */
       size,
       builder.create<arith::ConstantIntOp>(loc, false, 1) /* volatile */
     );
@@ -758,8 +758,9 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
       auto PT = base.getType().cast<LLVM::LLVMPointerType>();
       auto ET = PT.getElementType();
       mlir::Type nextType;
-      if (auto ST = ET.dyn_cast<LLVM::LLVMStructType>())
+      if (auto ST = ET.dyn_cast<LLVM::LLVMStructType>()) {
         nextType = ST.getBody()[i];
+      }
       else if (auto AT = ET.dyn_cast<LLVM::LLVMArrayType>())
         nextType = AT.getElementType();
       else
@@ -826,7 +827,6 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
               toInit);
         }
       }
-
       // initialize explicit element
       for (unsigned i = 0, e = initListExpr->getNumInits(); i < e; ++i) {
         auto curPtr = MoveCurrentPtr(toInit, i, loc);
@@ -845,7 +845,6 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
       // TODO: collect memref attribute
       // The remaining elements are filled with the array filler expression.
       auto Init = initListExpr->getArrayFiller();
-      auto curPtr = MoveCurrentPtr(toInit, initListExpr->getNumInits(), loc);
       // Extract the initializer for the individual array elements by pulling
       // out the array filler from all the nested initializer lists. This avoids
       // generating a nested loop for the initialization.
@@ -861,7 +860,8 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
       // If number of elements is runtime value, keep initialization 
       auto ConstNum = NumElements.getDefiningOp<arith::ConstantOp>();
       if (!ConstNum || ConstNum.getValue().cast<IntegerAttr>().getInt() > initListExpr->getNumInits()) {
-
+        assert(Init && "have trailing elements to initialize but no initializer");
+        auto curPtr = MoveCurrentPtr(toInit, initListExpr->getNumInits(), loc);
         // If this is a constructor, call common routine 
         if (const auto CCE = dyn_cast<CXXConstructExpr>(Init)) {
           (void) VisitConstructCommon(CCE, nullptr, 0, curPtr, getConstantIndex(1));

@@ -664,289 +664,290 @@ MLIRScanner::VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl) {
   assert(0 && "bad");
 }
 
-// TODO:
-//   Currently assume NumElements is either result of arith.constant or any other types
-//   This is important to infer whether it is static or not
-/// Construct corresponding MLIR operations to initialize the given value by a
-/// provided InitListExpr.
-mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
-                                                           clang::Expr *expr,
-                                                           mlir::Value NumElements) {
-  // IF NumElements (can be dynamic) is not specified, infer from the given memory toInit
-  if (!NumElements) {
-    if (auto MT = toInit.getType().dyn_cast<MemRefType>()) {
-      auto shape = MT.getShape();
-      assert(shape.size() > 0);
-      assert(shape[0] != -1);
-      NumElements = getConstantIndex(shape[0]);
-    } else if (auto PT = toInit.getType().dyn_cast<LLVM::LLVMPointerType>()) {
-      if (auto AT = PT.getElementType().dyn_cast<LLVM::LLVMArrayType>()) {
-        NumElements = getConstantIndex(AT.getNumElements());
-      } else if (auto AT =
-                      PT.getElementType().dyn_cast<LLVM::LLVMStructType>()) {
-        NumElements = getConstantIndex(AT.getBody().size());
-      } else {
-        expr->dump();
-        toInit.getType().dump();
-        assert(0 && "NumElements not given, neither can infer from given memory");
-      }
-    } else {
-      expr->dump();
-      toInit.getType().dump();
-      assert(0 && "NumElements not given, neither can infer from given memory");
-    }
-  }
+void MLIRScanner::CommonArrayInit(InitListExpr *E, QualType ElementType, mlir::Value destMem) {
 
-  // Trivial initialization
-  auto TryTrivialInitialization = [&](mlir::Value toInit, clang::Expr *expr, mlir::Location loc) -> mlir::DenseElementsAttr {
-    bool isArray = false;
-    Glob.getMLIRType(expr->getType(), &isArray);
-    ValueCategory sub;
-    // if is constructor, use memory direclty
-    if (const auto CCE = dyn_cast<CXXConstructExpr>(expr)) {
-      sub = VisitConstructCommon(CCE, nullptr, 0, toInit, getConstantIndex(1));
-    } else {
-      sub = Visit(expr);
-      ValueCategory(toInit, /*isReference*/ true)
-          .store(loc, builder, sub, isArray);
-    }
-    if (!sub.isReference)
-      if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
-        if (auto cop = sub.val.getDefiningOp<ConstantIntOp>())
-          return DenseElementsAttr::get(
-              RankedTensorType::get(std::vector<int64_t>({1}),
-                                    mt.getElementType()),
-              cop.getValue());
-        if (auto cop = sub.val.getDefiningOp<ConstantFloatOp>())
-          return DenseElementsAttr::get(
-              RankedTensorType::get(std::vector<int64_t>({1}),
-                                    mt.getElementType()),
-              cop.getValue());
+}
+
+// Can be used for static only
+// Including innder initialization of an new array init
+void MLIRScanner::StoreIntoOneUnit(clang::Expr *Init, mlir::Value address, QualType ElementType) {
+  switch (clang::CodeGen::CodeGenFunction(Glob.CGM).getEvaluationKind(ElementType)) {
+    case clang::CodeGen::TEK_Scalar:
+    case clang::CodeGen::TEK_Complex: {
+      // trivial type, get value and store
+      bool isArray;
+      Glob.getMLIRType(Init->getType(), &isArray);
+      if (isArray) {
+        Init->getType()->dump();
+        assert(isArray &&  "This branch should not handle array");
       }
-    return mlir::DenseElementsAttr();
-  };
-  // Memset for value-initialization
-  auto TryMemsetInitialization = [&](mlir::Value toInit, unsigned ExpInits, clang::Expr *e,  mlir::Location loc) -> bool {
-    auto unitType = e->getType();
-    if (!Glob.CGM.getTypes().isZeroInitializable(unitType)) {
-      return false;
+
+      ValueCategory sub;
+      // if is constructor, use memory direclty
+      if (const auto CCE = dyn_cast<CXXConstructExpr>(Init)) {
+        sub = VisitConstructCommon(CCE, nullptr, 0, address, getConstantIndex(1));
+      } else {
+        sub = Visit(Init);
+        ValueCategory(address, /*isReference*/ true)
+            .store(address.getLoc(), builder, sub, false);
+      }
+      return;
     }
-    
+    case clang::CodeGen::TEK_Aggregate:
+      assert(0 && "TODO: static aggregate type initialization");
+      return;
+  }
+  llvm_unreachable("bad bad evaulation kind");
+}
+
+// TODO: Add memref support
+void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, QualType ElementType, mlir::Value NumElements, mlir::Value AllocSize) {
+  if (!E->hasInitializer()) return;
+  mlir::Value CurPtr = address;
+  unsigned ExplicitInitListElements = 0;
+  Expr *Init = E->getInitializer();
+  mlir::Location loc = address.getLoc();
+
+  auto TryMemsetInitialization = [&]() -> bool {
+    if (!Glob.CGM.getTypes().isZeroInitializable(ElementType))
+      return false;
+
     // Subtract explicit initialized elements
-    mlir::Value size = getTypeSize(loc, unitType);
-    mlir::Value RemainingsNums = NumElements;
-    if (ExpInits) 
-      RemainingsNums = builder.create<arith::SubIOp>(loc, 
-                            NumElements, 
-                            getConstantIndex(ExpInits));
-    size = builder.create<arith::IndexCastOp>(loc, builder.getI64Type(),
-                          builder.create<MulIOp>(loc, size, RemainingsNums));
+    mlir::Value RemainingSize = AllocSize;
+    if (ExplicitInitListElements) {
+      auto initializedSize = builder.create<arith::MulIOp>(loc, 
+        getTypeSize(loc, ElementType), 
+        getConstantIndex(ExplicitInitListElements)
+      );
+      RemainingSize = builder.create<arith::IndexCastOp>(loc, 
+        builder.getI64Type(), 
+        builder.create<SubIOp>(loc, RemainingSize, initializedSize)
+      );
+    }
     builder.create<LLVM::MemsetOp>(loc, 
-      toInit, 
+      CurPtr, 
       builder.create<arith::ConstantIntOp>(loc, 0, 8), /* base */
-      size,
+      RemainingSize,
       builder.create<arith::ConstantIntOp>(loc, false, 1) /* volatile */
     );
     return true;
   };
 
   // Move current ptr further
-  auto MoveCurrentPtr = [&](mlir::Value base, unsigned i, mlir::Location loc) -> mlir::Value {
-    if (auto mt = base.getType().dyn_cast<MemRefType>()) {
+  auto MoveCurrentPtr = [&]() -> mlir::Value {
+    if (auto mt = address.getType().dyn_cast<MemRefType>()) {
       auto shape = std::vector<int64_t>(mt.getShape());
       assert(shape.size() > 0);
       shape[0] = -1;
       auto mt0 = mlir::MemRefType::get(shape, mt.getElementType(),
                                         MemRefLayoutAttrInterface(),
                                         mt.getMemorySpace());
-      return builder.create<polygeist::SubIndexOp>(loc, mt0, base,
-                                                    getConstantIndex(i)); 
+      return builder.create<polygeist::SubIndexOp>(loc, mt0, address,
+                                                    getConstantIndex(1)); 
     } else {
-      auto PT = base.getType().cast<LLVM::LLVMPointerType>();
+      auto PT = address.getType().cast<LLVM::LLVMPointerType>();
       auto ET = PT.getElementType();
       mlir::Type nextType;
       if (auto ST = ET.dyn_cast<LLVM::LLVMStructType>()) {
-        nextType = ST.getBody()[i];
+        // nextType = ST.getBody()[i];
+        assert(0 && "Struct is not handled here anymore");
       }
       else if (auto AT = ET.dyn_cast<LLVM::LLVMArrayType>())
         nextType = AT.getElementType();
       else
-        assert(0 && "unknown inner type");
+        assert(0 && "array new move pointer unknown next type");
 
       mlir::Value idxs[] = {
           builder.create<ConstantIntOp>(loc, 0, 32),
-          builder.create<ConstantIntOp>(loc, i, 32),
+          builder.create<ConstantIntOp>(loc, 1, 32),
       };
       return builder.create<LLVM::GEPOp>(
           loc, LLVM::LLVMPointerType::get(nextType, PT.getAddressSpace()),
-          base, idxs);
+          address, idxs);
     }
   };
 
   // Call constructor in a loop 
-  auto AggrConstructorCall = [&](mlir::Value base, CXXConstructExpr *CCE, unsigned ExpInits, mlir::Location loc) {
-    mlir::Value RemainingsNums = NumElements;
-    if (ExpInits) {
-      RemainingsNums = builder.create<arith::SubIOp>(loc, 
+  auto AggrConstructorCall = [&](CXXConstructExpr *CCE) {
+    mlir::Value Remainings = NumElements;
+    if (ExplicitInitListElements) {
+      Remainings = builder.create<arith::SubIOp>(loc, 
                             NumElements, 
-                            getConstantIndex(ExpInits)); 
+                            getConstantIndex(ExplicitInitListElements)); 
     }
-    auto forOp = builder.create<scf::ForOp>(loc, getConstantIndex(0), RemainingsNums, getConstantIndex(1));
+    auto forOp = builder.create<scf::ForOp>(loc, getConstantIndex(0), Remainings, getConstantIndex(1));
     mlir::Block::iterator oldpoint = builder.getInsertionPoint();
     mlir::Block *oldblock = builder.getInsertionBlock();
     builder.setInsertionPointToStart(&forOp.getLoopBody().front());
     auto tocall = Glob.GetOrCreateMLIRFunction(CCE->getConstructor());
     auto curSlot = CommonArrayLookup(loc, 
-                            ValueCategory(base, false), forOp.getInductionVar(),
+                            ValueCategory(CurPtr, false), forOp.getInductionVar(),
                             /*isImplicitRef*/ false, /*removeIndex*/ false);
     
 
     SmallVector<std::pair<ValueCategory, clang::Expr *>> args;
     args.emplace_back(make_pair(curSlot, (clang::Expr *)nullptr));
     for (auto a : CCE->arguments()) {
-      a->dump();
       args.push_back(make_pair(Visit(a), a));
     }
 
     CallHelper(tocall, CCE->getType(), args,
         /*retType*/ Glob.CGM.getContext().VoidTy, false, CCE);
-
     builder.setInsertionPoint(oldblock, oldpoint);
   };
 
+  // If the initializer is an initializer list, first do the explicit elements.
+  if (InitListExpr *ILE = dyn_cast<InitListExpr>(Init)) {
+    ExplicitInitListElements = ILE->getNumInits();
 
-  // Struct initializan requires an extra 0, since the first index
-  // is the pointer index, and then the struct index.
-  auto PTT = expr->getType()->getUnqualifiedDesugaredType();
-  // toInit.dump();
-  // expr->dump();
-  bool inner = false;
-  if (isa<RecordType>(PTT) || isa<clang::ComplexType>(PTT)) {
-    if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
-      inner = true;
+    // If this is a multi-dimensional array new, we will initialize multiple
+    // elements with each init list element.
+    QualType AllocType = E->getAllocatedType();
+    if (const ConstantArrayType *CAT = dyn_cast_or_null<ConstantArrayType>(AllocType->getAsArrayTypeUnsafe())) {
+      auto ElementTy = Glob.CGM.getTypes().ConvertTypeForMem(AllocType);
+      // CurPtr = Builder.CreateElementBitCast(CurPtr, ElementTy);
+      ElementTy->dump();
+      ExplicitInitListElements *= Glob.CGM.getContext().getConstantArrayElementCount(CAT);
+    }
+
+    for (unsigned i = 0, e = ILE->getNumInits(); i != e; ++i) {
+      StoreIntoOneUnit(ILE->getInit(i), CurPtr, ILE->getInit(i)->getType());
+      MoveCurrentPtr();
+    }
+
+    // The remaining elements are filled with the array filler expression.
+    Init = ILE->getArrayFiller();
+    // Extract the initializer for the individual array elements by pulling
+    // out the array filler from all the nested initializer lists. This avoids
+    // generating a nested loop for the initialization.
+    while (Init && Init->getType()->isConstantArrayType()) {
+      auto *SubILE = dyn_cast<InitListExpr>(Init);
+      if (!SubILE)
+        break;
+      assert(SubILE->getNumInits() == 0 && "explicit inits in array filler?");
+      Init = SubILE->getArrayFiller();
     }
   }
 
-  while (auto CO = toInit.getDefiningOp<memref::CastOp>())
-    toInit = CO.getSource();
-
-  // Recursively visit the initialization expression following the linear
-  // increment of the memory address.
-  std::function<mlir::DenseElementsAttr(Expr *, mlir::Value, bool)> helper =
-      [&](Expr *expr, mlir::Value toInit,
-          bool inner) -> mlir::DenseElementsAttr {
-    Location loc = toInit.getLoc();
-    if (InitListExpr *initListExpr = dyn_cast<InitListExpr>(expr)) {
-      if (inner) {
-        if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
-          auto shape = std::vector<int64_t>(mt.getShape());
-          shape.erase(shape.begin());
-          auto mt0 = mlir::MemRefType::get(shape, mt.getElementType(),
-                                           MemRefLayoutAttrInterface(),
-                                           mt.getMemorySpace());
-          toInit = builder.create<polygeist::SubIndexOp>(loc, mt0, toInit,
-                                                         getConstantIndex(0));
-        }
-      }
-
-      unsigned num = 0;
-      num = initListExpr->getNumInits();
-
-      SmallVector<char> attrs;
-      bool allSub = true;
-
-      if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
-        auto shape = std::vector<int64_t>(mt.getShape());
-        if (shape.size() == 0) {
-          auto ET = mt.getElementType();
-          assert(ET.isa<mlir::LLVM::LLVMStructType>() ||
-                 ET.isa<mlir::LLVM::LLVMArrayType>());
-          toInit = builder.create<polygeist::Memref2PointerOp>(
-              loc, LLVM::LLVMPointerType::get(ET, mt.getMemorySpaceAsInt()),
-              toInit);
-        }
-      }
-      // initialize explicit element
-      for (unsigned i = 0, e = initListExpr->getNumInits(); i < e; ++i) {
-        auto curPtr = MoveCurrentPtr(toInit, i, loc);
-        auto sub = helper(initListExpr->getInit(i), curPtr, true);
-        if (sub) {
-          size_t n = 1;
-          if (sub.isSplat())
-            n = sub.size();
-          for (size_t i = 0; i < n; i++)
-            for (auto ea : sub.getRawData())
-              attrs.push_back(ea);
-        } else {
-          allSub = false;
-        }
-      }
-      // TODO: collect memref attribute
-      // The remaining elements are filled with the array filler expression.
-      auto Init = initListExpr->getArrayFiller();
-      // Extract the initializer for the individual array elements by pulling
-      // out the array filler from all the nested initializer lists. This avoids
-      // generating a nested loop for the initialization.
-      while (Init && Init->getType()->isConstantArrayType()) {
-        auto *SubILE = dyn_cast<InitListExpr>(Init);
-        if (!SubILE)
-          break;
-        assert(SubILE->getNumInits() == 0 && "explicit inits in array filler?");
-        Init = SubILE->getArrayFiller();
-      } 
-
-      // If all elements are initialized, not need to continue
-      // If number of elements is runtime value, keep initialization 
-      auto ConstNum = NumElements.getDefiningOp<arith::ConstantOp>();
-      if (!ConstNum || ConstNum.getValue().cast<IntegerAttr>().getInt() > initListExpr->getNumInits()) {
-        assert(Init && "have trailing elements to initialize but no initializer");
-        auto curPtr = MoveCurrentPtr(toInit, initListExpr->getNumInits(), loc);
-
-        // If this is a constructor, call common routine iteratively
-        if (const auto CCE = dyn_cast<CXXConstructExpr>(Init)) {
-          CXXConstructorDecl *Ctor = CCE->getConstructor();
-          if (Ctor->isTrivial()) {
-            // If new expression did not specify value-initialization, then there
-            // is no initialization.
-            if (!CCE->requiresZeroInitialization() || Ctor->getParent()->isEmpty())
-              return mlir::DenseElementsAttr();
-
-            if (TryMemsetInitialization(curPtr, num, Init, loc))
-              return mlir::DenseElementsAttr();
-          }
-          AggrConstructorCall(curPtr, CCE, num, loc);
-          return mlir::DenseElementsAttr();
-        }
-
-        // TODO: support multi-dimension array new
-        // If this is value-initialization, we can usually use memset.
-        // ImplicitValueInitExpr IVIE(ElementType);
-        if (isa<ImplicitValueInitExpr>(Init)) {
-          if(TryMemsetInitialization(curPtr, num, Init, loc))
-            return mlir::DenseElementsAttr();
-          // Switch to an ImplicitValueInitExpr for the element type. This handles
-          // only one case: multidimensional array new of pointers to members. In
-          // all other cases, we already have an initializer for the array element.
-
-          // Init = &IVIE;
-        }
-      }
-
-      if (!allSub)
-        return mlir::DenseElementsAttr();
-      if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
-        return DenseElementsAttr::getFromRawBuffer(
-            RankedTensorType::get(mt.getShape(), mt.getElementType()), attrs);
-      }
-      return mlir::DenseElementsAttr();
-    } 
-    /* Scalar initialization */
+  // If all elements are initialized, not need to continue
+  // If number of elements is runtime value, keep initialization 
+  mlir::Operation *op = NumElements.getDefiningOp();
+  if (op && op->hasTrait<OpTrait::ConstantLike>()) {
+    unsigned n = 0;
+    if (auto llvmConst = dyn_cast<LLVM::ConstantOp>(op))
+      n = llvmConst.getValue().cast<IntegerAttr>().getInt();
+    else if (auto arithConst = dyn_cast<arith::ConstantOp>(op)) 
+      n = arithConst.getValue().cast<IntegerAttr>().getInt();
     else {
-      return TryTrivialInitialization(toInit, expr, loc);
+      op->print(llvm::errs());
+      assert(0 && "get constant Op, cannot parse number of elements");
     }
-  };
+    if (n <= ExplicitInitListElements) return;
+  }
 
-  return helper(expr, toInit, inner);
+  assert(Init && "have trailing elements to initialize but no initializer");
+  if (CXXConstructExpr *CCE = dyn_cast<CXXConstructExpr>(Init)) {
+    CXXConstructorDecl *Ctor = CCE->getConstructor();
+    if (Ctor->isTrivial()) {
+      // If new expression did not specify value-initialization, then there
+      // is no initialization.
+      if (!CCE->requiresZeroInitialization() || Ctor->getParent()->isEmpty())
+        return;
+
+      if (TryMemsetInitialization())
+        return;
+    }
+    AggrConstructorCall(CCE);
+    return;
+  }
+
+  // If this is value-initialization, we can usually use memset.
+  ImplicitValueInitExpr IVIE(ElementType);
+  if (isa<ImplicitValueInitExpr>(Init)) {
+    if (TryMemsetInitialization())
+      return;
+
+    // Switch to an ImplicitValueInitExpr for the element type. This handles
+    // only one case: multidimensional array new of pointers to members. In
+    // all other cases, we already have an initializer for the array element.
+    Init = &IVIE;
+  }
+  
+  // At this point we should have found an initializer for the individual
+  // elements of the array.
+  assert(Glob.CGM.getContext().hasSameUnqualifiedType(ElementType, Init->getType()) &&
+         "got wrong type of element to initialize");
+  // If we have an empty initializer list, we can usually use memset.
+  if (auto *ILE = dyn_cast<InitListExpr>(Init))
+    if (ILE->getNumInits() == 0 && TryMemsetInitialization())
+      return;
+  
+  // Call initialization repeatedly
+  mlir::Value Remainings = NumElements;
+  if (ExplicitInitListElements) {
+    Remainings = builder.create<arith::SubIOp>(loc, 
+                          NumElements, 
+                          getConstantIndex(ExplicitInitListElements)); 
+  }
+  auto forOp = builder.create<scf::ForOp>(loc, getConstantIndex(0), Remainings, getConstantIndex(1));
+  mlir::Block::iterator oldpoint = builder.getInsertionPoint();
+  mlir::Block *oldblock = builder.getInsertionBlock();
+  builder.setInsertionPointToStart(&forOp.getLoopBody().front());
+  auto curSlot = CommonArrayLookup(loc, 
+                          ValueCategory(CurPtr, false), forOp.getInductionVar(),
+                          /*isImplicitRef*/ false, /*removeIndex*/ false);
+  
+  StoreIntoOneUnit(Init, curSlot.val, Init->getType());
+  builder.setInsertionPoint(oldblock, oldpoint); 
+}
+
+// Static only !!!
+/// Construct corresponding MLIR operations to initialize the given value by a
+/// provided InitListExpr.
+mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
+                                                           clang::Expr *expr) {
+  // IF NumElements (can be dynamic) is not specified, infer from the given memory toInit
+  // if (!NumElements) {
+  //   if (auto MT = toInit.getType().dyn_cast<MemRefType>()) {
+  //     auto shape = MT.getShape();
+  //     assert(shape.size() > 0);
+  //     assert(shape[0] != -1);
+  //     NumElements = getConstantIndex(shape[0]);
+  //   } else if (auto PT = toInit.getType().dyn_cast<LLVM::LLVMPointerType>()) {
+  //     if (auto AT = PT.getElementType().dyn_cast<LLVM::LLVMArrayType>()) {
+  //       NumElements = getConstantIndex(AT.getNumElements());
+  //     } else if (auto AT =
+  //                     PT.getElementType().dyn_cast<LLVM::LLVMStructType>()) {
+  //       NumElements = getConstantIndex(AT.getBody().size());
+  //     } else {
+  //       expr->dump();
+  //       toInit.getType().dump();
+  //       assert(0 && "NumElements not given, neither can infer from given memory");
+  //     }
+  //   } else {
+  //     expr->dump();
+  //     toInit.getType().dump();
+  //     assert(0 && "NumElements not given, neither can infer from given memory");
+  //   }
+  // }
+  assert(isa<InitListExpr>(expr) && "only accept initialization list here");
+  clang::InitListExpr *E = cast<InitListExpr>(expr);
+  if (E->hadArrayRangeDesignator())
+    assert(0 && "Poly: GNU array range designator not supported");
+  if (E->isTransparent()) {
+    StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
+  }
+
+  // Handle initialization of an array.
+  if (E->getType()->isArrayType()) {
+    E->getType()->dump();
+    // auto AType = cast<llvm::ArrayType>(Dest.getAddress().getElementType());
+    // EmitArrayInit(Dest.getAddress(), AType, E->getType(), E);
+    return mlir::DenseElementsAttr();
+  }
+
+
+  return  mlir::DenseElementsAttr();
 }
 
 ValueCategory MLIRScanner::VisitVarDecl(clang::VarDecl *decl) {
@@ -1076,7 +1077,7 @@ ValueCategory MLIRScanner::VisitVarDecl(clang::VarDecl *decl) {
         .store(varLoc, builder, inite, isArray);
   } else if (auto init = decl->getInit()) {
     if (isa<InitListExpr>(init)) {
-      InitializeValueByInitListExpr(op, init);
+      InitializeValueByInitListExpr(op, cast<InitListExpr>(init));
     } else if (auto CE = dyn_cast<CXXConstructExpr>(init)) {
       VisitConstructCommon(CE, decl, memtype, op);
     } else
@@ -1101,6 +1102,10 @@ ValueCategory MLIRScanner::VisitPredefinedExpr(clang::PredefinedExpr *expr) {
 }
 
 ValueCategory MLIRScanner::VisitInitListExpr(clang::InitListExpr *expr) {
+  if (expr->isTransparent()) {
+    llvm::errs() << "is transparent\n";
+    return Visit(expr->getInit(0));
+  } 
   mlir::Type subType = getMLIRType(expr->getType());
   // expr->dump();
   bool isArray = false;
@@ -1388,7 +1393,22 @@ ValueCategory MLIRScanner::VisitCXXDeleteExpr(clang::CXXDeleteExpr *expr) {
 
   return nullptr;
 }
+
+void MLIRScanner::NewInitializer(clang::CXXNewExpr *expr, mlir::Value toInit) {
+  if (expr->isArray()) {
+    QualType allocType = Glob.CGM.getContext().getBaseElementType(expr->getAllocatedType());
+    expr->dump();
+    llvm::errs() << "ary size " << *expr->getArraySize() << "\n";
+    NewArrayInitialization(expr, toInit, allocType, getConstantIndex(1), getConstantIndex(10));
+  } else if (Expr *Init = expr->getInitializer())
+    StoreIntoOneUnit(Init, toInit, expr->getAllocatedType());
+}
+
 ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
+  // expr->getAllocatedType()->dump();
+  // Glob.CGM.getContext().getBaseElementType(expr->getAllocatedType())->dump();
+  // StoreAnyExprIntoOneUnit(nullptr, nullptr, expr->getAllocatedType());
+
   auto loc = getMLIRLocation(expr->getExprLoc());
   mlir::Value count;
 
@@ -1437,8 +1457,7 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
     mlir::Value args[1] = {count};
     arrayCons = alloc = builder.create<mlir::memref::AllocOp>(loc, mt, args);
     if (expr->hasInitializer() && isa<InitListExpr>(expr->getInitializer()))
-      (void)InitializeValueByInitListExpr(alloc, expr->getInitializer());
-
+      NewInitializer(expr, alloc);
   } else {
     auto typeSize = getTypeSize(loc, expr->getAllocatedType());
     mlir::Value arg = builder.create<arith::MulIOp>(loc, typeSize, count);
@@ -1460,7 +1479,7 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
         const_cast<CXXConstructExpr *>(expr->getConstructExpr()),
         /*name*/ nullptr, /*memtype*/ 0, arrayCons, count);
   } else if (expr->hasInitializer())
-    (void)InitializeValueByInitListExpr(arrayCons, expr->getInitializer(), count);
+    NewInitializer(expr, arrayCons);
   return ValueCategory(alloc, /*isRefererence*/ false);
 }
 

@@ -21,194 +21,74 @@ ignoring duplicate directory "/usr/local/include"
 End of search list.
 Emitting fn: main
 main
-CompoundStmt 0x9158630
-|-DeclStmt 0x91558b8
-| `-VarDecl 0x91556a0  used n 'int' cinit
-|   `-CallExpr 0x9155860 'int'
-|     |-ImplicitCastExpr 0x9155848 'int (*)(const char *) throw()' <FunctionToPointerDecay>
-|     | `-DeclRefExpr 0x91557c8 'int (const char *) throw()' lvalue Function 0x90ea930 'atoi' 'int (const char *) throw()' (UsingShadow 0x9153410 'atoi')
-|     `-ImplicitCastExpr 0x91558a0 'const char *' <NoOp>
-|       `-ImplicitCastExpr 0x9155888 'char *' <LValueToRValue>
-|         `-ArraySubscriptExpr 0x91557a8 'char *' lvalue
-|           |-ImplicitCastExpr 0x9155790 'char **' <LValueToRValue>
-|           | `-DeclRefExpr 0x9155750 'char **' lvalue ParmVar 0x91554f8 'argv' 'char **'
-|           `-IntegerLiteral 0x9155770 'int' 1
-|-DeclStmt 0x91559e8
-| `-VarDecl 0x91558e8  used a 'int *' cinit
-|   `-CXXNewExpr 0x91559a8 'int *' Function 0x8d777d8 'operator new' 'void *(std::size_t)'
-|     `-IntegerLiteral 0x9155950 'int' 2
-|-CallExpr 0x9155af0 'int'
-| |-ImplicitCastExpr 0x9155ad8 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-| | `-DeclRefExpr 0x9155ab8 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-| |-ImplicitCastExpr 0x9155b20 'const char *' <ArrayToPointerDecay>
-| | `-StringLiteral 0x9155a48 'const char[8]' lvalue "a = %d\n"
-| `-ImplicitCastExpr 0x9155b38 'int' <LValueToRValue>
-|   `-UnaryOperator 0x9155aa0 'int' lvalue prefix '*' cannot overflow
-|     `-ImplicitCastExpr 0x9155a88 'int *' <LValueToRValue>
-|       `-DeclRefExpr 0x9155a68 'int *' lvalue Var 0x91558e8 'a' 'int *'
-|-DeclStmt 0x9155e20
-| `-VarDecl 0x9155b68  used as 'int *' cinit
-|   `-CXXNewExpr 0x9155dd8 'int *' array Function 0x8d77a50 'operator new[]' 'void *(std::size_t)'
-|     |-ImplicitCastExpr 0x9155cd8 'unsigned long' <IntegralCast>
-|     | `-ImplicitCastExpr 0x9155cc0 'int' <LValueToRValue>
-|     |   `-DeclRefExpr 0x9155bd0 'int' lvalue Var 0x91556a0 'n' 'int'
-|     `-InitListExpr 0x9155d18 'int[3]'
-|       |-array_filler: ImplicitValueInitExpr 0x9155dc8 'int'
-|       |-IntegerLiteral 0x9155bf0 'int' 1
-|       |-IntegerLiteral 0x9155c10 'int' 2
-|       `-IntegerLiteral 0x9155c30 'int' 3
-|-ForStmt 0x91561c8
-| |-DeclStmt 0x9155ed8
-| | `-VarDecl 0x9155e50  used i 'int' cinit
-| |   `-IntegerLiteral 0x9155eb8 'int' 0
+CompoundStmt 0x81b3a70
+|-DeclStmt 0x81b30f8
+| `-VarDecl 0x81b2ee0  used n 'int' cinit
+|   `-CallExpr 0x81b30a0 'int'
+|     |-ImplicitCastExpr 0x81b3088 'int (*)(const char *) throw()' <FunctionToPointerDecay>
+|     | `-DeclRefExpr 0x81b3008 'int (const char *) throw()' lvalue Function 0x8148140 'atoi' 'int (const char *) throw()' (UsingShadow 0x81b0c20 'atoi')
+|     `-ImplicitCastExpr 0x81b30e0 'const char *' <NoOp>
+|       `-ImplicitCastExpr 0x81b30c8 'char *' <LValueToRValue>
+|         `-ArraySubscriptExpr 0x81b2fe8 'char *' lvalue
+|           |-ImplicitCastExpr 0x81b2fd0 'char **' <LValueToRValue>
+|           | `-DeclRefExpr 0x81b2f90 'char **' lvalue ParmVar 0x81b2d30 'argv' 'char **'
+|           `-IntegerLiteral 0x81b2fb0 'int' 1
+|-DeclStmt 0x81b3228
+| `-VarDecl 0x81b3128  used a 'int *' cinit
+|   `-CXXNewExpr 0x81b31e8 'int *' Function 0x7dd50a8 'operator new' 'void *(std::size_t)'
+|     `-IntegerLiteral 0x81b3190 'int' 2
+|-CallExpr 0x81b3330 'int'
+| |-ImplicitCastExpr 0x81b3318 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+| | `-DeclRefExpr 0x81b32f8 'int (const char *__restrict, ...)' lvalue Function 0x8123ac8 'printf' 'int (const char *__restrict, ...)'
+| |-ImplicitCastExpr 0x81b3360 'const char *' <ArrayToPointerDecay>
+| | `-StringLiteral 0x81b3288 'const char[8]' lvalue "a = %d\n"
+| `-ImplicitCastExpr 0x81b3378 'int' <LValueToRValue>
+|   `-UnaryOperator 0x81b32e0 'int' lvalue prefix '*' cannot overflow
+|     `-ImplicitCastExpr 0x81b32c8 'int *' <LValueToRValue>
+|       `-DeclRefExpr 0x81b32a8 'int *' lvalue Var 0x81b3128 'a' 'int *'
+|-DeclStmt 0x81b3660
+| `-VarDecl 0x81b33a8  used as 'int *' cinit
+|   `-CXXNewExpr 0x81b3618 'int *' array Function 0x7dd5320 'operator new[]' 'void *(std::size_t)'
+|     |-ImplicitCastExpr 0x81b3518 'unsigned long' <IntegralCast>
+|     | `-ImplicitCastExpr 0x81b3500 'int' <LValueToRValue>
+|     |   `-DeclRefExpr 0x81b3410 'int' lvalue Var 0x81b2ee0 'n' 'int'
+|     `-InitListExpr 0x81b3558 'int[3]'
+|       |-array_filler: ImplicitValueInitExpr 0x81b3608 'int'
+|       |-IntegerLiteral 0x81b3430 'int' 1
+|       |-IntegerLiteral 0x81b3450 'int' 2
+|       `-IntegerLiteral 0x81b3470 'int' 3
+|-ForStmt 0x81b3a08
+| |-DeclStmt 0x81b3718
+| | `-VarDecl 0x81b3690  used i 'int' cinit
+| |   `-IntegerLiteral 0x81b36f8 'int' 0
 | |-<<<NULL>>>
-| |-BinaryOperator 0x9155f48 '_Bool' '<'
-| | |-ImplicitCastExpr 0x9155f30 'int' <LValueToRValue>
-| | | `-DeclRefExpr 0x9155ef0 'int' lvalue Var 0x9155e50 'i' 'int'
-| | `-IntegerLiteral 0x9155f10 'int' 5
-| |-UnaryOperator 0x9155f88 'int' lvalue prefix '++'
-| | `-DeclRefExpr 0x9155f68 'int' lvalue Var 0x9155e50 'i' 'int'
-| `-CompoundStmt 0x91561b0
-|   `-CallExpr 0x9156150 'int'
-|     |-ImplicitCastExpr 0x9156138 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-|     | `-DeclRefExpr 0x9156118 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-|     |-ImplicitCastExpr 0x9156180 'const char *' <ArrayToPointerDecay>
-|     | `-StringLiteral 0x9156068 'const char[9]' lvalue "as = %d\n"
-|     `-ImplicitCastExpr 0x9156198 'int' <LValueToRValue>
-|       `-ArraySubscriptExpr 0x91560f8 'int' lvalue
-|         |-ImplicitCastExpr 0x91560c8 'int *' <LValueToRValue>
-|         | `-DeclRefExpr 0x9156088 'int *' lvalue Var 0x9155b68 'as' 'int *'
-|         `-ImplicitCastExpr 0x91560e0 'int' <LValueToRValue>
-|           `-DeclRefExpr 0x91560a8 'int' lvalue Var 0x9155e50 'i' 'int'
-|-DeclStmt 0x91564d8
-| `-VarDecl 0x91562f0  used a2d 'int[2][2]' cinit
-|   `-InitListExpr 0x9156430 'int[2][2]'
-|     |-array_filler: ImplicitValueInitExpr 0x91564c8 'int[2]'
-|     `-InitListExpr 0x9156470 'int[2]'
-|       |-IntegerLiteral 0x9156358 'int' 1
-|       `-IntegerLiteral 0x9156378 'int' 2
-|-ForStmt 0x9156a58
-| |-DeclStmt 0x9156590
-| | `-VarDecl 0x9156508  used i 'int' cinit
-| |   `-IntegerLiteral 0x9156570 'int' 0
-| |-<<<NULL>>>
-| |-BinaryOperator 0x9156600 '_Bool' '<'
-| | |-ImplicitCastExpr 0x91565e8 'int' <LValueToRValue>
-| | | `-DeclRefExpr 0x91565a8 'int' lvalue Var 0x9156508 'i' 'int'
-| | `-IntegerLiteral 0x91565c8 'int' 2
-| |-UnaryOperator 0x9156640 'int' lvalue prefix '++'
-| | `-DeclRefExpr 0x9156620 'int' lvalue Var 0x9156508 'i' 'int'
-| `-CompoundStmt 0x9156a40
-|   `-ForStmt 0x9156a08
-|     |-DeclStmt 0x91566f8
-|     | `-VarDecl 0x9156670  used j 'int' cinit
-|     |   `-IntegerLiteral 0x91566d8 'int' 0
-|     |-<<<NULL>>>
-|     |-BinaryOperator 0x9156768 '_Bool' '<'
-|     | |-ImplicitCastExpr 0x9156750 'int' <LValueToRValue>
-|     | | `-DeclRefExpr 0x9156710 'int' lvalue Var 0x9156670 'j' 'int'
-|     | `-IntegerLiteral 0x9156730 'int' 2
-|     |-UnaryOperator 0x91567a8 'int' lvalue prefix '++'
-|     | `-DeclRefExpr 0x9156788 'int' lvalue Var 0x9156670 'j' 'int'
-|     `-CompoundStmt 0x91569f0
-|       `-CallExpr 0x9156990 'int'
-|         |-ImplicitCastExpr 0x9156978 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-|         | `-DeclRefExpr 0x9156958 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-|         |-ImplicitCastExpr 0x91569c0 'const char *' <ArrayToPointerDecay>
-|         | `-StringLiteral 0x9156808 'const char[10]' lvalue "a2d = %d\n"
-|         `-ImplicitCastExpr 0x91569d8 'int' <LValueToRValue>
-|           `-ArraySubscriptExpr 0x9156938 'int' lvalue
-|             |-ImplicitCastExpr 0x9156908 'int *' <ArrayToPointerDecay>
-|             | `-ArraySubscriptExpr 0x91568c8 'int[2]' lvalue
-|             |   |-ImplicitCastExpr 0x9156898 'int (*)[2]' <ArrayToPointerDecay>
-|             |   | `-DeclRefExpr 0x9156830 'int[2][2]' lvalue Var 0x91562f0 'a2d' 'int[2][2]'
-|             |   `-ImplicitCastExpr 0x91568b0 'int' <LValueToRValue>
-|             |     `-DeclRefExpr 0x9156850 'int' lvalue Var 0x9156508 'i' 'int'
-|             `-ImplicitCastExpr 0x9156920 'int' <LValueToRValue>
-|               `-DeclRefExpr 0x91568e8 'int' lvalue Var 0x9156670 'j' 'int'
-|-DeclStmt 0x91574d0
-| `-VarDecl 0x9156b00  used aa 'A *' cinit
-|   `-CXXNewExpr 0x9157490 'A *' Function 0x8d777d8 'operator new' 'void *(std::size_t)'
-|     `-CXXConstructExpr 0x9157460 'A':'struct A' 'void (int)'
-|       `-IntegerLiteral 0x9156b68 'int' 2
-|-CallExpr 0x91575f0 'int'
-| |-ImplicitCastExpr 0x91575d8 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-| | `-DeclRefExpr 0x91575b8 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-| |-ImplicitCastExpr 0x9157620 'const char *' <ArrayToPointerDecay>
-| | `-StringLiteral 0x9157530 'const char[9]' lvalue "aa = %d\n"
-| `-ImplicitCastExpr 0x9157638 'int' <LValueToRValue>
-|   `-MemberExpr 0x9157588 'int' lvalue ->a 0x9154df0
-|     `-ImplicitCastExpr 0x9157570 'A *' <LValueToRValue>
-|       `-DeclRefExpr 0x9157550 'A *' lvalue Var 0x9156b00 'aa' 'A *'
-|-DeclStmt 0x9157a10
-| `-VarDecl 0x9157728  used saa 'A[2]' cinit
-|   `-InitListExpr 0x9157840 'A[2]'
-|     |-array_filler: CXXConstructExpr 0x91579e8 'A':'struct A' 'void (void) noexcept' list zeroing
-|     `-CXXConstructExpr 0x9157970 'A':'struct A' 'void (int)' list
-|       `-IntegerLiteral 0x9157790 'int' 1
-|-CallExpr 0x9157b78 'int'
-| |-ImplicitCastExpr 0x9157b60 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-| | `-DeclRefExpr 0x9157b40 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-| |-ImplicitCastExpr 0x9157ba8 'const char *' <ArrayToPointerDecay>
-| | `-StringLiteral 0x9157a70 'const char[10]' lvalue "saa = %d\n"
-| `-ImplicitCastExpr 0x9157bc0 'int' <LValueToRValue>
-|   `-MemberExpr 0x9157b10 'int' lvalue .a 0x9154df0
-|     `-ArraySubscriptExpr 0x9157af0 'A':'struct A' lvalue
-|       |-ImplicitCastExpr 0x9157ad8 'A *' <ArrayToPointerDecay>
-|       | `-DeclRefExpr 0x9157a98 'A[2]' lvalue Var 0x9157728 'saa' 'A[2]'
-|       `-IntegerLiteral 0x9157ab8 'int' 0
-|-DeclStmt 0x91580d8
-| `-VarDecl 0x9157bf0  used aaa 'A *' cinit
-|   `-CXXNewExpr 0x9158090 'A *' array Function 0x8d77a50 'operator new[]' 'void *(std::size_t)'
-|     |-ImplicitCastExpr 0x9157e30 'unsigned long' <IntegralCast>
-|     | `-ImplicitCastExpr 0x9157e18 'int' <LValueToRValue>
-|     |   `-DeclRefExpr 0x9157c58 'int' lvalue Var 0x91556a0 'n' 'int'
-|     `-InitListExpr 0x9157ea8 'A[3]'
-|       |-array_filler: CXXConstructExpr 0x9158068 'A':'struct A' 'void (void) noexcept' list zeroing
-|       |-CXXConstructExpr 0x9157ee8 'A':'struct A' 'void (int)' list
-|       | `-IntegerLiteral 0x9157c78 'int' 1
-|       |-CXXConstructExpr 0x9157f20 'A':'struct A' 'void (int)' list
-|       | `-IntegerLiteral 0x9157ce0 'int' 2
-|       `-CXXConstructExpr 0x9157f60 'A':'struct A' 'void (int)' list
-|         `-IntegerLiteral 0x9157d48 'int' 3
-|-ForStmt 0x9158450
-| |-DeclStmt 0x9158190
-| | `-VarDecl 0x9158108  used i 'int' cinit
-| |   `-IntegerLiteral 0x9158170 'int' 0
-| |-<<<NULL>>>
-| |-BinaryOperator 0x9158218 '_Bool' '<'
-| | |-ImplicitCastExpr 0x91581e8 'int' <LValueToRValue>
-| | | `-DeclRefExpr 0x91581a8 'int' lvalue Var 0x9158108 'i' 'int'
-| | `-ImplicitCastExpr 0x9158200 'int' <LValueToRValue>
-| |   `-DeclRefExpr 0x91581c8 'int' lvalue Var 0x91556a0 'n' 'int'
-| |-UnaryOperator 0x9158258 'int' lvalue prefix '++'
-| | `-DeclRefExpr 0x9158238 'int' lvalue Var 0x9158108 'i' 'int'
-| `-CompoundStmt 0x9158438
-|   `-CallExpr 0x91583d8 'int'
-|     |-ImplicitCastExpr 0x91583c0 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
-|     | `-DeclRefExpr 0x91583a0 'int (const char *__restrict, ...)' lvalue Function 0x90c62b8 'printf' 'int (const char *__restrict, ...)'
-|     |-ImplicitCastExpr 0x9158408 'const char *' <ArrayToPointerDecay>
-|     | `-StringLiteral 0x91582b8 'const char[10]' lvalue "aaa = %d\n"
-|     `-ImplicitCastExpr 0x9158420 'int' <LValueToRValue>
-|       `-MemberExpr 0x9158370 'int' lvalue .a 0x9154df0
-|         `-ArraySubscriptExpr 0x9158350 'A':'struct A' lvalue
-|           |-ImplicitCastExpr 0x9158320 'A *' <LValueToRValue>
-|           | `-DeclRefExpr 0x91582e0 'A *' lvalue Var 0x9157bf0 'aaa' 'A *'
-|           `-ImplicitCastExpr 0x9158338 'int' <LValueToRValue>
-|             `-DeclRefExpr 0x9158300 'int' lvalue Var 0x9158108 'i' 'int'
-|-DeclStmt 0x91585e8
-| `-VarDecl 0x91584d0  b 'B':'struct B' cinit
-|   `-InitListExpr 0x9158578 'B':'struct B'
-|     |-ImplicitValueInitExpr 0x91585c8 'double'
-|     `-ImplicitValueInitExpr 0x91585d8 'int'
-`-ReturnStmt 0x9158620
-  `-IntegerLiteral 0x9158600 'int' 0
-Emitting fn: _ZN1AC1Ei
-A
- init: - baseInit:0 memberInit:1 anyMember:1 indirectMember:0 isinClass:0 delegating:0 isPack:0
-FieldDecl 0x9154df0 <testcpp.cc:16:3, col:7> col:7 referenced a 'int'
-ImplicitCastExpr 0x9155180 'int' <LValueToRValue>
-`-DeclRefExpr 0x9155140 'int' lvalue ParmVar 0x9154f98 'a' 'int'
-CompoundStmt 0x91551c0
-Emitting fn: _ZN1AC1Ev
-A
+| |-BinaryOperator 0x81b3788 '_Bool' '<'
+| | |-ImplicitCastExpr 0x81b3770 'int' <LValueToRValue>
+| | | `-DeclRefExpr 0x81b3730 'int' lvalue Var 0x81b3690 'i' 'int'
+| | `-IntegerLiteral 0x81b3750 'int' 5
+| |-UnaryOperator 0x81b37c8 'int' lvalue prefix '++'
+| | `-DeclRefExpr 0x81b37a8 'int' lvalue Var 0x81b3690 'i' 'int'
+| `-CompoundStmt 0x81b39f0
+|   `-CallExpr 0x81b3990 'int'
+|     |-ImplicitCastExpr 0x81b3978 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+|     | `-DeclRefExpr 0x81b3958 'int (const char *__restrict, ...)' lvalue Function 0x8123ac8 'printf' 'int (const char *__restrict, ...)'
+|     |-ImplicitCastExpr 0x81b39c0 'const char *' <ArrayToPointerDecay>
+|     | `-StringLiteral 0x81b38a8 'const char[9]' lvalue "as = %d\n"
+|     `-ImplicitCastExpr 0x81b39d8 'int' <LValueToRValue>
+|       `-ArraySubscriptExpr 0x81b3938 'int' lvalue
+|         |-ImplicitCastExpr 0x81b3908 'int *' <LValueToRValue>
+|         | `-DeclRefExpr 0x81b38c8 'int *' lvalue Var 0x81b33a8 'as' 'int *'
+|         `-ImplicitCastExpr 0x81b3920 'int' <LValueToRValue>
+|           `-DeclRefExpr 0x81b38e8 'int' lvalue Var 0x81b3690 'i' 'int'
+`-ReturnStmt 0x81b3a60
+  `-IntegerLiteral 0x81b3a40 'int' 0
+CXXNewExpr 0x81b3618 'int *' array Function 0x7dd5320 'operator new[]' 'void *(std::size_t)'
+|-ImplicitCastExpr 0x81b3518 'unsigned long' <IntegralCast>
+| `-ImplicitCastExpr 0x81b3500 'int' <LValueToRValue>
+|   `-DeclRefExpr 0x81b3410 'int' lvalue Var 0x81b2ee0 'n' 'int'
+`-InitListExpr 0x81b3558 'int[3]'
+  |-array_filler: ImplicitValueInitExpr 0x81b3608 'int'
+  |-IntegerLiteral 0x81b3430 'int' 1
+  |-IntegerLiteral 0x81b3450 'int' 2
+  `-IntegerLiteral 0x81b3470 'int' 3
+ary size 0x81b3518

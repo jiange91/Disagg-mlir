@@ -382,6 +382,8 @@ public:
   ValueCategory
   VisitMaterializeTemporaryExpr(clang::MaterializeTemporaryExpr *expr);
 
+  void NewInitializer(clang::CXXNewExpr *expr, mlir::Value toInit);
+
   ValueCategory VisitCXXNewExpr(clang::CXXNewExpr *expr);
 
   ValueCategory VisitCXXDeleteExpr(clang::CXXDeleteExpr *expr);
@@ -398,9 +400,15 @@ public:
 
   ValueCategory VisitCXXFunctionalCastExpr(clang::CXXFunctionalCastExpr *expr);
 
+  // initialization for array initialization apart from array new
+  void CommonArrayInit(InitListExpr *E, QualType ElementType, mlir::Value destMem);
+  // init value into one memory unit 
+  void StoreIntoOneUnit(clang::Expr *Init, mlir::Value address, QualType ElementType);
+  // initialization for new T[]
+  void NewArrayInitialization(CXXNewExpr *E, mlir::Value address, QualType ElementType, mlir::Value NumElements, mlir::Value AllocSize);
+
   mlir::Attribute InitializeValueByInitListExpr(mlir::Value toInit,
-                                                clang::Expr *expr,
-                                                mlir::Value NumElements /* not number of inits */ = nullptr);
+                                                clang::Expr *expr);
 
   ValueCategory VisitInitListExpr(clang::InitListExpr *expr);
   ValueCategory

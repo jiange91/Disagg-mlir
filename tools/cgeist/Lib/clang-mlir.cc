@@ -634,11 +634,12 @@ ValueCategory MLIRScanner::VisitParenExpr(clang::ParenExpr *expr) {
   return Visit(expr->getSubExpr());
 }
 
+
 ValueCategory
 MLIRScanner::VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl) {
   auto Mty = getMLIRType(decl->getType());
   auto loc = getMLIRLocation(decl->getExprLoc());
-
+  
   if (auto FT = Mty.dyn_cast<mlir::FloatType>())
     return ValueCategory(builder.create<ConstantFloatOp>(
                              loc, APFloat(FT.getFloatSemantics(), "0"), FT),
@@ -700,9 +701,15 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
   auto TryTrivialInitialization = [&](mlir::Value toInit, clang::Expr *expr, mlir::Location loc) -> mlir::DenseElementsAttr {
     bool isArray = false;
     Glob.getMLIRType(expr->getType(), &isArray);
-    ValueCategory sub = Visit(expr);
-    ValueCategory(toInit, /*isReference*/ true)
-        .store(loc, builder, sub, isArray);
+    ValueCategory sub;
+    // if is constructor, use memory direclty
+    if (const auto CCE = dyn_cast<CXXConstructExpr>(expr)) {
+      sub = VisitConstructCommon(CCE, nullptr, 0, toInit, getConstantIndex(1));
+    } else {
+      sub = Visit(expr);
+      ValueCategory(toInit, /*isReference*/ true)
+          .store(loc, builder, sub, isArray);
+    }
     if (!sub.isReference)
       if (auto mt = toInit.getType().dyn_cast<MemRefType>()) {
         if (auto cop = sub.val.getDefiningOp<ConstantIntOp>())
@@ -775,6 +782,38 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
           base, idxs);
     }
   };
+
+  // Call constructor in a loop 
+  auto AggrConstructorCall = [&](mlir::Value base, CXXConstructExpr *CCE, unsigned ExpInits, mlir::Location loc) {
+    mlir::Value RemainingsNums = NumElements;
+    if (ExpInits) {
+      RemainingsNums = builder.create<arith::SubIOp>(loc, 
+                            NumElements, 
+                            getConstantIndex(ExpInits)); 
+    }
+    auto forOp = builder.create<scf::ForOp>(loc, getConstantIndex(0), RemainingsNums, getConstantIndex(1));
+    mlir::Block::iterator oldpoint = builder.getInsertionPoint();
+    mlir::Block *oldblock = builder.getInsertionBlock();
+    builder.setInsertionPointToStart(&forOp.getLoopBody().front());
+    auto tocall = Glob.GetOrCreateMLIRFunction(CCE->getConstructor());
+    auto curSlot = CommonArrayLookup(loc, 
+                            ValueCategory(base, false), forOp.getInductionVar(),
+                            /*isImplicitRef*/ false, /*removeIndex*/ false);
+    
+
+    SmallVector<std::pair<ValueCategory, clang::Expr *>> args;
+    args.emplace_back(make_pair(curSlot, (clang::Expr *)nullptr));
+    for (auto a : CCE->arguments()) {
+      a->dump();
+      args.push_back(make_pair(Visit(a), a));
+    }
+
+    CallHelper(tocall, CCE->getType(), args,
+        /*retType*/ Glob.CGM.getContext().VoidTy, false, CCE);
+
+    builder.setInsertionPoint(oldblock, oldpoint);
+  };
+
 
   // Struct initializan requires an extra 0, since the first index
   // is the pointer index, and then the struct index.
@@ -862,17 +901,29 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value toInit,
       if (!ConstNum || ConstNum.getValue().cast<IntegerAttr>().getInt() > initListExpr->getNumInits()) {
         assert(Init && "have trailing elements to initialize but no initializer");
         auto curPtr = MoveCurrentPtr(toInit, initListExpr->getNumInits(), loc);
-        // If this is a constructor, call common routine 
+
+        // If this is a constructor, call common routine iteratively
         if (const auto CCE = dyn_cast<CXXConstructExpr>(Init)) {
-          (void) VisitConstructCommon(CCE, nullptr, 0, curPtr, getConstantIndex(1));
+          CXXConstructorDecl *Ctor = CCE->getConstructor();
+          if (Ctor->isTrivial()) {
+            // If new expression did not specify value-initialization, then there
+            // is no initialization.
+            if (!CCE->requiresZeroInitialization() || Ctor->getParent()->isEmpty())
+              return mlir::DenseElementsAttr();
+
+            if (TryMemsetInitialization(curPtr, num, Init, loc))
+              return mlir::DenseElementsAttr();
+          }
+          AggrConstructorCall(curPtr, CCE, num, loc);
+          return mlir::DenseElementsAttr();
         }
 
         // TODO: support multi-dimension array new
         // If this is value-initialization, we can usually use memset.
         // ImplicitValueInitExpr IVIE(ElementType);
         if (isa<ImplicitValueInitExpr>(Init)) {
-          TryMemsetInitialization(curPtr, num, Init, loc);
-
+          if(TryMemsetInitialization(curPtr, num, Init, loc))
+            return mlir::DenseElementsAttr();
           // Switch to an ImplicitValueInitExpr for the element type. This handles
           // only one case: multidimensional array new of pointers to members. In
           // all other cases, we already have an initializer for the array element.
@@ -1499,7 +1550,6 @@ ValueCategory MLIRScanner::VisitConstructCommon(clang::CXXConstructExpr *cons,
                                                 mlir::Value op,
                                                 mlir::Value count) {
   auto loc = getMLIRLocation(cons->getExprLoc());
-
   bool isArray = false;
   mlir::Type subType = Glob.getMLIRType(cons->getType(), &isArray);
 
@@ -1631,9 +1681,7 @@ ValueCategory MLIRScanner::CommonArrayLookup(mlir::Location loc,
                                              bool removeIndex) {
   mlir::Value val = array.getValue(loc, builder);
   assert(val);
-
   if (val.getType().isa<LLVM::LLVMPointerType>()) {
-
     mlir::Value vals[] = {
         builder.create<IndexCastOp>(loc, builder.getIntegerType(64), idx)};
     // TODO sub
@@ -5402,7 +5450,7 @@ mlir::Type MLIRASTConsumer::getMLIRType(clang::QualType qt, bool *implicitRef,
   if (t->isNullPtrType()) {
     llvm::Type *T = CGM.getTypes().ConvertType(QualType(t, 0)); 
     auto MT /* ptr<i8> */ = typeTranslator.translateType(T); 
-    if (!CStyleMemRef)
+    if (!memRefABI)
       return MT;
     else
       return MemRefType::get( {-1}, MT.cast<LLVM::LLVMPointerType>().getElementType());

@@ -20,6 +20,7 @@ public:
 };
 
 struct B {
+  // double x[10];
   double x;
   int y;
 };

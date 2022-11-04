@@ -34,24 +34,28 @@ int main(int argc, char **argv) {
   // for (int i = 0; i < a.size(); ++ i) {
   //   printf("%d\n", a[i]);
   // }
+
   int n = atoi(argv[1]);
   int *a = new int(2);
   printf("a = %d\n", *a);
 
-  int *as = new int[n] {1,2,3} ;
+  int *as = new int[n] { 1,2,3 } ;
   for (int i = 0; i < 5; ++ i) {
     printf("as = %d\n", as[i]);
   }
 
-  // int a2d[2][2] = { {1,2} };
-  // for (int i = 0; i < 2; ++ i) {
-  //   for (int j = 0; j < 2; ++ j) {
-  //     printf("a2d = %d\n", a2d[i][j]);
-  //   }
-  // }
+  int tt = {n};
+  printf("tt = %d\n", tt);
 
-  // A *aa = new A(2);
-  // printf("aa = %d\n", aa->a);
+  int a2d[2][2] = { {1,2} };
+  for (int i = 0; i < 2; ++ i) {
+    for (int j = 0; j < 2; ++ j) {
+      printf("a2d = %d\n", a2d[i][j]);
+    }
+  }
+
+  A *aa = new A(2);
+  printf("aa = %d\n", aa->a);
 
   // A saa[2] = {{1}};
   // printf("saa = %d\n", saa[0].a);

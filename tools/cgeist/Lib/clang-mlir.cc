@@ -664,8 +664,27 @@ MLIRScanner::VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl) {
   assert(0 && "bad");
 }
 
-void MLIRScanner::CommonArrayInit(InitListExpr *E, QualType ElementType, mlir::Value destMem) {
+/// Determine if E is a trivial array filler, that is, one that is
+/// equivalent to zero-initialization.
+static inline bool isTrivialFiller(Expr *E) {
+  if (!E)
+    return true;
 
+  if (isa<ImplicitValueInitExpr>(E))
+    return true;
+
+  if (auto *ILE = dyn_cast<InitListExpr>(E)) {
+    if (ILE->getNumInits())
+      return false;
+    return isTrivialFiller(ILE->getArrayFiller());
+  }
+
+  if (auto *Cons = dyn_cast_or_null<CXXConstructExpr>(E))
+    return Cons->getConstructor()->isDefaultConstructor() &&
+           Cons->getConstructor()->isTrivial();
+
+  // FIXME: Are there other cases where we can avoid emitting an initializer?
+  return false;
 }
 
 // Can be used for static only
@@ -694,18 +713,23 @@ void MLIRScanner::StoreIntoOneUnit(clang::Expr *Init, mlir::Value address, QualT
       return;
     }
     case clang::CodeGen::TEK_Aggregate:
-      assert(0 && "TODO: static aggregate type initialization");
+      if (auto CCE = dyn_cast<CXXConstructExpr>(Init))
+        VisitConstructCommon(CCE, nullptr, 0, address);
+      else if (auto ILE = dyn_cast<InitListExpr>(Init))
+        (void)InitializeValueByInitListExpr(address, Init);
+      else {
+        Init->dump();
+        assert(0 && "Unsupported initialization store");
+      }
       return;
   }
   llvm_unreachable("bad bad evaulation kind");
 }
 
 // TODO: Add memref support
-void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, QualType ElementType, mlir::Value NumElements, mlir::Value AllocSize) {
-  if (!E->hasInitializer()) return;
-  mlir::Value CurPtr = address;
+void MLIRScanner::ArrayInitialization(Expr *Init, mlir::Value address, QualType ElementType, mlir::Value NumElements, mlir::Value MemSize) {
+  mlir::Value CurPtr = nullptr;
   unsigned ExplicitInitListElements = 0;
-  Expr *Init = E->getInitializer();
   mlir::Location loc = address.getLoc();
 
   auto TryMemsetInitialization = [&]() -> bool {
@@ -713,7 +737,7 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
       return false;
 
     // Subtract explicit initialized elements
-    mlir::Value RemainingSize = AllocSize;
+    mlir::Value RemainingSize = MemSize;
     if (ExplicitInitListElements) {
       auto initializedSize = builder.create<arith::MulIOp>(loc, 
         getTypeSize(loc, ElementType), 
@@ -734,7 +758,7 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
   };
 
   // Move current ptr further
-  auto MoveCurrentPtr = [&]() -> mlir::Value {
+  auto MoveCurrentPtrTo = [&](unsigned i) -> mlir::Value {
     if (auto mt = address.getType().dyn_cast<MemRefType>()) {
       auto shape = std::vector<int64_t>(mt.getShape());
       assert(shape.size() > 0);
@@ -743,7 +767,7 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
                                         MemRefLayoutAttrInterface(),
                                         mt.getMemorySpace());
       return builder.create<polygeist::SubIndexOp>(loc, mt0, address,
-                                                    getConstantIndex(1)); 
+                                                    getConstantIndex(i)); 
     } else {
       auto PT = address.getType().cast<LLVM::LLVMPointerType>();
       auto ET = PT.getElementType();
@@ -759,7 +783,7 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
 
       mlir::Value idxs[] = {
           builder.create<ConstantIntOp>(loc, 0, 32),
-          builder.create<ConstantIntOp>(loc, 1, 32),
+          builder.create<ConstantIntOp>(loc, i, 32),
       };
       return builder.create<LLVM::GEPOp>(
           loc, LLVM::LLVMPointerType::get(nextType, PT.getAddressSpace()),
@@ -799,20 +823,17 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
   // If the initializer is an initializer list, first do the explicit elements.
   if (InitListExpr *ILE = dyn_cast<InitListExpr>(Init)) {
     ExplicitInitListElements = ILE->getNumInits();
-
     // If this is a multi-dimensional array new, we will initialize multiple
     // elements with each init list element.
-    QualType AllocType = E->getAllocatedType();
-    if (const ConstantArrayType *CAT = dyn_cast_or_null<ConstantArrayType>(AllocType->getAsArrayTypeUnsafe())) {
-      auto ElementTy = Glob.CGM.getTypes().ConvertTypeForMem(AllocType);
-      // CurPtr = Builder.CreateElementBitCast(CurPtr, ElementTy);
-      ElementTy->dump();
-      ExplicitInitListElements *= Glob.CGM.getContext().getConstantArrayElementCount(CAT);
-    }
+    // if (const ConstantArrayType *CAT = dyn_cast_or_null<ConstantArrayType>(ElementType->getAsArrayTypeUnsafe())) {
+    //   auto ElementTy = Glob.CGM.getTypes().ConvertTypeForMem(ElementType);
+    //   // CurPtr = Builder.CreateElementBitCast(CurPtr, ElementTy);
+    //   ExplicitInitListElements *= Glob.CGM.getContext().getConstantArrayElementCount(CAT);
+    // }
 
     for (unsigned i = 0, e = ILE->getNumInits(); i != e; ++i) {
+      CurPtr = MoveCurrentPtrTo(i);
       StoreIntoOneUnit(ILE->getInit(i), CurPtr, ILE->getInit(i)->getType());
-      MoveCurrentPtr();
     }
 
     // The remaining elements are filled with the array filler expression.
@@ -845,6 +866,7 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
     if (n <= ExplicitInitListElements) return;
   }
 
+  CurPtr = MoveCurrentPtrTo(ExplicitInitListElements);
   assert(Init && "have trailing elements to initialize but no initializer");
   if (CXXConstructExpr *CCE = dyn_cast<CXXConstructExpr>(Init)) {
     CXXConstructorDecl *Ctor = CCE->getConstructor();
@@ -906,30 +928,6 @@ void MLIRScanner::NewArrayInitialization(CXXNewExpr *E, mlir::Value address, Qua
 /// provided InitListExpr.
 mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
                                                            clang::Expr *expr) {
-  // IF NumElements (can be dynamic) is not specified, infer from the given memory toInit
-  // if (!NumElements) {
-  //   if (auto MT = toInit.getType().dyn_cast<MemRefType>()) {
-  //     auto shape = MT.getShape();
-  //     assert(shape.size() > 0);
-  //     assert(shape[0] != -1);
-  //     NumElements = getConstantIndex(shape[0]);
-  //   } else if (auto PT = toInit.getType().dyn_cast<LLVM::LLVMPointerType>()) {
-  //     if (auto AT = PT.getElementType().dyn_cast<LLVM::LLVMArrayType>()) {
-  //       NumElements = getConstantIndex(AT.getNumElements());
-  //     } else if (auto AT =
-  //                     PT.getElementType().dyn_cast<LLVM::LLVMStructType>()) {
-  //       NumElements = getConstantIndex(AT.getBody().size());
-  //     } else {
-  //       expr->dump();
-  //       toInit.getType().dump();
-  //       assert(0 && "NumElements not given, neither can infer from given memory");
-  //     }
-  //   } else {
-  //     expr->dump();
-  //     toInit.getType().dump();
-  //     assert(0 && "NumElements not given, neither can infer from given memory");
-  //   }
-  // }
   assert(isa<InitListExpr>(expr) && "only accept initialization list here");
   clang::InitListExpr *E = cast<InitListExpr>(expr);
   if (E->hadArrayRangeDesignator())
@@ -940,12 +938,25 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
 
   // Handle initialization of an array.
   if (E->getType()->isArrayType()) {
-    E->getType()->dump();
     // auto AType = cast<llvm::ArrayType>(Dest.getAddress().getElementType());
     // EmitArrayInit(Dest.getAddress(), AType, E->getType(), E);
+    auto AryType = dyn_cast_or_null<ConstantArrayType>(E->getType()->getAsArrayTypeUnsafe());
+    AryType->dump();
+    assert(AryType && "Expect constant array type here");
+
+    uint64_t NumInitElements = E->getNumInits();
+    uint64_t NumArrayElements = AryType->getSize().getZExtValue();
+    assert(NumInitElements <= NumArrayElements);
+
+    CharUnits elementSize = Glob.CGM.getContext().getTypeSizeInChars(AryType->getElementType());
+    mlir::Value memSize = getConstantIndex(NumArrayElements * elementSize.getQuantity());
+    ArrayInitialization(E, mem, AryType->getElementType(), 
+      getConstantIndex(NumArrayElements),
+      memSize
+    );
+
     return mlir::DenseElementsAttr();
   }
-
 
   return  mlir::DenseElementsAttr();
 }
@@ -1077,7 +1088,7 @@ ValueCategory MLIRScanner::VisitVarDecl(clang::VarDecl *decl) {
         .store(varLoc, builder, inite, isArray);
   } else if (auto init = decl->getInit()) {
     if (isa<InitListExpr>(init)) {
-      InitializeValueByInitListExpr(op, cast<InitListExpr>(init));
+      InitializeValueByInitListExpr(op, init);
     } else if (auto CE = dyn_cast<CXXConstructExpr>(init)) {
       VisitConstructCommon(CE, decl, memtype, op);
     } else
@@ -1394,12 +1405,21 @@ ValueCategory MLIRScanner::VisitCXXDeleteExpr(clang::CXXDeleteExpr *expr) {
   return nullptr;
 }
 
-void MLIRScanner::NewInitializer(clang::CXXNewExpr *expr, mlir::Value toInit) {
+void MLIRScanner::NewInitializer(clang::CXXNewExpr *expr, mlir::Value toInit, mlir::Value arraySize, mlir::Value allocSize) {
   if (expr->isArray()) {
     QualType allocType = Glob.CGM.getContext().getBaseElementType(expr->getAllocatedType());
-    expr->dump();
-    llvm::errs() << "ary size " << *expr->getArraySize() << "\n";
-    NewArrayInitialization(expr, toInit, allocType, getConstantIndex(1), getConstantIndex(10));
+
+    if (!isa<mlir::MemRefType>(toInit.getType())) {
+      assert(arraySize && "No memref type, better pass array size to new init\n");
+      assert(allocSize && "No memref type, better pass alloc size to new init\n");
+    }
+    // mlir::Value arraySize = Visit(*expr->getArraySize()).getValue(toInit.getLoc(), builder);
+    // mlir::Value allocSize = builder.create<arith::MulIOp>(toInit.getLoc(), 
+    //   builder.create<IndexCastOp>(toInit.getLoc(), 
+    //     mlir::IndexType::get(builder.getContext()), arraySize),
+    //   getTypeSize(toInit.getLoc(), allocType)
+    // );
+    ArrayInitialization(expr->getInitializer(), toInit, allocType, arraySize, allocSize);
   } else if (Expr *Init = expr->getInitializer())
     StoreIntoOneUnit(Init, toInit, expr->getAllocatedType());
 }
@@ -1424,7 +1444,13 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
   // llvm::Type *resultType = Glob.CGM.getTypes().ConvertTypeForMem(expr->getType());
   // resultType->dump();
   mlir::Value alloc;
+  mlir::Value allocSize;
   mlir::Value arrayCons;
+
+  // calculate alloc size, only meaningful to non-memref for now
+  auto typeSize = getTypeSize(loc, expr->getAllocatedType());
+  allocSize = builder.create<arith::MulIOp>(loc, typeSize, count);
+
   if (!expr->placement_arguments().empty()) {
     // Placement address
     mlir::Value val = Visit(*expr->placement_arg_begin()).getValue(loc, builder);
@@ -1459,10 +1485,8 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
     if (expr->hasInitializer() && isa<InitListExpr>(expr->getInitializer()))
       NewInitializer(expr, alloc);
   } else {
-    auto typeSize = getTypeSize(loc, expr->getAllocatedType());
-    mlir::Value arg = builder.create<arith::MulIOp>(loc, typeSize, count);
     arrayCons = alloc = builder.create<mlir::LLVM::BitcastOp>(
-        loc, ty, Glob.CallMalloc(builder, loc, arg));
+        loc, ty, Glob.CallMalloc(builder, loc, allocSize));
     auto PT = ty.cast<LLVM::LLVMPointerType>();
     if (expr->isArray())
       arrayCons = builder.create<mlir::LLVM::BitcastOp>(
@@ -1473,13 +1497,16 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
           alloc);
   }
   assert(alloc);
-  if (expr->getConstructExpr()) {
-    // expr->getConstructExpr()->dump();
-    VisitConstructCommon(
-        const_cast<CXXConstructExpr *>(expr->getConstructExpr()),
-        /*name*/ nullptr, /*memtype*/ 0, arrayCons, count);
-  } else if (expr->hasInitializer())
-    NewInitializer(expr, arrayCons);
+  if (expr->hasInitializer())
+    NewInitializer(expr, arrayCons, count, allocSize);
+
+  // if (expr->getConstructExpr()) {
+  //   // expr->getConstructExpr()->dump();
+  //   VisitConstructCommon(
+  //       const_cast<CXXConstructExpr *>(expr->getConstructExpr()),
+  //       /*name*/ nullptr, /*memtype*/ 0, arrayCons, count);
+  // } else if (expr->hasInitializer())
+  //   NewInitializer(expr, arrayCons, count, allocSize);
   return ValueCategory(alloc, /*isRefererence*/ false);
 }
 

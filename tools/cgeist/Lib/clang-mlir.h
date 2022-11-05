@@ -159,6 +159,17 @@ private:
   std::vector<LoopContext> loops;
   mlir::Block *allocationScope;
 
+  // Used to convey memory across visitors
+  // If value is not null, meaning we are operating on this
+  // memory for the current visitor, prioritize its usage first
+  mlir::Value dest = nullptr;
+
+  // Return dest or newly created temp & automatic storage
+  mlir::Value EnsureSlot(QualType T);
+
+  // always return old dest
+  mlir::Value SetDest(mlir::Value newV);
+  
   std::map<const void *, std::vector<mlir::LLVM::AllocaOp>> bufs;
   mlir::LLVM::AllocaOp allocateBuffer(size_t i, mlir::LLVM::LLVMPointerType t) {
     auto &vec = bufs[t.getAsOpaquePointer()];
@@ -182,7 +193,7 @@ private:
 
   mlir::Value getTypeSize(mlir::Location loc, clang::QualType t);
   mlir::Value getTypeAlign(mlir::Location loc, clang::QualType t);
-
+  mlir::Value createAllocOp(QualType T);
   mlir::Value createAllocOp(mlir::Type t, VarDecl *name, uint64_t memspace,
                             bool isArray, bool LLVMABI);
 
@@ -238,8 +249,17 @@ public:
 
   mlir::Value getConstantIndex(int x);
 
+  struct VlaSizeMLIRPair {
+    mlir::Value NumEles /* Index type */;
+    QualType Type;
+
+    VlaSizeMLIRPair(mlir::Value NE, QualType T) : NumEles(NE), Type(T) {}
+  };
+
+  VlaSizeMLIRPair getVLASize(const VariableArrayType *vla, mlir::Location loc);
   ValueCategory VisitDeclStmt(clang::DeclStmt *decl);
 
+  void CommonNullInitialization(QualType T, mlir::Value mem);
   ValueCategory VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl);
 
   ValueCategory VisitExtVectorElementExpr(clang::ExtVectorElementExpr *expr);

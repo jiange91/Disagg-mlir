@@ -354,6 +354,65 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
 
 mlir::OpBuilder &MLIRScanner::getBuilder() { return builder; }
 
+MLIRScanner::VlaSizeMLIRPair MLIRScanner::getVLASize(const VariableArrayType *type, mlir::Location loc) {
+  // The number of elements so far; always size_t 
+  mlir::Value numElements = nullptr;
+  QualType elementType;
+  do {
+    elementType = type->getElementType();
+    mlir::Value vlaSize = Visit(type->getSizeExpr()).getValue(loc, builder);
+    assert(vlaSize && "no size for VLA!");
+
+    if (!numElements) {
+      numElements = vlaSize;
+    } else {
+      // It's undefined behavior if this wraps around, so mark it that way.
+      // FIXME: Teach -fsanitize=undefined to trap this.
+      numElements = builder.create<arith::MulIOp>(loc,
+        numElements,
+        vlaSize
+      );
+    }
+  } while ((type = Glob.CGM.getContext().getAsVariableArrayType(elementType)));
+  numElements = builder.create<arith::IndexCastOp>(loc,
+    builder.getIndexType(),
+    numElements
+  );
+  return { numElements, elementType };
+}
+
+mlir::Value MLIRScanner::createAllocOp(QualType T) {
+  mlir::Type subType = getMLIRType(T);
+  // expr->dump();
+  bool isArray = false;
+  bool LLVMABI = false;
+
+  if (Glob.getMLIRType(
+              Glob.CGM.getContext().getLValueReferenceType(T))
+          .isa<mlir::LLVM::LLVMPointerType>())
+    LLVMABI = true;
+  else {
+    Glob.getMLIRType(T, &isArray);
+    if (isArray)
+      subType = Glob.getMLIRType(
+          Glob.CGM.getContext().getLValueReferenceType(T));
+  }
+  return createAllocOp(subType, nullptr, /*memtype*/ 0, isArray, LLVMABI);
+}
+
+mlir::Value MLIRScanner::EnsureSlot(QualType T) {
+  // TODO: add checks
+  if (dest) return dest;
+  return createAllocOp(T);
+  // if dest is not set by preceeding visitors, create temporary storage
+}
+
+mlir::Value MLIRScanner::SetDest(mlir::Value newV) {
+  auto oldV = dest;
+  dest = newV;
+  return oldV;
+}
+
 mlir::Value MLIRScanner::createAllocOp(mlir::Type t, VarDecl *name,
                                        uint64_t memspace, bool isArray = false,
                                        bool LLVMABI = false) {
@@ -634,6 +693,50 @@ ValueCategory MLIRScanner::VisitParenExpr(clang::ParenExpr *expr) {
   return Visit(expr->getSubExpr());
 }
 
+void MLIRScanner::CommonNullInitialization(QualType Ty, mlir::Value destMem) {
+  // Ignore empty classes in C++.
+  if (Glob.CGM.getLangOpts().CPlusPlus) {
+    if (const RecordType *RT = Ty->getAs<RecordType>()) {
+      if (cast<CXXRecordDecl>(RT->getDecl())->isEmpty())
+        return;
+    }
+  }
+  mlir::Location loc = destMem.getLoc();
+  mlir::Value SizeVal; // Index type
+  const VariableArrayType *vla;
+
+  CharUnits size = Glob.CGM.getContext().getTypeSizeInChars(Ty);
+  if (size.isZero()) {
+    // But note that getTypeInfo returns 0 for a VLA.
+    if (const VariableArrayType *vlaType =
+          dyn_cast_or_null<VariableArrayType>(
+            Glob.CGM.getContext().getAsArrayType(Ty))) {
+      auto VlaSize = getVLASize(vlaType, loc);
+      SizeVal = VlaSize.NumEles;
+      CharUnits eleSize = Glob.CGM.getContext().getTypeSizeInChars(VlaSize.Type);
+      if (!eleSize.isOne()) {
+        SizeVal = builder.create<arith::MulIOp>(loc,
+          SizeVal,
+          getConstantIndex(eleSize.getQuantity())
+        );
+      }
+      vla = vlaType;
+    } else {
+      return;
+    }
+  } else {
+    SizeVal = getConstantIndex(size.getQuantity());
+    vla = nullptr;
+  }
+
+  // Current impl force zero initialization
+  builder.create<LLVM::MemsetOp>(loc, 
+    destMem, 
+    builder.create<arith::ConstantIntOp>(loc, 0, 8), /* base */
+    builder.create<arith::IndexCastOp>(loc, builder.getI64Type(), SizeVal),
+    builder.create<arith::ConstantIntOp>(loc, false, 1) /* volatile */
+  );
+}
 
 ValueCategory
 MLIRScanner::VisitImplicitValueInitExpr(clang::ImplicitValueInitExpr *decl) {
@@ -713,10 +816,13 @@ void MLIRScanner::StoreIntoOneUnit(clang::Expr *Init, mlir::Value address, QualT
       return;
     }
     case clang::CodeGen::TEK_Aggregate:
+      // Only static initialization can get here
       if (auto CCE = dyn_cast<CXXConstructExpr>(Init))
         VisitConstructCommon(CCE, nullptr, 0, address);
       else if (auto ILE = dyn_cast<InitListExpr>(Init))
         (void)InitializeValueByInitListExpr(address, Init);
+      else if (auto IE = dyn_cast<ImplicitValueInitExpr>(Init))
+        CommonNullInitialization(IE->getType(), address);
       else {
         Init->dump();
         assert(0 && "Unsupported initialization store");
@@ -743,11 +849,12 @@ void MLIRScanner::ArrayInitialization(Expr *Init, mlir::Value address, QualType 
         getTypeSize(loc, ElementType), 
         getConstantIndex(ExplicitInitListElements)
       );
-      RemainingSize = builder.create<arith::IndexCastOp>(loc, 
-        builder.getI64Type(), 
-        builder.create<SubIOp>(loc, RemainingSize, initializedSize)
-      );
+      RemainingSize = builder.create<SubIOp>(loc, RemainingSize, initializedSize);
     }
+    RemainingSize = builder.create<arith::IndexCastOp>(loc, 
+      builder.getI64Type(), 
+      RemainingSize
+    );
     builder.create<LLVM::MemsetOp>(loc, 
       CurPtr, 
       builder.create<arith::ConstantIntOp>(loc, 0, 8), /* base */
@@ -934,17 +1041,18 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
     assert(0 && "Poly: GNU array range designator not supported");
   if (E->isTransparent()) {
     StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
+    return mlir::DenseElementsAttr();
   }
+
+  uint64_t NumInitElements = E->getNumInits();
 
   // Handle initialization of an array.
   if (E->getType()->isArrayType()) {
     // auto AType = cast<llvm::ArrayType>(Dest.getAddress().getElementType());
     // EmitArrayInit(Dest.getAddress(), AType, E->getType(), E);
     auto AryType = dyn_cast_or_null<ConstantArrayType>(E->getType()->getAsArrayTypeUnsafe());
-    AryType->dump();
     assert(AryType && "Expect constant array type here");
 
-    uint64_t NumInitElements = E->getNumInits();
     uint64_t NumArrayElements = AryType->getSize().getZExtValue();
     assert(NumInitElements <= NumArrayElements);
 
@@ -956,6 +1064,56 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
     );
 
     return mlir::DenseElementsAttr();
+  }
+  assert(E->getType()->isRecordType() && "Only support structs/unions here!");
+  /*
+    Poly struct type example
+    struct A {
+      T a;
+    };
+    struct B : A {
+      T b;
+    };
+
+    -> B { a, b }
+  */
+  // Base class is flattened into the derived class
+  // Initialized the result record in once
+  auto GetAddressOfMember = [&](unsigned i) -> mlir::Value {
+    mlir::Location loc = mem.getLoc();
+    if (auto mt = mem.getType().dyn_cast<MemRefType>()) {
+      auto shape = std::vector<int64_t>(mt.getShape());
+      assert(shape.size() > 0);
+      shape[0] = -1;
+      auto mt0 = mlir::MemRefType::get(shape, mt.getElementType(),
+                                        MemRefLayoutAttrInterface(),
+                                        mt.getMemorySpace());
+      return builder.create<polygeist::SubIndexOp>(loc, mt0, mem,
+                                                    getConstantIndex(i)); 
+    } else {
+      auto PT = mem.getType().cast<LLVM::LLVMPointerType>();
+      auto ET = PT.getElementType();
+      mlir::Type nextType;
+      if (auto ST = ET.dyn_cast<LLVM::LLVMStructType>()) {
+        nextType = ST.getBody()[i];
+      }
+      else if (auto AT = ET.dyn_cast<LLVM::LLVMArrayType>())
+        assert(0 && "array is not handled here anymore");
+      else
+        assert(0 && "array new move pointer unknown next type");
+
+      mlir::Value idxs[] = {
+          builder.create<ConstantIntOp>(loc, 0, 32),
+          builder.create<ConstantIntOp>(loc, i, 32),
+      };
+      return builder.create<LLVM::GEPOp>(
+          loc, LLVM::LLVMPointerType::get(nextType, PT.getAddressSpace()),
+          mem, idxs);
+    }
+  };
+  for (uint64_t i = 0; i < NumInitElements; ++ i) {
+    auto CurPtr = GetAddressOfMember(i);
+    StoreIntoOneUnit(E->getInit(i), CurPtr, E->getInit(i)->getType());
   }
 
   return  mlir::DenseElementsAttr();

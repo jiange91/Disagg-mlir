@@ -80,7 +80,9 @@ void ValueCategory::store(mlir::Location loc, mlir::OpBuilder &builder,
       }
     } else { // toStore.getType() == pt.getElementType()
       assert(toStore.getType() == pt.getElementType() && "expect same type");
-      builder.create<mlir::LLVM::StoreOp>(loc, toStore, val);
+      auto storeop = builder.create<mlir::LLVM::StoreOp>(loc, toStore, val);
+      // storeop->print(llvm::errs());
+      (void) storeop;
     }
     return;
   }

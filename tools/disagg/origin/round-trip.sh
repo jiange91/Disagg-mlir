@@ -88,3 +88,9 @@ function compile_target() {
   clang -lpthread -lprofiler -flto=thin -fuse-ld=ld out/base.o libs/cache.c.o libs/common.c.o libs/remote_pool.c.o libs/tcp_rt.c.o -o out/$2
   echo "Compile $1 complete"
 }
+
+function cpp_from_mlir() {
+  polygeist-opt --convert-polygeist-to-llvm $1 -o out/base_llvm.mlir 
+  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll 
+  clang-b++ -std=c++11 -O0 out/base.ll -o out/base
+}

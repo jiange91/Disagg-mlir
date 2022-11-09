@@ -1,0 +1,1303 @@
+clang version 16.0.0 (https://github.com/llvm/llvm-project.git cbc378ecb87e3f31dd5aff91f2a621d500640412)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /users/Zijian/Disagg-mlir/build/bin
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ignoring nonexistent directory "/users/Zijian/Disagg-mlir/build/lib/clang/16.0.0/include"
+ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/include"
+ignoring duplicate directory "/usr/local/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/x86_64-linux-gnu/c++/9
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/backward
+ /usr/local/include
+ /users/Zijian/Disagg-mlir/llvm-project/build/lib/clang/16.0.0/include
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+Emitting fn: main
+FunctionDecl 0xb242880 <testcpp.cc:47:1, line:149:1> line:47:5 main 'int (int, char **)'
+|-ParmVarDecl 0xb242728 <col:10, col:14> col:14 argc 'int'
+|-ParmVarDecl 0xb2427a8 <col:20, col:27> col:27 argv 'char **'
+`-CompoundStmt 0xb242f88 <col:33, line:149:1>
+  |-DeclStmt 0xb242c60 <line:63:3, col:27>
+  | `-VarDecl 0xb2429b8 <col:3, col:20> col:15 used ss 'std::string':'std::basic_string<char>' cinit destroyed
+  |   `-ExprWithCleanups 0xb242c48 <col:15, col:20> 'std::string':'std::basic_string<char>'
+  |     `-CXXConstructExpr 0xb242c18 <col:15, col:20> 'std::string':'std::basic_string<char>' 'void (basic_string<char> &&) noexcept' elidable
+  |       `-MaterializeTemporaryExpr 0xb242c00 <col:20> 'std::string':'std::basic_string<char>' xvalue
+  |         `-CXXBindTemporaryExpr 0xb242be0 <col:20> 'std::string':'std::basic_string<char>' (CXXTemporary 0xb242be0)
+  |           `-ImplicitCastExpr 0xb242bc0 <col:20> 'std::string':'std::basic_string<char>' <ConstructorConversion>
+  |             `-CXXConstructExpr 0xb242b88 <col:20> 'std::string':'std::basic_string<char>' 'void (const char *, const std::allocator<char> &)'
+  |               |-ImplicitCastExpr 0xb242a40 <col:20> 'const char *' <ArrayToPointerDecay>
+  |               | `-StringLiteral 0xb242a20 <col:20> 'const char[6]' lvalue "ABCDE"
+  |               `-CXXDefaultArgExpr 0xb242b38 <<invalid sloc>> 'const std::allocator<char>':'const std::allocator<char>' lvalue
+  |-CallExpr 0xb242da0 <line:64:3, col:28> 'int'
+  | |-ImplicitCastExpr 0xb242d88 <col:3> 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+  | | `-DeclRefExpr 0xb242d68 <col:3> 'int (const char *__restrict, ...)' lvalue Function 0xa7d1eb8 'printf' 'int (const char *__restrict, ...)'
+  | |-ImplicitCastExpr 0xb242dd0 <col:10> 'const char *' <ArrayToPointerDecay>
+  | | `-StringLiteral 0xb242cc0 <col:10> 'const char[5]' lvalue "%zu\n"
+  | `-CXXMemberCallExpr 0xb242d30 <col:19, col:27> 'size_type':'unsigned long'
+  |   `-MemberExpr 0xb242d00 <col:19, col:22> '<bound member function type>' .size 0xaa631a0
+  |     `-ImplicitCastExpr 0xb242d50 <col:19> 'const std::basic_string<char>' lvalue <NoOp>
+  |       `-DeclRefExpr 0xb242ce0 <col:19> 'std::string':'std::basic_string<char>' lvalue Var 0xb2429b8 'ss' 'std::string':'std::basic_string<char>'
+  |-CallExpr 0xb242f10 <line:65:3, col:28> 'int'
+  | |-ImplicitCastExpr 0xb242ef8 <col:3> 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+  | | `-DeclRefExpr 0xb242ed8 <col:3> 'int (const char *__restrict, ...)' lvalue Function 0xa7d1eb8 'printf' 'int (const char *__restrict, ...)'
+  | |-ImplicitCastExpr 0xb242f40 <col:10> 'const char *' <ArrayToPointerDecay>
+  | | `-StringLiteral 0xb242e30 <col:10> 'const char[4]' lvalue "%s\n"
+  | `-CXXMemberCallExpr 0xb242ea0 <col:18, col:27> 'const char *'
+  |   `-MemberExpr 0xb242e70 <col:18, col:21> '<bound member function type>' .c_str 0xaa6f6c0
+  |     `-ImplicitCastExpr 0xb242ec0 <col:18> 'const std::basic_string<char>' lvalue <NoOp>
+  |       `-DeclRefExpr 0xb242e50 <col:18> 'std::string':'std::basic_string<char>' lvalue Var 0xb2429b8 'ss' 'std::string':'std::basic_string<char>'
+  `-ReturnStmt 0xb242f78 <line:148:3, col:10>
+    `-IntegerLiteral 0xb242f58 <col:10> 'int' 0
+CompoundStmt 0xb242f88
+|-DeclStmt 0xb242c60
+| `-VarDecl 0xb2429b8  used ss 'std::string':'class std::basic_string<char>' cinit destroyed
+|   `-ExprWithCleanups 0xb242c48 'std::string':'class std::basic_string<char>'
+|     `-CXXConstructExpr 0xb242c18 'std::string':'class std::basic_string<char>' 'void (basic_string<char> &&) noexcept' elidable
+|       `-MaterializeTemporaryExpr 0xb242c00 'std::string':'class std::basic_string<char>' xvalue
+|         `-CXXBindTemporaryExpr 0xb242be0 'std::string':'class std::basic_string<char>' (CXXTemporary 0xb242be0)
+|           `-ImplicitCastExpr 0xb242bc0 'std::string':'class std::basic_string<char>' <ConstructorConversion>
+|             `-CXXConstructExpr 0xb242b88 'std::string':'class std::basic_string<char>' 'void (const char *, const class std::allocator<char> &)'
+|               |-ImplicitCastExpr 0xb242a40 'const char *' <ArrayToPointerDecay>
+|               | `-StringLiteral 0xb242a20 'const char[6]' lvalue "ABCDE"
+|               `-CXXDefaultArgExpr 0xb242b38 'const class std::allocator<char>':'const class std::allocator<char>' lvalue
+|-CallExpr 0xb242da0 'int'
+| |-ImplicitCastExpr 0xb242d88 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+| | `-DeclRefExpr 0xb242d68 'int (const char *__restrict, ...)' lvalue Function 0xa7d1eb8 'printf' 'int (const char *__restrict, ...)'
+| |-ImplicitCastExpr 0xb242dd0 'const char *' <ArrayToPointerDecay>
+| | `-StringLiteral 0xb242cc0 'const char[5]' lvalue "%zu\n"
+| `-CXXMemberCallExpr 0xb242d30 'size_type':'unsigned long'
+|   `-MemberExpr 0xb242d00 '<bound member function type>' .size 0xaa631a0
+|     `-ImplicitCastExpr 0xb242d50 'const class std::basic_string<char>' lvalue <NoOp>
+|       `-DeclRefExpr 0xb242ce0 'std::string':'class std::basic_string<char>' lvalue Var 0xb2429b8 'ss' 'std::string':'class std::basic_string<char>'
+|-CallExpr 0xb242f10 'int'
+| |-ImplicitCastExpr 0xb242ef8 'int (*)(const char *__restrict, ...)' <FunctionToPointerDecay>
+| | `-DeclRefExpr 0xb242ed8 'int (const char *__restrict, ...)' lvalue Function 0xa7d1eb8 'printf' 'int (const char *__restrict, ...)'
+| |-ImplicitCastExpr 0xb242f40 'const char *' <ArrayToPointerDecay>
+| | `-StringLiteral 0xb242e30 'const char[4]' lvalue "%s\n"
+| `-CXXMemberCallExpr 0xb242ea0 'const char *'
+|   `-MemberExpr 0xb242e70 '<bound member function type>' .c_str 0xaa6f6c0
+|     `-ImplicitCastExpr 0xb242ec0 'const class std::basic_string<char>' lvalue <NoOp>
+|       `-DeclRefExpr 0xb242e50 'std::string':'class std::basic_string<char>' lvalue Var 0xb2429b8 'ss' 'std::string':'class std::basic_string<char>'
+`-ReturnStmt 0xb242f78
+  `-IntegerLiteral 0xb242f58 'int' 0
+cleanup of materialized not handledcleanup of materialized not handledCXXConstructExpr 0xb242c18 'std::string':'class std::basic_string<char>' 'void (basic_string<char> &&) noexcept' elidable
+`-MaterializeTemporaryExpr 0xb242c00 'std::string':'class std::basic_string<char>' xvalue
+  `-CXXBindTemporaryExpr 0xb242be0 'std::string':'class std::basic_string<char>' (CXXTemporary 0xb242be0)
+    `-ImplicitCastExpr 0xb242bc0 'std::string':'class std::basic_string<char>' <ConstructorConversion>
+      `-CXXConstructExpr 0xb242b88 'std::string':'class std::basic_string<char>' 'void (const char *, const class std::allocator<char> &)'
+        |-ImplicitCastExpr 0xb242a40 'const char *' <ArrayToPointerDecay>
+        | `-StringLiteral 0xb242a20 'const char[6]' lvalue "ABCDE"
+        `-CXXDefaultArgExpr 0xb242b38 'const class std::allocator<char>':'const class std::allocator<char>' lvalue
+cleanup not handled
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC1EOS4_
+CXXConstructorDecl 0xaa604e0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:556:7, line:576:7> line:556:7 used basic_string 'void (basic_string<char> &&) noexcept' implicit-inline
+|-ParmVarDecl 0xaa603c0 <col:20, col:35> col:35 used __str 'basic_string<char> &&'
+|-CXXCtorInitializer Field 0xaa589b0 '_M_dataplus' '_Alloc_hider':'std::basic_string<char>::_Alloc_hider'
+| `-CXXConstructExpr 0xb289b58 <line:557:9, col:73> '_Alloc_hider':'std::basic_string<char>::_Alloc_hider' 'void (pointer, std::allocator<char> &&)'
+|   |-CXXMemberCallExpr 0xb289058 <col:21, col:35> 'pointer':'char *'
+|   | `-MemberExpr 0xb289028 <col:21> '<bound member function type>' ->_M_local_data 0xaa59848
+|   |   `-CXXThisExpr 0xb289018 <col:21> 'std::basic_string<char> *' implicit this
+|   `-CallExpr 0xb289aa0 <col:38, col:72> 'typename std::remove_reference<allocator<char> &>::type':'std::allocator<char>' xvalue
+|     |-ImplicitCastExpr 0xb289a88 <col:38, col:43> 'typename std::remove_reference<allocator<char> &>::type &&(*)(std::allocator<char> &) noexcept' <BuiltinFnToFnPtr>
+|     | `-DeclRefExpr 0xb2899f8 <col:38, col:43> '<builtin fn type>' Function 0xb289848 'move' 'typename std::remove_reference<allocator<char> &>::type &&(std::allocator<char> &) noexcept' (FunctionTemplate 0xa45a2f0 'move')
+|     `-CXXMemberCallExpr 0xb289178 <col:48, col:71> 'allocator_type':'std::allocator<char>' lvalue
+|       `-MemberExpr 0xb289148 <col:48, col:54> '<bound member function type>' ._M_get_allocator 0xaa5bc50
+|         `-DeclRefExpr 0xb2890c8 <col:48> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+`-CompoundStmt 0xb28a850 <line:558:7, line:576:7>
+  |-IfStmt 0xb28a4f8 <line:559:2, line:568:4> has_else
+  | |-CXXMemberCallExpr 0xb289c08 <line:559:6, col:24> 'bool'
+  | | `-MemberExpr 0xb289bd8 <col:6, col:12> '<bound member function type>' ._M_is_local 0xaa59cd0
+  | |   `-ImplicitCastExpr 0xb289c28 <col:6> 'const std::basic_string<char>' lvalue <NoOp>
+  | |     `-DeclRefExpr 0xb289bb8 <col:6> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  | |-CompoundStmt 0xb28a1d8 <line:560:4, line:563:4>
+  | | `-CallExpr 0xb28a140 <line:561:6, line:562:31> 'char_type *'
+  | |   |-ImplicitCastExpr 0xb28a128 <line:561:6, col:19> 'char_type *(*)(char_type *, const char_type *, size_t)' <FunctionToPointerDecay>
+  | |   | `-DeclRefExpr 0xb289c80 <col:6, col:19> 'char_type *(char_type *, const char_type *, size_t)' lvalue CXXMethod 0xa8a4fa8 'copy' 'char_type *(char_type *, const char_type *, size_t)'
+  | |   |-ImplicitCastExpr 0xb28a178 <col:24> 'char *' <ArrayToPointerDecay>
+  | |   | `-MemberExpr 0xb289d08 <col:24> 'char[16]' lvalue ._M_local_buf 0xaa59168
+  | |   |   `-MemberExpr 0xb289cc0 <col:24> 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+  | |   |     `-CXXThisExpr 0xb289cb0 <col:24> 'std::basic_string<char> *' implicit this
+  | |   |-ImplicitCastExpr 0xb28a1a8 <col:38, col:44> 'const char_type *' <NoOp>
+  | |   | `-ImplicitCastExpr 0xb28a190 <col:38, col:44> 'char *' <ArrayToPointerDecay>
+  | |   |   `-MemberExpr 0xb289da0 <col:38, col:44> 'char[16]' lvalue ._M_local_buf 0xaa59168
+  | |   |     `-MemberExpr 0xb289d58 <col:38, col:44> 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue . 0xaa59230
+  | |   |       `-DeclRefExpr 0xb289d38 <col:38> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  | |   `-ImplicitCastExpr 0xb28a1c0 <line:562:10, col:30> 'size_t':'unsigned long' <IntegralCast>
+  | |     `-BinaryOperator 0xb28a108 <col:10, col:30> 'int' '+'
+  | |       |-ImplicitCastExpr 0xb28a0f0 <col:10> 'int' <IntegralCast>
+  | |       | `-DeclRefExpr 0xb289e30 <col:10> 'std::basic_string<char>::(unnamed enum at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)' EnumConstant 0xaa58bb8 '_S_local_capacity' 'std::basic_string<char>::(unnamed enum at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)'
+  | |       `-IntegerLiteral 0xaa0f558 <col:30> 'int' 1
+  | `-CompoundStmt 0xb28a4d8 <line:565:4, line:568:4>
+  |   |-CXXMemberCallExpr 0xb28a398 <line:566:6, col:29> 'void'
+  |   | |-MemberExpr 0xb28a368 <col:6> '<bound member function type>' ->_M_data 0xaa59438
+  |   | | `-CXXThisExpr 0xb28a358 <col:6> 'std::basic_string<char> *' implicit this
+  |   | `-CXXMemberCallExpr 0xb28a320 <col:14, col:28> 'pointer':'char *'
+  |   |   `-MemberExpr 0xb28a2f0 <col:14, col:20> '<bound member function type>' ._M_data 0xaa59708
+  |   |     `-ImplicitCastExpr 0xb28a340 <col:14> 'const std::basic_string<char>' lvalue <NoOp>
+  |   |       `-DeclRefExpr 0xb28a270 <col:14> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  |   `-CXXMemberCallExpr 0xb28a498 <line:567:6, col:45> 'void'
+  |     |-MemberExpr 0xb28a3d0 <col:6> '<bound member function type>' ->_M_capacity 0xaa59ab0
+  |     | `-CXXThisExpr 0xb28a3c0 <col:6> 'std::basic_string<char> *' implicit this
+  |     `-ImplicitCastExpr 0xb28a4c0 <col:18, col:24> 'size_type':'unsigned long' <LValueToRValue>
+  |       `-MemberExpr 0xb28a468 <col:18, col:24> 'size_type':'unsigned long' lvalue ._M_allocated_capacity 0xaa591c8
+  |         `-MemberExpr 0xb28a420 <col:18, col:24> 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue . 0xaa59230
+  |           `-DeclRefExpr 0xb28a400 <col:18> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  |-CXXMemberCallExpr 0xb28a5f0 <line:573:2, col:26> 'void'
+  | |-MemberExpr 0xb28a538 <col:2> '<bound member function type>' ->_M_length 0xaa595c8
+  | | `-CXXThisExpr 0xb28a528 <col:2> 'std::basic_string<char> *' implicit this
+  | `-CXXMemberCallExpr 0xb28a5b8 <col:12, col:25> 'size_type':'unsigned long'
+  |   `-MemberExpr 0xb28a588 <col:12, col:18> '<bound member function type>' .length 0xaa63280
+  |     `-ImplicitCastExpr 0xb28a5d8 <col:12> 'const std::basic_string<char>' lvalue <NoOp>
+  |       `-DeclRefExpr 0xb28a568 <col:12> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  |-CXXMemberCallExpr 0xb28a798 <line:574:2, col:37> 'void'
+  | |-MemberExpr 0xb28a768 <col:2, col:8> '<bound member function type>' ._M_data 0xaa59438
+  | | `-DeclRefExpr 0xb28a618 <col:2> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  | `-CXXMemberCallExpr 0xb28a748 <col:16, col:36> 'pointer':'char *'
+  |   `-MemberExpr 0xb28a718 <col:16, col:22> '<bound member function type>' ._M_local_data 0xaa59848
+  |     `-DeclRefExpr 0xb28a698 <col:16> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  `-CXXMemberCallExpr 0xb28a810 <line:575:2, col:23> 'void'
+    |-MemberExpr 0xb28a7e0 <col:2, col:8> '<bound member function type>' ._M_set_length 0xaa59c10
+    | `-DeclRefExpr 0xb28a7c0 <col:2> 'basic_string<char>':'std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+    `-ImplicitCastExpr 0xb28a838 <col:22> 'size_type':'unsigned long' <IntegralCast>
+      `-IntegerLiteral 0xaa0fbf0 <col:22> 'int' 0
+ init: - baseInit:0 memberInit:1 anyMember:1 indirectMember:0 isinClass:0 delegating:0 isPack:0
+FieldDecl 0xaa589b0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:170:7, col:20> col:20 referenced _M_dataplus '_Alloc_hider':'std::basic_string<char>::_Alloc_hider'
+CXXConstructExpr 0xb289b58 '_Alloc_hider':'struct std::basic_string<char>::_Alloc_hider' 'void (pointer, class std::allocator<char> &&)'
+|-CXXMemberCallExpr 0xb289058 'pointer':'char *'
+| `-MemberExpr 0xb289028 '<bound member function type>' ->_M_local_data 0xaa59848
+|   `-CXXThisExpr 0xb289018 'class std::basic_string<char> *' implicit this
+`-CallExpr 0xb289aa0 'typename std::remove_reference<class allocator<char> &>::type':'class std::allocator<char>' xvalue
+  |-ImplicitCastExpr 0xb289a88 'typename std::remove_reference<class allocator<char> &>::type &&(*)(class std::allocator<char> &) noexcept' <BuiltinFnToFnPtr>
+  | `-DeclRefExpr 0xb2899f8 '<builtin fn type>' Function 0xb289848 'move' 'typename std::remove_reference<class allocator<char> &>::type &&(class std::allocator<char> &) noexcept' (FunctionTemplate 0xa45a2f0 'move')
+  `-CXXMemberCallExpr 0xb289178 'allocator_type':'class std::allocator<char>' lvalue
+    `-MemberExpr 0xb289148 '<bound member function type>' ._M_get_allocator 0xaa5bc50
+      `-DeclRefExpr 0xb2890c8 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+CompoundStmt 0xb28a850
+|-IfStmt 0xb28a4f8 has_else
+| |-CXXMemberCallExpr 0xb289c08 '_Bool'
+| | `-MemberExpr 0xb289bd8 '<bound member function type>' ._M_is_local 0xaa59cd0
+| |   `-ImplicitCastExpr 0xb289c28 'const class std::basic_string<char>' lvalue <NoOp>
+| |     `-DeclRefExpr 0xb289bb8 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+| |-CompoundStmt 0xb28a1d8
+| | `-CallExpr 0xb28a140 'char_type *'
+| |   |-ImplicitCastExpr 0xb28a128 'char_type *(*)(char_type *, const char_type *, size_t)' <FunctionToPointerDecay>
+| |   | `-DeclRefExpr 0xb289c80 'char_type *(char_type *, const char_type *, size_t)' lvalue CXXMethod 0xa8a4fa8 'copy' 'char_type *(char_type *, const char_type *, size_t)'
+| |   |-ImplicitCastExpr 0xb28a178 'char *' <ArrayToPointerDecay>
+| |   | `-MemberExpr 0xb289d08 'char[16]' lvalue ._M_local_buf 0xaa59168
+| |   |   `-MemberExpr 0xb289cc0 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+| |   |     `-CXXThisExpr 0xb289cb0 'class std::basic_string<char> *' implicit this
+| |   |-ImplicitCastExpr 0xb28a1a8 'const char_type *' <NoOp>
+| |   | `-ImplicitCastExpr 0xb28a190 'char *' <ArrayToPointerDecay>
+| |   |   `-MemberExpr 0xb289da0 'char[16]' lvalue ._M_local_buf 0xaa59168
+| |   |     `-MemberExpr 0xb289d58 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue . 0xaa59230
+| |   |       `-DeclRefExpr 0xb289d38 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+| |   `-ImplicitCastExpr 0xb28a1c0 'size_t':'unsigned long' <IntegralCast>
+| |     `-BinaryOperator 0xb28a108 'int' '+'
+| |       |-ImplicitCastExpr 0xb28a0f0 'int' <IntegralCast>
+| |       | `-DeclRefExpr 0xb289e30 'enum std::basic_string<char>::(unnamed at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)' EnumConstant 0xaa58bb8 '_S_local_capacity' 'enum std::basic_string<char>::(unnamed at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)'
+| |       `-IntegerLiteral 0xaa0f558 'int' 1
+| `-CompoundStmt 0xb28a4d8
+|   |-CXXMemberCallExpr 0xb28a398 'void'
+|   | |-MemberExpr 0xb28a368 '<bound member function type>' ->_M_data 0xaa59438
+|   | | `-CXXThisExpr 0xb28a358 'class std::basic_string<char> *' implicit this
+|   | `-CXXMemberCallExpr 0xb28a320 'pointer':'char *'
+|   |   `-MemberExpr 0xb28a2f0 '<bound member function type>' ._M_data 0xaa59708
+|   |     `-ImplicitCastExpr 0xb28a340 'const class std::basic_string<char>' lvalue <NoOp>
+|   |       `-DeclRefExpr 0xb28a270 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+|   `-CXXMemberCallExpr 0xb28a498 'void'
+|     |-MemberExpr 0xb28a3d0 '<bound member function type>' ->_M_capacity 0xaa59ab0
+|     | `-CXXThisExpr 0xb28a3c0 'class std::basic_string<char> *' implicit this
+|     `-ImplicitCastExpr 0xb28a4c0 'size_type':'unsigned long' <LValueToRValue>
+|       `-MemberExpr 0xb28a468 'size_type':'unsigned long' lvalue ._M_allocated_capacity 0xaa591c8
+|         `-MemberExpr 0xb28a420 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue . 0xaa59230
+|           `-DeclRefExpr 0xb28a400 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+|-CXXMemberCallExpr 0xb28a5f0 'void'
+| |-MemberExpr 0xb28a538 '<bound member function type>' ->_M_length 0xaa595c8
+| | `-CXXThisExpr 0xb28a528 'class std::basic_string<char> *' implicit this
+| `-CXXMemberCallExpr 0xb28a5b8 'size_type':'unsigned long'
+|   `-MemberExpr 0xb28a588 '<bound member function type>' .length 0xaa63280
+|     `-ImplicitCastExpr 0xb28a5d8 'const class std::basic_string<char>' lvalue <NoOp>
+|       `-DeclRefExpr 0xb28a568 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+|-CXXMemberCallExpr 0xb28a798 'void'
+| |-MemberExpr 0xb28a768 '<bound member function type>' ._M_data 0xaa59438
+| | `-DeclRefExpr 0xb28a618 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+| `-CXXMemberCallExpr 0xb28a748 'pointer':'char *'
+|   `-MemberExpr 0xb28a718 '<bound member function type>' ._M_local_data 0xaa59848
+|     `-DeclRefExpr 0xb28a698 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+`-CXXMemberCallExpr 0xb28a810 'void'
+  |-MemberExpr 0xb28a7e0 '<bound member function type>' ._M_set_length 0xaa59c10
+  | `-DeclRefExpr 0xb28a7c0 'basic_string<char>':'class std::basic_string<char>' lvalue ParmVar 0xaa603c0 '__str' 'basic_string<char> &&'
+  `-ImplicitCastExpr 0xb28a838 'size_type':'unsigned long' <IntegralCast>
+    `-IntegerLiteral 0xaa0fbf0 'int' 0
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC1EPKcRKS3_
+CXXConstructorDecl 0xaa5ff48 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:529:7, line:531:77> line:529:7 used basic_string 'void (const char *, const std::allocator<char> &)' implicit-inline
+|-ParmVarDecl 0xaa5fda0 <col:20, col:34> col:34 used __s 'const char *'
+|-ParmVarDecl 0xaa5fe18 <col:39, col:66> col:53 used __a 'const std::allocator<char> &' cinit
+| `-ExprWithCleanups 0xb242b20 <col:59, col:66> 'const std::allocator<char>':'const std::allocator<char>' lvalue
+|   `-MaterializeTemporaryExpr 0xb242b08 <col:59, col:66> 'const std::allocator<char>':'const std::allocator<char>' lvalue
+|     `-ImplicitCastExpr 0xb242af0 <col:59, col:66> 'const std::allocator<char>':'const std::allocator<char>' <NoOp>
+|       `-CXXBindTemporaryExpr 0xb242ad0 <col:59, col:66> 'std::allocator<char>':'std::allocator<char>' (CXXTemporary 0xb242ad0)
+|         `-CXXTemporaryObjectExpr 0xb242a98 <col:59, col:66> 'std::allocator<char>':'std::allocator<char>' 'void () noexcept'
+|-CXXCtorInitializer Field 0xaa589b0 '_M_dataplus' '_Alloc_hider':'std::basic_string<char>::_Alloc_hider'
+| `-CXXConstructExpr 0xb2ced28 <line:530:9, col:41> '_Alloc_hider':'std::basic_string<char>::_Alloc_hider' 'void (pointer, const std::allocator<char> &)'
+|   |-CXXMemberCallExpr 0xb2cecc0 <col:21, col:35> 'pointer':'char *'
+|   | `-MemberExpr 0xb2cec90 <col:21> '<bound member function type>' ->_M_local_data 0xaa59848
+|   |   `-CXXThisExpr 0xb2cec80 <col:21> 'std::basic_string<char> *' implicit this
+|   `-DeclRefExpr 0xb2cece0 <col:38> 'const std::allocator<char>':'const std::allocator<char>' lvalue ParmVar 0xaa5fe18 '__a' 'const std::allocator<char> &'
+`-CompoundStmt 0xb2cf828 <line:531:7, col:77>
+  `-CXXMemberCallExpr 0xb2cf7e0 <col:9, col:74> 'void'
+    |-MemberExpr 0xb2cf798 <col:9> '<bound member function type>' ->_M_construct 0xb2cf678
+    | `-CXXThisExpr 0xb2cf788 <col:9> 'std::basic_string<char> *' implicit this
+    |-ImplicitCastExpr 0xb2cf810 <col:22> 'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2cee18 <col:22> 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+    `-ConditionalOperator 0xb2cf448 <col:27, col:70> 'const char *'
+      |-ImplicitCastExpr 0xb2cf430 <col:27> 'bool' <PointerToBoolean>
+      | `-ImplicitCastExpr 0xb2cf418 <col:27> 'const char *' <LValueToRValue>
+      |   `-DeclRefExpr 0xb2cee38 <col:27> 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+      |-BinaryOperator 0xb2cefd8 <col:33, col:62> 'const char *' '+'
+      | |-ImplicitCastExpr 0xb2cefc0 <col:33> 'const char *' <LValueToRValue>
+      | | `-DeclRefExpr 0xb2ceeb8 <col:33> 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+      | `-CallExpr 0xb2cef80 <col:39, col:62> 'size_t':'unsigned long'
+      |   |-ImplicitCastExpr 0xb2cef68 <col:39, col:52> 'size_t (*)(const char_type *)' <FunctionToPointerDecay>
+      |   | `-DeclRefExpr 0xb2cef18 <col:39, col:52> 'size_t (const char_type *)' lvalue CXXMethod 0xa8a2f98 'length' 'size_t (const char_type *)'
+      |   `-ImplicitCastExpr 0xb2cefa8 <col:59> 'const char *' <LValueToRValue>
+      |     `-DeclRefExpr 0xb2cef48 <col:59> 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+      `-BinaryOperator 0xb2cf3f8 <col:66, col:70> 'const char *' '+'
+        |-ImplicitCastExpr 0xb2cf3a8 <col:66> 'const char *' <LValueToRValue>
+        | `-DeclRefExpr 0xb2cf058 <col:66> 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+        `-ImplicitCastExpr 0xb2cf3e0 <col:70> 'size_type':'unsigned long' <LValueToRValue>
+          `-DeclRefExpr 0xb2cf3c0 <col:70> 'const size_type':'const unsigned long' lvalue Var 0xaa573e0 'npos' 'const size_type':'const unsigned long' non_odr_use_constant
+ init: - baseInit:0 memberInit:1 anyMember:1 indirectMember:0 isinClass:0 delegating:0 isPack:0
+FieldDecl 0xaa589b0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:170:7, col:20> col:20 referenced _M_dataplus '_Alloc_hider':'std::basic_string<char>::_Alloc_hider'
+CXXConstructExpr 0xb2ced28 '_Alloc_hider':'struct std::basic_string<char>::_Alloc_hider' 'void (pointer, const class std::allocator<char> &)'
+|-CXXMemberCallExpr 0xb2cecc0 'pointer':'char *'
+| `-MemberExpr 0xb2cec90 '<bound member function type>' ->_M_local_data 0xaa59848
+|   `-CXXThisExpr 0xb2cec80 'class std::basic_string<char> *' implicit this
+`-DeclRefExpr 0xb2cece0 'const class std::allocator<char>':'const class std::allocator<char>' lvalue ParmVar 0xaa5fe18 '__a' 'const class std::allocator<char> &'
+CompoundStmt 0xb2cf828
+`-CXXMemberCallExpr 0xb2cf7e0 'void'
+  |-MemberExpr 0xb2cf798 '<bound member function type>' ->_M_construct 0xb2cf678
+  | `-CXXThisExpr 0xb2cf788 'class std::basic_string<char> *' implicit this
+  |-ImplicitCastExpr 0xb2cf810 'const char *' <LValueToRValue>
+  | `-DeclRefExpr 0xb2cee18 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+  `-ConditionalOperator 0xb2cf448 'const char *'
+    |-ImplicitCastExpr 0xb2cf430 '_Bool' <PointerToBoolean>
+    | `-ImplicitCastExpr 0xb2cf418 'const char *' <LValueToRValue>
+    |   `-DeclRefExpr 0xb2cee38 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+    |-BinaryOperator 0xb2cefd8 'const char *' '+'
+    | |-ImplicitCastExpr 0xb2cefc0 'const char *' <LValueToRValue>
+    | | `-DeclRefExpr 0xb2ceeb8 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+    | `-CallExpr 0xb2cef80 'size_t':'unsigned long'
+    |   |-ImplicitCastExpr 0xb2cef68 'size_t (*)(const char_type *)' <FunctionToPointerDecay>
+    |   | `-DeclRefExpr 0xb2cef18 'size_t (const char_type *)' lvalue CXXMethod 0xa8a2f98 'length' 'size_t (const char_type *)'
+    |   `-ImplicitCastExpr 0xb2cefa8 'const char *' <LValueToRValue>
+    |     `-DeclRefExpr 0xb2cef48 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+    `-BinaryOperator 0xb2cf3f8 'const char *' '+'
+      |-ImplicitCastExpr 0xb2cf3a8 'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2cf058 'const char *' lvalue ParmVar 0xaa5fda0 '__s' 'const char *'
+      `-ImplicitCastExpr 0xb2cf3e0 'size_type':'unsigned long' <LValueToRValue>
+        `-DeclRefExpr 0xb2cf3c0 'const size_type':'const unsigned long' lvalue Var 0xaa573e0 'npos' 'const size_type':'const unsigned long' non_odr_use_constant
+Emitting fn: _ZNSaIcEC1Ev
+CXXConstructorDecl 0xa64d040 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/allocator.h:137:7, col:38> col:7 used allocator 'void () noexcept' implicit-inline
+|-CXXCtorInitializer '__allocator_base<char>':'__gnu_cxx::new_allocator<char>'
+| `-CXXConstructExpr 0xb271a88 <col:7> '__allocator_base<char>':'__gnu_cxx::new_allocator<char>' 'void () noexcept'
+`-CompoundStmt 0xa645b38 <col:36, col:38>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb271a88 '__allocator_base<char>':'class __gnu_cxx::new_allocator<char>' 'void (void) noexcept'
+CompoundStmt 0xa645b38
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE4sizeEv
+CXXMethodDecl 0xaa631a0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:933:7, line:935:34> line:934:7 used size 'size_type () const noexcept' implicit-inline
+`-CompoundStmt 0xb2cb580 <line:935:7, col:34>
+  `-ReturnStmt 0xb2cb570 <col:9, col:16>
+    `-ImplicitCastExpr 0xb2cb558 <col:16> 'size_type':'unsigned long' <LValueToRValue>
+      `-MemberExpr 0xb2cb528 <col:16> 'const size_type':'const unsigned long' lvalue ->_M_string_length 0xaa58a10
+        `-CXXThisExpr 0xb2cb518 <col:16> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb2cb580
+`-ReturnStmt 0xb2cb570
+  `-ImplicitCastExpr 0xb2cb558 'size_type':'unsigned long' <LValueToRValue>
+    `-MemberExpr 0xb2cb528 'const size_type':'const unsigned long' lvalue ->_M_string_length 0xaa58a10
+      `-CXXThisExpr 0xb2cb518 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE5c_strEv
+CXXMethodDecl 0xaa6f6c0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:2303:7, line:2305:27> line:2304:7 used c_str 'const char *() const noexcept' implicit-inline
+`-CompoundStmt 0xb2434e8 <line:2305:7, col:27>
+  `-ReturnStmt 0xb2434d8 <col:9, col:24>
+    `-ImplicitCastExpr 0xb2434c0 <col:16, col:24> 'const char *' <NoOp>
+      `-CXXMemberCallExpr 0xb2434a0 <col:16, col:24> 'pointer':'char *'
+        `-MemberExpr 0xb243470 <col:16> '<bound member function type>' ->_M_data 0xaa59708
+          `-CXXThisExpr 0xb243460 <col:16> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb2434e8
+`-ReturnStmt 0xb2434d8
+  `-ImplicitCastExpr 0xb2434c0 'const char *' <NoOp>
+    `-CXXMemberCallExpr 0xb2434a0 'pointer':'char *'
+      `-MemberExpr 0xb243470 '<bound member function type>' ->_M_data 0xaa59708
+        `-CXXThisExpr 0xb243460 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_Alloc_hiderC1EPcOS3_
+CXXConstructorDecl 0xaa57d48 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:163:2, line:164:50> line:163:2 used _Alloc_hider 'void (pointer, std::allocator<char> &&)' implicit-inline
+|-ParmVarDecl 0xaa57b40 <col:15, col:23> col:23 used __dat 'pointer':'char *'
+|-ParmVarDecl 0xaa57c18 <col:30, col:52> col:39 used __a 'std::allocator<char> &&'
+|-CXXCtorInitializer 'allocator_type':'std::allocator<char>'
+| `-CXXConstructExpr 0xb28aa48 <line:164:4, col:33> 'allocator_type':'std::allocator<char>' 'void (const allocator<char> &) noexcept'
+|   `-ImplicitCastExpr 0xb28aa30 <col:19, col:32> 'const typename std::remove_reference<allocator<char> &>::type':'const std::allocator<char>' xvalue <NoOp>
+|     `-CallExpr 0xb28a9a0 <col:19, col:32> 'typename std::remove_reference<allocator<char> &>::type':'std::allocator<char>' xvalue
+|       |-ImplicitCastExpr 0xb28a988 <col:19, col:24> 'typename std::remove_reference<allocator<char> &>::type &&(*)(std::allocator<char> &) noexcept' <BuiltinFnToFnPtr>
+|       | `-DeclRefExpr 0xb28a950 <col:19, col:24> '<builtin fn type>' Function 0xb289848 'move' 'typename std::remove_reference<allocator<char> &>::type &&(std::allocator<char> &) noexcept' (FunctionTemplate 0xa45a2f0 'move')
+|       `-DeclRefExpr 0xb28a8d0 <col:29> 'std::allocator<char>':'std::allocator<char>' lvalue ParmVar 0xaa57c18 '__a' 'std::allocator<char> &&'
+|-CXXCtorInitializer Field 0xaa57e38 '_M_p' 'pointer':'char *'
+| `-ImplicitCastExpr 0xb28aad8 <col:41> 'pointer':'char *' <LValueToRValue>
+|   `-DeclRefExpr 0xb28aa98 <col:41> 'pointer':'char *' lvalue ParmVar 0xaa57b40 '__dat' 'pointer':'char *'
+`-CompoundStmt 0xa9f7fb0 <col:48, col:50>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb28aa48 'allocator_type':'class std::allocator<char>' 'void (const allocator<char> &) noexcept'
+`-ImplicitCastExpr 0xb28aa30 'const typename std::remove_reference<class allocator<char> &>::type':'const class std::allocator<char>' xvalue <NoOp>
+  `-CallExpr 0xb28a9a0 'typename std::remove_reference<class allocator<char> &>::type':'class std::allocator<char>' xvalue
+    |-ImplicitCastExpr 0xb28a988 'typename std::remove_reference<class allocator<char> &>::type &&(*)(class std::allocator<char> &) noexcept' <BuiltinFnToFnPtr>
+    | `-DeclRefExpr 0xb28a950 '<builtin fn type>' Function 0xb289848 'move' 'typename std::remove_reference<class allocator<char> &>::type &&(class std::allocator<char> &) noexcept' (FunctionTemplate 0xa45a2f0 'move')
+    `-DeclRefExpr 0xb28a8d0 'class std::allocator<char>':'class std::allocator<char>' lvalue ParmVar 0xaa57c18 '__a' 'class std::allocator<char> &&'
+ init: - baseInit:0 memberInit:1 anyMember:1 indirectMember:0 isinClass:0 delegating:0 isPack:0
+FieldDecl 0xaa57e38 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:167:2, col:10> col:10 referenced _M_p 'pointer':'char *'
+ImplicitCastExpr 0xb28aad8 'pointer':'char *' <LValueToRValue>
+`-DeclRefExpr 0xb28aa98 'pointer':'char *' lvalue ParmVar 0xaa57b40 '__dat' 'pointer':'char *'
+CompoundStmt 0xa9f7fb0
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE13_M_local_dataEv
+CXXMethodDecl 0xaa59848 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:193:7, line:201:7> line:194:7 used _M_local_data 'pointer ()' implicit-inline
+`-CompoundStmt 0xb2745d8 <line:195:7, line:201:7>
+  `-ReturnStmt 0xb2745c8 <line:197:2, col:63>
+    `-CallExpr 0xb2745a0 <col:9, col:63> 'pointer':'char *'
+      |-ImplicitCastExpr 0xb274588 <col:9, col:39> 'pointer (*)(__make_not_void<element_type> &) noexcept' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb274448 <col:9, col:39> 'pointer (__make_not_void<element_type> &) noexcept' lvalue CXXMethod 0xb274370 'pointer_to' 'pointer (__make_not_void<element_type> &) noexcept'
+      `-UnaryOperator 0xb274518 <col:50, col:51> 'char':'char' lvalue prefix '*' cannot overflow
+        `-ImplicitCastExpr 0xb274500 <col:51> 'char *' <ArrayToPointerDecay>
+          `-MemberExpr 0xb2744d0 <col:51> 'char[16]' lvalue ._M_local_buf 0xaa59168
+            `-MemberExpr 0xb274488 <col:51> 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+              `-CXXThisExpr 0xb274478 <col:51> 'std::basic_string<char> *' implicit this
+CompoundStmt 0xb2745d8
+`-ReturnStmt 0xb2745c8
+  `-CallExpr 0xb2745a0 'pointer':'char *'
+    |-ImplicitCastExpr 0xb274588 'pointer (*)(__make_not_void<element_type> &) noexcept' <FunctionToPointerDecay>
+    | `-DeclRefExpr 0xb274448 'pointer (__make_not_void<element_type> &) noexcept' lvalue CXXMethod 0xb274370 'pointer_to' 'pointer (__make_not_void<element_type> &) noexcept'
+    `-UnaryOperator 0xb274518 'char':'char' lvalue prefix '*' cannot overflow
+      `-ImplicitCastExpr 0xb274500 'char *' <ArrayToPointerDecay>
+        `-MemberExpr 0xb2744d0 'char[16]' lvalue ._M_local_buf 0xaa59168
+          `-MemberExpr 0xb274488 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+            `-CXXThisExpr 0xb274478 'class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE16_M_get_allocatorEv
+CXXMethodDecl 0xaa5bc50 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:289:7, line:291:29> line:290:7 used _M_get_allocator 'allocator_type &()' implicit-inline
+`-CompoundStmt 0xb288ad8 <line:291:7, col:29>
+  `-ReturnStmt 0xb288ac8 <col:9, col:16>
+    `-ImplicitCastExpr 0xb288aa8 <col:16> 'allocator_type':'std::allocator<char>' lvalue <DerivedToBase (allocator)>
+      `-MemberExpr 0xb288a78 <col:16> '_Alloc_hider':'std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+        `-CXXThisExpr 0xb288a68 <col:16> 'std::basic_string<char> *' implicit this
+CompoundStmt 0xb288ad8
+`-ReturnStmt 0xb288ac8
+  `-ImplicitCastExpr 0xb288aa8 'allocator_type':'class std::allocator<char>' lvalue <DerivedToBase (allocator)>
+    `-MemberExpr 0xb288a78 '_Alloc_hider':'struct std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+      `-CXXThisExpr 0xb288a68 'class std::basic_string<char> *' implicit this
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE11_M_is_localEv
+CXXMethodDecl 0xaa59cd0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:224:7, line:226:46> line:225:7 used _M_is_local 'bool () const' implicit-inline
+`-CompoundStmt 0xb285d40 <line:226:7, col:46>
+  `-ReturnStmt 0xb285d30 <col:9, col:43>
+    `-BinaryOperator 0xb285d10 <col:16, col:43> 'bool' '=='
+      |-ImplicitCastExpr 0xb285cf8 <col:16, col:24> 'const char *' <NoOp>
+      | `-CXXMemberCallExpr 0xb285bf8 <col:16, col:24> 'pointer':'char *'
+      |   `-MemberExpr 0xb285bc8 <col:16> '<bound member function type>' ->_M_data 0xaa59708
+      |     `-CXXThisExpr 0xb285bb8 <col:16> 'const std::basic_string<char> *' implicit this
+      `-CXXMemberCallExpr 0xb285cd8 <col:29, col:43> 'const_pointer':'const char *'
+        `-MemberExpr 0xb285ca8 <col:29> '<bound member function type>' ->_M_local_data 0xaa59948
+          `-CXXThisExpr 0xb285c98 <col:29> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb285d40
+`-ReturnStmt 0xb285d30
+  `-BinaryOperator 0xb285d10 '_Bool' '=='
+    |-ImplicitCastExpr 0xb285cf8 'const char *' <NoOp>
+    | `-CXXMemberCallExpr 0xb285bf8 'pointer':'char *'
+    |   `-MemberExpr 0xb285bc8 '<bound member function type>' ->_M_data 0xaa59708
+    |     `-CXXThisExpr 0xb285bb8 'const class std::basic_string<char> *' implicit this
+    `-CXXMemberCallExpr 0xb285cd8 'const_pointer':'const char *'
+      `-MemberExpr 0xb285ca8 '<bound member function type>' ->_M_local_data 0xaa59948
+        `-CXXThisExpr 0xb285c98 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt11char_traitsIcE4copyEPcPKcm
+CXXMethodDecl 0xa8a4fa8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/char_traits.h:367:7, line:373:7> line:368:7 used copy 'char_type *(char_type *, const char_type *, size_t)' static implicit-inline
+|-ParmVarDecl 0xa8a4e08 <col:12, col:23> col:23 used __s1 'char_type *'
+|-ParmVarDecl 0xa8a4e88 <col:29, col:46> col:46 used __s2 'const char_type *'
+|-ParmVarDecl 0xa8a4f00 <col:52, col:59> col:59 used __n 'size_t':'unsigned long'
+`-CompoundStmt 0xa8a73b0 <line:369:7, line:373:7>
+  |-IfStmt 0xa8a6ee0 <line:370:2, line:371:11>
+  | |-BinaryOperator 0xa8a6e78 <line:370:6, col:13> 'bool' '=='
+  | | |-ImplicitCastExpr 0xa8a6e48 <col:6> 'size_t':'unsigned long' <LValueToRValue>
+  | | | `-DeclRefExpr 0xa8a6e08 <col:6> 'size_t':'unsigned long' lvalue ParmVar 0xa8a4f00 '__n' 'size_t':'unsigned long'
+  | | `-ImplicitCastExpr 0xa8a6e60 <col:13> 'size_t':'unsigned long' <IntegralCast>
+  | |   `-IntegerLiteral 0xa8a6e28 <col:13> 'int' 0
+  | `-ReturnStmt 0xa8a6ed0 <line:371:4, col:11>
+  |   `-ImplicitCastExpr 0xa8a6eb8 <col:11> 'char_type *' <LValueToRValue>
+  |     `-DeclRefExpr 0xa8a6e98 <col:11> 'char_type *' lvalue ParmVar 0xa8a4e08 '__s1' 'char_type *'
+  `-ReturnStmt 0xa8a73a0 <line:372:2, col:66>
+    `-CXXStaticCastExpr 0xa8a7370 <col:9, col:66> 'char_type *' static_cast<char_type *> <BitCast>
+      `-CallExpr 0xa8a72a8 <col:33, col:65> 'void *'
+        |-ImplicitCastExpr 0xa8a7290 <col:33> 'void *(*)(void *, const void *, unsigned long) noexcept' <BuiltinFnToFnPtr>
+        | `-DeclRefExpr 0xa8a71c8 <col:33> '<builtin fn type>' Function 0xa8a6f50 '__builtin_memcpy' 'void *(void *, const void *, unsigned long) noexcept'
+        |-ImplicitCastExpr 0xa8a72f8 <col:50> 'void *' <BitCast>
+        | `-ImplicitCastExpr 0xa8a72e0 <col:50> 'char_type *' <LValueToRValue>
+        |   `-DeclRefExpr 0xa8a71e8 <col:50> 'char_type *' lvalue ParmVar 0xa8a4e08 '__s1' 'char_type *'
+        |-ImplicitCastExpr 0xa8a7328 <col:56> 'const void *' <BitCast>
+        | `-ImplicitCastExpr 0xa8a7310 <col:56> 'const char_type *' <LValueToRValue>
+        |   `-DeclRefExpr 0xa8a7208 <col:56> 'const char_type *' lvalue ParmVar 0xa8a4e88 '__s2' 'const char_type *'
+        `-ImplicitCastExpr 0xa8a7340 <col:62> 'size_t':'unsigned long' <LValueToRValue>
+          `-DeclRefExpr 0xa8a7228 <col:62> 'size_t':'unsigned long' lvalue ParmVar 0xa8a4f00 '__n' 'size_t':'unsigned long'
+CompoundStmt 0xa8a73b0
+|-IfStmt 0xa8a6ee0
+| |-BinaryOperator 0xa8a6e78 '_Bool' '=='
+| | |-ImplicitCastExpr 0xa8a6e48 'size_t':'unsigned long' <LValueToRValue>
+| | | `-DeclRefExpr 0xa8a6e08 'size_t':'unsigned long' lvalue ParmVar 0xa8a4f00 '__n' 'size_t':'unsigned long'
+| | `-ImplicitCastExpr 0xa8a6e60 'size_t':'unsigned long' <IntegralCast>
+| |   `-IntegerLiteral 0xa8a6e28 'int' 0
+| `-ReturnStmt 0xa8a6ed0
+|   `-ImplicitCastExpr 0xa8a6eb8 'char_type *' <LValueToRValue>
+|     `-DeclRefExpr 0xa8a6e98 'char_type *' lvalue ParmVar 0xa8a4e08 '__s1' 'char_type *'
+`-ReturnStmt 0xa8a73a0
+  `-CXXStaticCastExpr 0xa8a7370 'char_type *' static_cast<char_type *> <BitCast>
+    `-CallExpr 0xa8a72a8 'void *'
+      |-ImplicitCastExpr 0xa8a7290 'void *(*)(void *, const void *, unsigned long) noexcept' <BuiltinFnToFnPtr>
+      | `-DeclRefExpr 0xa8a71c8 '<builtin fn type>' Function 0xa8a6f50 '__builtin_memcpy' 'void *(void *, const void *, unsigned long) noexcept'
+      |-ImplicitCastExpr 0xa8a72f8 'void *' <BitCast>
+      | `-ImplicitCastExpr 0xa8a72e0 'char_type *' <LValueToRValue>
+      |   `-DeclRefExpr 0xa8a71e8 'char_type *' lvalue ParmVar 0xa8a4e08 '__s1' 'char_type *'
+      |-ImplicitCastExpr 0xa8a7328 'const void *' <BitCast>
+      | `-ImplicitCastExpr 0xa8a7310 'const char_type *' <LValueToRValue>
+      |   `-DeclRefExpr 0xa8a7208 'const char_type *' lvalue ParmVar 0xa8a4e88 '__s2' 'const char_type *'
+      `-ImplicitCastExpr 0xa8a7340 'size_t':'unsigned long' <LValueToRValue>
+        `-DeclRefExpr 0xa8a7228 'size_t':'unsigned long' lvalue ParmVar 0xa8a4f00 '__n' 'size_t':'unsigned long'
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7_M_dataEPc
+CXXMethodDecl 0xaa59438 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:181:7, line:183:33> line:182:7 used _M_data 'void (pointer)' implicit-inline
+|-ParmVarDecl 0xaa59340 <col:15, col:23> col:23 used __p 'pointer':'char *'
+`-CompoundStmt 0xb285070 <line:183:7, col:33>
+  `-BinaryOperator 0xb285050 <col:9, col:28> 'pointer':'char *' lvalue '='
+    |-MemberExpr 0xb284fe8 <col:9, col:21> 'pointer':'char *' lvalue ._M_p 0xaa57e38
+    | `-MemberExpr 0xb284fb8 <col:9> '_Alloc_hider':'std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+    |   `-CXXThisExpr 0xb284fa8 <col:9> 'std::basic_string<char> *' implicit this
+    `-ImplicitCastExpr 0xb285038 <col:28> 'pointer':'char *' <LValueToRValue>
+      `-DeclRefExpr 0xb285018 <col:28> 'pointer':'char *' lvalue ParmVar 0xaa59340 '__p' 'pointer':'char *'
+CompoundStmt 0xb285070
+`-BinaryOperator 0xb285050 'pointer':'char *' lvalue '='
+  |-MemberExpr 0xb284fe8 'pointer':'char *' lvalue ._M_p 0xaa57e38
+  | `-MemberExpr 0xb284fb8 '_Alloc_hider':'struct std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+  |   `-CXXThisExpr 0xb284fa8 'class std::basic_string<char> *' implicit this
+  `-ImplicitCastExpr 0xb285038 'pointer':'char *' <LValueToRValue>
+    `-DeclRefExpr 0xb285018 'pointer':'char *' lvalue ParmVar 0xaa59340 '__p' 'pointer':'char *'
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7_M_dataEv
+CXXMethodDecl 0xaa59708 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:189:7, line:191:34> line:190:7 used _M_data 'pointer () const' implicit-inline
+`-CompoundStmt 0xb243598 <line:191:7, col:34>
+  `-ReturnStmt 0xb243588 <col:9, col:28>
+    `-ImplicitCastExpr 0xb243570 <col:16, col:28> 'pointer':'char *' <LValueToRValue>
+      `-MemberExpr 0xb243540 <col:16, col:28> 'const pointer':'char *const' lvalue ._M_p 0xaa57e38
+        `-MemberExpr 0xb243510 <col:16> 'const _Alloc_hider':'const std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+          `-CXXThisExpr 0xb243500 <col:16> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb243598
+`-ReturnStmt 0xb243588
+  `-ImplicitCastExpr 0xb243570 'pointer':'char *' <LValueToRValue>
+    `-MemberExpr 0xb243540 'const pointer':'char *const' lvalue ._M_p 0xaa57e38
+      `-MemberExpr 0xb243510 'const _Alloc_hider':'const struct std::basic_string<char>::_Alloc_hider' lvalue ->_M_dataplus 0xaa589b0
+        `-CXXThisExpr 0xb243500 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE11_M_capacityEm
+CXXMethodDecl 0xaa59ab0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:213:7, line:215:45> line:214:7 used _M_capacity 'void (size_type)' implicit-inline
+|-ParmVarDecl 0xaa59a20 <col:19, col:29> col:29 used __capacity 'size_type':'unsigned long'
+`-CompoundStmt 0xb285168 <line:215:7, col:45>
+  `-BinaryOperator 0xb285148 <col:9, col:33> 'size_type':'unsigned long' lvalue '='
+    |-MemberExpr 0xb2850e0 <col:9> 'size_type':'unsigned long' lvalue ._M_allocated_capacity 0xaa591c8
+    | `-MemberExpr 0xb285098 <col:9> 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+    |   `-CXXThisExpr 0xb285088 <col:9> 'std::basic_string<char> *' implicit this
+    `-ImplicitCastExpr 0xb285130 <col:33> 'size_type':'unsigned long' <LValueToRValue>
+      `-DeclRefExpr 0xb285110 <col:33> 'size_type':'unsigned long' lvalue ParmVar 0xaa59a20 '__capacity' 'size_type':'unsigned long'
+CompoundStmt 0xb285168
+`-BinaryOperator 0xb285148 'size_type':'unsigned long' lvalue '='
+  |-MemberExpr 0xb2850e0 'size_type':'unsigned long' lvalue ._M_allocated_capacity 0xaa591c8
+  | `-MemberExpr 0xb285098 'union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+  |   `-CXXThisExpr 0xb285088 'class std::basic_string<char> *' implicit this
+  `-ImplicitCastExpr 0xb285130 'size_type':'unsigned long' <LValueToRValue>
+    `-DeclRefExpr 0xb285110 'size_type':'unsigned long' lvalue ParmVar 0xaa59a20 '__capacity' 'size_type':'unsigned long'
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_lengthEm
+CXXMethodDecl 0xaa595c8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:185:7, line:187:38> line:186:7 used _M_length 'void (size_type)' implicit-inline
+|-ParmVarDecl 0xaa59508 <col:17, col:27> col:27 used __length 'size_type':'unsigned long'
+`-CompoundStmt 0xb288f08 <line:187:7, col:38>
+  `-BinaryOperator 0xb288ee8 <col:9, col:28> 'size_type':'unsigned long' lvalue '='
+    |-MemberExpr 0xb288e80 <col:9> 'size_type':'unsigned long' lvalue ->_M_string_length 0xaa58a10
+    | `-CXXThisExpr 0xb288e70 <col:9> 'std::basic_string<char> *' implicit this
+    `-ImplicitCastExpr 0xb288ed0 <col:28> 'size_type':'unsigned long' <LValueToRValue>
+      `-DeclRefExpr 0xb288eb0 <col:28> 'size_type':'unsigned long' lvalue ParmVar 0xaa59508 '__length' 'size_type':'unsigned long'
+CompoundStmt 0xb288f08
+`-BinaryOperator 0xb288ee8 'size_type':'unsigned long' lvalue '='
+  |-MemberExpr 0xb288e80 'size_type':'unsigned long' lvalue ->_M_string_length 0xaa58a10
+  | `-CXXThisExpr 0xb288e70 'class std::basic_string<char> *' implicit this
+  `-ImplicitCastExpr 0xb288ed0 'size_type':'unsigned long' <LValueToRValue>
+    `-DeclRefExpr 0xb288eb0 'size_type':'unsigned long' lvalue ParmVar 0xaa59508 '__length' 'size_type':'unsigned long'
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE6lengthEv
+CXXMethodDecl 0xaa63280 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:939:7, line:941:34> line:940:7 used length 'size_type () const noexcept' implicit-inline
+`-CompoundStmt 0xb28ab88 <line:941:7, col:34>
+  `-ReturnStmt 0xb28ab78 <col:9, col:16>
+    `-ImplicitCastExpr 0xb28ab60 <col:16> 'size_type':'unsigned long' <LValueToRValue>
+      `-MemberExpr 0xb28ab30 <col:16> 'const size_type':'const unsigned long' lvalue ->_M_string_length 0xaa58a10
+        `-CXXThisExpr 0xb28ab20 <col:16> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb28ab88
+`-ReturnStmt 0xb28ab78
+  `-ImplicitCastExpr 0xb28ab60 'size_type':'unsigned long' <LValueToRValue>
+    `-MemberExpr 0xb28ab30 'const size_type':'const unsigned long' lvalue ->_M_string_length 0xaa58a10
+      `-CXXThisExpr 0xb28ab20 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE13_M_set_lengthEm
+CXXMethodDecl 0xaa59c10 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:217:7, line:222:7> line:218:7 used _M_set_length 'void (size_type)' implicit-inline
+|-ParmVarDecl 0xaa59b80 <col:21, col:31> col:31 used __n 'size_type':'unsigned long'
+`-CompoundStmt 0xb288e50 <line:219:7, line:222:7>
+  |-CXXMemberCallExpr 0xb288b50 <line:220:2, col:15> 'void'
+  | |-MemberExpr 0xb288b00 <col:2> '<bound member function type>' ->_M_length 0xaa595c8
+  | | `-CXXThisExpr 0xb288af0 <col:2> 'std::basic_string<char> *' implicit this
+  | `-ImplicitCastExpr 0xb288b78 <col:12> 'size_type':'unsigned long' <LValueToRValue>
+  |   `-DeclRefExpr 0xb288b30 <col:12> 'size_type':'unsigned long' lvalue ParmVar 0xaa59b80 '__n' 'size_type':'unsigned long'
+  `-ExprWithCleanups 0xb288e38 <line:221:2, col:46> 'void'
+    `-CallExpr 0xb288df0 <col:2, col:46> 'void'
+      |-ImplicitCastExpr 0xb288dd8 <col:2, col:15> 'void (*)(char_type &, const char_type &) noexcept' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb288da8 <col:2, col:15> 'void (char_type &, const char_type &) noexcept' lvalue CXXMethod 0xa8a2650 'assign' 'void (char_type &, const char_type &) noexcept'
+      |-ArraySubscriptExpr 0xb288d60 <col:22, col:35> 'char':'char' lvalue
+      | |-CXXMemberCallExpr 0xb288cf0 <col:22, col:30> 'pointer':'char *'
+      | | `-MemberExpr 0xb288cc0 <col:22> '<bound member function type>' ->_M_data 0xaa59708
+      | |   `-ImplicitCastExpr 0xb288d10 <col:22> 'const std::basic_string<char> *' <NoOp>
+      | |     `-CXXThisExpr 0xb288cb0 <col:22> 'std::basic_string<char> *' implicit this
+      | `-ImplicitCastExpr 0xb288d48 <col:32> 'size_type':'unsigned long' <LValueToRValue>
+      |   `-DeclRefExpr 0xb288d28 <col:32> 'size_type':'unsigned long' lvalue ParmVar 0xaa59b80 '__n' 'size_type':'unsigned long'
+      `-MaterializeTemporaryExpr 0xb288e20 <col:38, col:45> 'const char_type':'const char' lvalue
+        `-CXXScalarValueInitExpr 0xb288d90 <col:38, col:45> 'char':'char'
+CompoundStmt 0xb288e50
+|-CXXMemberCallExpr 0xb288b50 'void'
+| |-MemberExpr 0xb288b00 '<bound member function type>' ->_M_length 0xaa595c8
+| | `-CXXThisExpr 0xb288af0 'class std::basic_string<char> *' implicit this
+| `-ImplicitCastExpr 0xb288b78 'size_type':'unsigned long' <LValueToRValue>
+|   `-DeclRefExpr 0xb288b30 'size_type':'unsigned long' lvalue ParmVar 0xaa59b80 '__n' 'size_type':'unsigned long'
+`-ExprWithCleanups 0xb288e38 'void'
+  `-CallExpr 0xb288df0 'void'
+    |-ImplicitCastExpr 0xb288dd8 'void (*)(char_type &, const char_type &) noexcept' <FunctionToPointerDecay>
+    | `-DeclRefExpr 0xb288da8 'void (char_type &, const char_type &) noexcept' lvalue CXXMethod 0xa8a2650 'assign' 'void (char_type &, const char_type &) noexcept'
+    |-ArraySubscriptExpr 0xb288d60 'char':'char' lvalue
+    | |-CXXMemberCallExpr 0xb288cf0 'pointer':'char *'
+    | | `-MemberExpr 0xb288cc0 '<bound member function type>' ->_M_data 0xaa59708
+    | |   `-ImplicitCastExpr 0xb288d10 'const class std::basic_string<char> *' <NoOp>
+    | |     `-CXXThisExpr 0xb288cb0 'class std::basic_string<char> *' implicit this
+    | `-ImplicitCastExpr 0xb288d48 'size_type':'unsigned long' <LValueToRValue>
+    |   `-DeclRefExpr 0xb288d28 'size_type':'unsigned long' lvalue ParmVar 0xaa59b80 '__n' 'size_type':'unsigned long'
+    `-MaterializeTemporaryExpr 0xb288e20 'const char_type':'const char' lvalue
+      `-CXXScalarValueInitExpr 0xb288d90 'char':'char'
+cleanup of materialized not handledCallExpr 0xb288df0 'void'
+|-ImplicitCastExpr 0xb288dd8 'void (*)(char_type &, const char_type &) noexcept' <FunctionToPointerDecay>
+| `-DeclRefExpr 0xb288da8 'void (char_type &, const char_type &) noexcept' lvalue CXXMethod 0xa8a2650 'assign' 'void (char_type &, const char_type &) noexcept'
+|-ArraySubscriptExpr 0xb288d60 'char':'char' lvalue
+| |-CXXMemberCallExpr 0xb288cf0 'pointer':'char *'
+| | `-MemberExpr 0xb288cc0 '<bound member function type>' ->_M_data 0xaa59708
+| |   `-ImplicitCastExpr 0xb288d10 'const class std::basic_string<char> *' <NoOp>
+| |     `-CXXThisExpr 0xb288cb0 'class std::basic_string<char> *' implicit this
+| `-ImplicitCastExpr 0xb288d48 'size_type':'unsigned long' <LValueToRValue>
+|   `-DeclRefExpr 0xb288d28 'size_type':'unsigned long' lvalue ParmVar 0xaa59b80 '__n' 'size_type':'unsigned long'
+`-MaterializeTemporaryExpr 0xb288e20 'const char_type':'const char' lvalue
+  `-CXXScalarValueInitExpr 0xb288d90 'char':'char'
+cleanup not handled
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_Alloc_hiderC1EPcRKS3_
+CXXConstructorDecl 0xaa57a60 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:160:2, line:161:39> line:160:2 used _Alloc_hider 'void (pointer, const std::allocator<char> &)' implicit-inline
+|-ParmVarDecl 0xaa57870 <col:15, col:23> col:23 used __dat 'pointer':'char *'
+|-ParmVarDecl 0xaa57918 <col:30, col:44> col:44 used __a 'const std::allocator<char> &'
+|-CXXCtorInitializer 'allocator_type':'std::allocator<char>'
+| `-CXXConstructExpr 0xb274f18 <line:161:4, col:22> 'allocator_type':'std::allocator<char>' 'void (const allocator<char> &) noexcept'
+|   `-DeclRefExpr 0xb274e60 <col:19> 'const std::allocator<char>':'const std::allocator<char>' lvalue ParmVar 0xaa57918 '__a' 'const std::allocator<char> &'
+|-CXXCtorInitializer Field 0xaa57e38 '_M_p' 'pointer':'char *'
+| `-ImplicitCastExpr 0xb274fa8 <col:30> 'pointer':'char *' <LValueToRValue>
+|   `-DeclRefExpr 0xb274f68 <col:30> 'pointer':'char *' lvalue ParmVar 0xaa57870 '__dat' 'pointer':'char *'
+`-CompoundStmt 0xa9f7e28 <col:37, col:39>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb274f18 'allocator_type':'class std::allocator<char>' 'void (const allocator<char> &) noexcept'
+`-DeclRefExpr 0xb274e60 'const class std::allocator<char>':'const class std::allocator<char>' lvalue ParmVar 0xaa57918 '__a' 'const class std::allocator<char> &'
+ init: - baseInit:0 memberInit:1 anyMember:1 indirectMember:0 isinClass:0 delegating:0 isPack:0
+FieldDecl 0xaa57e38 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:167:2, col:10> col:10 referenced _M_p 'pointer':'char *'
+ImplicitCastExpr 0xb274fa8 'pointer':'char *' <LValueToRValue>
+`-DeclRefExpr 0xb274f68 'pointer':'char *' lvalue ParmVar 0xaa57870 '__dat' 'pointer':'char *'
+CompoundStmt 0xa9f7e28
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_M_constructIPKcEEvT_S8_
+CXXMethodDecl 0xb2cf678 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:266:9, line:271:9> line:267:9 used _M_construct 'void (const char *, const char *)' implicit-inline
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2cf4e8 <col:22, col:34> col:34 used __beg 'const char *':'const char *'
+|-ParmVarDecl 0xb2cf560 <col:41, col:53> col:53 used __end 'const char *':'const char *'
+`-CompoundStmt 0xb2d0410 <line:268:2, line:271:9>
+  |-DeclStmt 0xb2cfdb8 <line:269:4, col:69>
+  | `-TypedefDecl 0xb2cfd60 <col:4, col:60> col:60 referenced _Integral 'typename std::__is_integer<const char *>::__type':'std::__false_type'
+  |   `-ElaboratedType 0xb2cfd10 'typename std::__is_integer<const char *>::__type' sugar
+  |     `-TypedefType 0xb2cfce0 'std::__is_integer<const char *>::__type' sugar
+  |       |-Typedef 0xb2cfc68 '__type'
+  |       `-ElaboratedType 0xa3879c0 '__false_type' sugar
+  |         `-RecordType 0xa387480 'std::__false_type'
+  |           `-CXXRecord 0xa3873f0 '__false_type'
+  `-ExprWithCleanups 0xb2d03f8 <line:270:4, col:46> 'void'
+    `-CXXMemberCallExpr 0xb2d0348 <col:4, col:46> 'void'
+      |-MemberExpr 0xb2d0300 <col:4> '<bound member function type>' ->_M_construct_aux 0xb2d01d8
+      | `-CXXThisExpr 0xb2d02f0 <col:4> 'std::basic_string<char> *' implicit this
+      |-ImplicitCastExpr 0xb2d0380 <col:21> 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2cfe50 <col:21> 'const char *':'const char *' lvalue ParmVar 0xb2cf4e8 '__beg' 'const char *':'const char *'
+      |-ImplicitCastExpr 0xb2d0398 <col:28> 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2cfe70 <col:28> 'const char *':'const char *' lvalue ParmVar 0xb2cf560 '__end' 'const char *':'const char *'
+      `-CXXConstructExpr 0xb2d03c8 <col:35, col:45> 'std::__false_type':'std::__false_type' 'void (std::__false_type &&) noexcept' elidable
+        `-MaterializeTemporaryExpr 0xb2d03b0 <col:35, col:45> '_Integral':'std::__false_type' xvalue
+          `-CXXTemporaryObjectExpr 0xb2cff28 <col:35, col:45> '_Integral':'std::__false_type' 'void () noexcept' zeroing
+CompoundStmt 0xb2d0410
+|-DeclStmt 0xb2cfdb8
+| `-TypedefDecl 0xb2cfd60  referenced _Integral 'typename std::__is_integer<const char *>::__type':'struct std::__false_type'
+|   `-ElaboratedType 0xb2cfd10 'typename std::__is_integer<const char *>::__type' sugar
+|     `-TypedefType 0xb2cfce0 'std::__is_integer<const char *>::__type' sugar
+|       |-Typedef 0xb2cfc68 '__type'
+|       `-ElaboratedType 0xa3879c0 '__false_type' sugar
+|         `-RecordType 0xa387480 'struct std::__false_type'
+|           `-CXXRecord 0xa3873f0 '__false_type'
+`-ExprWithCleanups 0xb2d03f8 'void'
+  `-CXXMemberCallExpr 0xb2d0348 'void'
+    |-MemberExpr 0xb2d0300 '<bound member function type>' ->_M_construct_aux 0xb2d01d8
+    | `-CXXThisExpr 0xb2d02f0 'class std::basic_string<char> *' implicit this
+    |-ImplicitCastExpr 0xb2d0380 'const char *':'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2cfe50 'const char *':'const char *' lvalue ParmVar 0xb2cf4e8 '__beg' 'const char *':'const char *'
+    |-ImplicitCastExpr 0xb2d0398 'const char *':'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2cfe70 'const char *':'const char *' lvalue ParmVar 0xb2cf560 '__end' 'const char *':'const char *'
+    `-CXXConstructExpr 0xb2d03c8 'std::__false_type':'struct std::__false_type' 'void (struct std::__false_type &&) noexcept' elidable
+      `-MaterializeTemporaryExpr 0xb2d03b0 '_Integral':'struct std::__false_type' xvalue
+        `-CXXTemporaryObjectExpr 0xb2cff28 '_Integral':'struct std::__false_type' 'void (void) noexcept' zeroing
+cleanup of materialized not handledCXXMemberCallExpr 0xb2d0348 'void'
+|-MemberExpr 0xb2d0300 '<bound member function type>' ->_M_construct_aux 0xb2d01d8
+| `-CXXThisExpr 0xb2d02f0 'class std::basic_string<char> *' implicit this
+|-ImplicitCastExpr 0xb2d0380 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2cfe50 'const char *':'const char *' lvalue ParmVar 0xb2cf4e8 '__beg' 'const char *':'const char *'
+|-ImplicitCastExpr 0xb2d0398 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2cfe70 'const char *':'const char *' lvalue ParmVar 0xb2cf560 '__end' 'const char *':'const char *'
+`-CXXConstructExpr 0xb2d03c8 'std::__false_type':'struct std::__false_type' 'void (struct std::__false_type &&) noexcept' elidable
+  `-MaterializeTemporaryExpr 0xb2d03b0 '_Integral':'struct std::__false_type' xvalue
+    `-CXXTemporaryObjectExpr 0xb2cff28 '_Integral':'struct std::__false_type' 'void (void) noexcept' zeroing
+cleanup not handled
+Emitting fn: _ZNSt11char_traitsIcE6lengthEPKc
+CXXMethodDecl 0xa8a2f98 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/char_traits.h:335:7, line:343:7> line:336:7 used length 'size_t (const char_type *)' static implicit-inline
+|-ParmVarDecl 0xa8a2ed8 <col:14, col:31> col:31 used __s 'const char_type *'
+`-CompoundStmt 0xa8a63f0 <line:337:7, line:343:7>
+  `-ReturnStmt 0xa8a63e0 <line:342:2, col:29>
+    `-CallExpr 0xa8a63a0 <col:9, col:29> 'unsigned long'
+      |-ImplicitCastExpr 0xa8a6388 <col:9> 'unsigned long (*)(const char *) noexcept' <BuiltinFnToFnPtr>
+      | `-DeclRefExpr 0xa8a6330 <col:9> '<builtin fn type>' Function 0xa61c4d0 '__builtin_strlen' 'unsigned long (const char *) noexcept'
+      `-ImplicitCastExpr 0xa8a63c8 <col:26> 'const char_type *' <LValueToRValue>
+        `-DeclRefExpr 0xa8a6350 <col:26> 'const char_type *' lvalue ParmVar 0xa8a2ed8 '__s' 'const char_type *'
+CompoundStmt 0xa8a63f0
+`-ReturnStmt 0xa8a63e0
+  `-CallExpr 0xa8a63a0 'unsigned long'
+    |-ImplicitCastExpr 0xa8a6388 'unsigned long (*)(const char *) noexcept' <BuiltinFnToFnPtr>
+    | `-DeclRefExpr 0xa8a6330 '<builtin fn type>' Function 0xa61c4d0 '__builtin_strlen' 'unsigned long (const char *) noexcept'
+    `-ImplicitCastExpr 0xa8a63c8 'const char_type *' <LValueToRValue>
+      `-DeclRefExpr 0xa8a6350 'const char_type *' lvalue ParmVar 0xa8a2ed8 '__s' 'const char_type *'
+Emitting fn: _ZN9__gnu_cxx13new_allocatorIcEC1Ev
+CXXConstructorDecl 0xa64a2c8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/ext/new_allocator.h:80:7, col:47> col:7 used new_allocator 'void () noexcept' implicit-inline
+`-CompoundStmt 0xa63abe0 <col:45, col:47>
+CompoundStmt 0xa63abe0
+Emitting fn: _ZNSaIcEC1ERKS_
+CXXConstructorDecl 0xa64d2c0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/allocator.h:140:7, line:141:38> line:140:7 used allocator 'void (const allocator<char> &) noexcept' implicit-inline
+|-ParmVarDecl 0xa64d1a0 <col:17, col:34> col:34 used __a 'const allocator<char> &'
+|-CXXCtorInitializer '__allocator_base<char>':'__gnu_cxx::new_allocator<char>'
+| `-CXXConstructExpr 0xb275520 <line:141:9, col:34> '__allocator_base<char>':'__gnu_cxx::new_allocator<char>' 'void (const new_allocator<char> &) noexcept'
+|   `-ImplicitCastExpr 0xb275500 <col:31> 'const new_allocator<char>':'const __gnu_cxx::new_allocator<char>' lvalue <DerivedToBase (new_allocator)>
+|     `-DeclRefExpr 0xb274ff0 <col:31> 'const allocator<char>':'const std::allocator<char>' lvalue ParmVar 0xa64d1a0 '__a' 'const allocator<char> &'
+`-CompoundStmt 0xa645d58 <col:36, col:38>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb275520 '__allocator_base<char>':'class __gnu_cxx::new_allocator<char>' 'void (const new_allocator<char> &) noexcept'
+`-ImplicitCastExpr 0xb275500 'const new_allocator<char>':'const class __gnu_cxx::new_allocator<char>' lvalue <DerivedToBase (new_allocator)>
+  `-DeclRefExpr 0xb274ff0 'const allocator<char>':'const class std::allocator<char>' lvalue ParmVar 0xa64d1a0 '__a' 'const allocator<char> &'
+CompoundStmt 0xa645d58
+Emitting fn: _ZNSt14pointer_traitsIPcE10pointer_toERc
+CXXMethodDecl 0xb274370 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/ptr_traits.h:145:7, line:147:37> line:146:7 used pointer_to 'pointer (__make_not_void<element_type> &) noexcept' static implicit-inline
+|-ParmVarDecl 0xb274270 <col:18, col:49> col:49 used __r '__make_not_void<element_type> &'
+`-CompoundStmt 0xb274e48 <line:147:7, col:37>
+  `-ReturnStmt 0xb274e38 <col:9, col:34>
+    `-CallExpr 0xb274e10 <col:16, col:34> 'char *'
+      |-ImplicitCastExpr 0xb274df8 <col:16, col:21> 'char *(*)(char &) noexcept' <BuiltinFnToFnPtr>
+      | `-DeclRefExpr 0xb274d98 <col:16, col:21> '<builtin fn type>' Function 0xb274820 'addressof' 'char *(char &) noexcept' (FunctionTemplate 0xa45c378 'addressof')
+      `-DeclRefExpr 0xb274640 <col:31> '__make_not_void<element_type>':'char' lvalue ParmVar 0xb274270 '__r' '__make_not_void<element_type> &'
+CompoundStmt 0xb274e48
+`-ReturnStmt 0xb274e38
+  `-CallExpr 0xb274e10 'char *'
+    |-ImplicitCastExpr 0xb274df8 'char *(*)(char &) noexcept' <BuiltinFnToFnPtr>
+    | `-DeclRefExpr 0xb274d98 '<builtin fn type>' Function 0xb274820 'addressof' 'char *(char &) noexcept' (FunctionTemplate 0xa45c378 'addressof')
+    `-DeclRefExpr 0xb274640 '__make_not_void<element_type>':'char' lvalue ParmVar 0xb274270 '__r' '__make_not_void<element_type> &'
+Emitting fn: _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE13_M_local_dataEv
+CXXMethodDecl 0xaa59948 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:203:7, line:211:7> line:204:7 used _M_local_data 'const_pointer () const' implicit-inline
+`-CompoundStmt 0xb287f58 <line:205:7, line:211:7>
+  `-ReturnStmt 0xb287f48 <line:207:2, col:69>
+    `-CallExpr 0xb287f20 <col:9, col:69> 'pointer':'const char *'
+      |-ImplicitCastExpr 0xb287f08 <col:9, col:45> 'pointer (*)(__make_not_void<element_type> &) noexcept' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb287d88 <col:9, col:45> 'pointer (__make_not_void<element_type> &) noexcept' lvalue CXXMethod 0xb287cb0 'pointer_to' 'pointer (__make_not_void<element_type> &) noexcept'
+      `-UnaryOperator 0xb287e90 <col:56, col:57> 'const char':'const char' lvalue prefix '*' cannot overflow
+        `-ImplicitCastExpr 0xb287e78 <col:57> 'const char *' <ArrayToPointerDecay>
+          `-MemberExpr 0xb287e10 <col:57> 'const char[16]' lvalue ._M_local_buf 0xaa59168
+            `-MemberExpr 0xb287dc8 <col:57> 'const union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'const std::basic_string<char>::(anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+              `-CXXThisExpr 0xb287db8 <col:57> 'const std::basic_string<char> *' implicit this
+CompoundStmt 0xb287f58
+`-ReturnStmt 0xb287f48
+  `-CallExpr 0xb287f20 'pointer':'const char *'
+    |-ImplicitCastExpr 0xb287f08 'pointer (*)(__make_not_void<element_type> &) noexcept' <FunctionToPointerDecay>
+    | `-DeclRefExpr 0xb287d88 'pointer (__make_not_void<element_type> &) noexcept' lvalue CXXMethod 0xb287cb0 'pointer_to' 'pointer (__make_not_void<element_type> &) noexcept'
+    `-UnaryOperator 0xb287e90 'const char':'const char' lvalue prefix '*' cannot overflow
+      `-ImplicitCastExpr 0xb287e78 'const char *' <ArrayToPointerDecay>
+        `-MemberExpr 0xb287e10 'const char[16]' lvalue ._M_local_buf 0xaa59168
+          `-MemberExpr 0xb287dc8 'const union (anonymous union at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)':'const union std::basic_string<char>::(anonymous at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:175:7)' lvalue -> 0xaa59230
+            `-CXXThisExpr 0xb287db8 'const class std::basic_string<char> *' implicit this
+Emitting fn: _ZNSt11char_traitsIcE6assignERcRKc
+CXXMethodDecl 0xa8a2650 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/char_traits.h:298:7, line:300:22> line:299:7 used assign 'void (char_type &, const char_type &) noexcept' static implicit-inline
+|-ParmVarDecl 0xa8a2450 <col:14, col:25> col:25 used __c1 'char_type &'
+|-ParmVarDecl 0xa8a2500 <col:31, col:48> col:48 used __c2 'const char_type &'
+`-CompoundStmt 0xa8a5d70 <line:300:7, col:22>
+  `-BinaryOperator 0xa8a5d50 <col:9, col:16> 'char_type':'char' lvalue '='
+    |-DeclRefExpr 0xa8a5cf8 <col:9> 'char_type':'char' lvalue ParmVar 0xa8a2450 '__c1' 'char_type &'
+    `-ImplicitCastExpr 0xa8a5d38 <col:16> 'char_type':'char' <LValueToRValue>
+      `-DeclRefExpr 0xa8a5d18 <col:16> 'const char_type':'const char' lvalue ParmVar 0xa8a2500 '__c2' 'const char_type &'
+CompoundStmt 0xa8a5d70
+`-BinaryOperator 0xa8a5d50 'char_type':'char' lvalue '='
+  |-DeclRefExpr 0xa8a5cf8 'char_type':'char' lvalue ParmVar 0xa8a2450 '__c1' 'char_type &'
+  `-ImplicitCastExpr 0xa8a5d38 'char_type':'char' <LValueToRValue>
+    `-DeclRefExpr 0xa8a5d18 'const char_type':'const char' lvalue ParmVar 0xa8a2500 '__c2' 'const char_type &'
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE16_M_construct_auxIPKcEEvT_S8_St12__false_type
+CXXMethodDecl 0xb2d01d8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:246:9, line:252:2> line:247:9 used _M_construct_aux 'void (const char *, const char *, std::__false_type)' implicit-inline
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2cffd8 <col:26, col:38> col:38 used __beg 'const char *':'const char *'
+|-ParmVarDecl 0xb2d0050 <col:45, col:57> col:57 used __end 'const char *':'const char *'
+|-ParmVarDecl 0xb2d00b8 <line:248:5, col:10> col:22 'std::__false_type':'std::__false_type'
+`-CompoundStmt 0xb2d0fb8 <line:249:2, line:252:2>
+  |-DeclStmt 0xb2d05a8 <line:250:11, col:80>
+  | `-TypedefDecl 0xb2d0550 <col:11, col:76> col:76 referenced _Tag 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag'
+  |   `-ElaboratedType 0xb2d0500 'typename iterator_traits<const char *>::iterator_category' sugar
+  |     `-TypedefType 0xb281050 'std::iterator_traits<const char *>::iterator_category' sugar
+  |       |-Typedef 0xb280dc8 'iterator_category'
+  |       `-ElaboratedType 0xa54a1c0 'random_access_iterator_tag' sugar
+  |         `-RecordType 0xa544680 'std::random_access_iterator_tag'
+  |           `-CXXRecord 0xa5445e8 'random_access_iterator_tag'
+  `-ExprWithCleanups 0xb2d0fa0 <line:251:11, col:44> 'void'
+    `-CXXMemberCallExpr 0xb2d0ec8 <col:11, col:44> 'void'
+      |-MemberExpr 0xb2d0e80 <col:11> '<bound member function type>' ->_M_construct 0xb2d09c8
+      | `-CXXThisExpr 0xb2d0e70 <col:11> 'std::basic_string<char> *' implicit this
+      |-ImplicitCastExpr 0xb2d0f00 <col:24> 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d0650 <col:24> 'const char *':'const char *' lvalue ParmVar 0xb2cffd8 '__beg' 'const char *':'const char *'
+      |-ImplicitCastExpr 0xb2d0f18 <col:31> 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d0670 <col:31> 'const char *':'const char *' lvalue ParmVar 0xb2d0050 '__end' 'const char *':'const char *'
+      `-CXXConstructExpr 0xb2d0f70 <col:38, col:43> 'std::forward_iterator_tag':'std::forward_iterator_tag' 'void (std::forward_iterator_tag &&) noexcept'
+        `-ImplicitCastExpr 0xb2d0f48 <col:38, col:43> 'std::forward_iterator_tag' xvalue <DerivedToBase (bidirectional_iterator_tag -> forward_iterator_tag)>
+          `-MaterializeTemporaryExpr 0xb2d0f30 <col:38, col:43> '_Tag':'std::random_access_iterator_tag' xvalue
+            `-CXXTemporaryObjectExpr 0xb2d0728 <col:38, col:43> '_Tag':'std::random_access_iterator_tag' 'void () noexcept' zeroing
+CompoundStmt 0xb2d0fb8
+|-DeclStmt 0xb2d05a8
+| `-TypedefDecl 0xb2d0550  referenced _Tag 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag'
+|   `-ElaboratedType 0xb2d0500 'typename iterator_traits<const char *>::iterator_category' sugar
+|     `-TypedefType 0xb281050 'std::iterator_traits<const char *>::iterator_category' sugar
+|       |-Typedef 0xb280dc8 'iterator_category'
+|       `-ElaboratedType 0xa54a1c0 'random_access_iterator_tag' sugar
+|         `-RecordType 0xa544680 'struct std::random_access_iterator_tag'
+|           `-CXXRecord 0xa5445e8 'random_access_iterator_tag'
+`-ExprWithCleanups 0xb2d0fa0 'void'
+  `-CXXMemberCallExpr 0xb2d0ec8 'void'
+    |-MemberExpr 0xb2d0e80 '<bound member function type>' ->_M_construct 0xb2d09c8
+    | `-CXXThisExpr 0xb2d0e70 'class std::basic_string<char> *' implicit this
+    |-ImplicitCastExpr 0xb2d0f00 'const char *':'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d0650 'const char *':'const char *' lvalue ParmVar 0xb2cffd8 '__beg' 'const char *':'const char *'
+    |-ImplicitCastExpr 0xb2d0f18 'const char *':'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d0670 'const char *':'const char *' lvalue ParmVar 0xb2d0050 '__end' 'const char *':'const char *'
+    `-CXXConstructExpr 0xb2d0f70 'std::forward_iterator_tag':'struct std::forward_iterator_tag' 'void (struct std::forward_iterator_tag &&) noexcept'
+      `-ImplicitCastExpr 0xb2d0f48 'struct std::forward_iterator_tag' xvalue <DerivedToBase (bidirectional_iterator_tag -> forward_iterator_tag)>
+        `-MaterializeTemporaryExpr 0xb2d0f30 '_Tag':'struct std::random_access_iterator_tag' xvalue
+          `-CXXTemporaryObjectExpr 0xb2d0728 '_Tag':'struct std::random_access_iterator_tag' 'void (void) noexcept' zeroing
+cleanup of materialized not handledCXXMemberCallExpr 0xb2d0ec8 'void'
+|-MemberExpr 0xb2d0e80 '<bound member function type>' ->_M_construct 0xb2d09c8
+| `-CXXThisExpr 0xb2d0e70 'class std::basic_string<char> *' implicit this
+|-ImplicitCastExpr 0xb2d0f00 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2d0650 'const char *':'const char *' lvalue ParmVar 0xb2cffd8 '__beg' 'const char *':'const char *'
+|-ImplicitCastExpr 0xb2d0f18 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2d0670 'const char *':'const char *' lvalue ParmVar 0xb2d0050 '__end' 'const char *':'const char *'
+`-CXXConstructExpr 0xb2d0f70 'std::forward_iterator_tag':'struct std::forward_iterator_tag' 'void (struct std::forward_iterator_tag &&) noexcept'
+  `-ImplicitCastExpr 0xb2d0f48 'struct std::forward_iterator_tag' xvalue <DerivedToBase (bidirectional_iterator_tag -> forward_iterator_tag)>
+    `-MaterializeTemporaryExpr 0xb2d0f30 '_Tag':'struct std::random_access_iterator_tag' xvalue
+      `-CXXTemporaryObjectExpr 0xb2d0728 '_Tag':'struct std::random_access_iterator_tag' 'void (void) noexcept' zeroing
+cleanup not handled
+Emitting fn: _ZNSt12__false_typeC1EOS_
+CXXConstructorDecl 0xa6f21d8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/cpp_type_traits.h:74:10> col:10 implicit used constexpr __false_type 'void (std::__false_type &&) noexcept' inline default trivial
+|-ParmVarDecl 0xa6f22f8 <col:10> col:10 'std::__false_type &&'
+`-CompoundStmt 0xb276650 <col:10>
+CompoundStmt 0xb276650
+Emitting fn: _ZN9__gnu_cxx13new_allocatorIcEC1ERKS1_
+CXXConstructorDecl 0xa64a550 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/ext/new_allocator.h:83:7, col:67> col:7 used new_allocator 'void (const new_allocator<char> &) noexcept' implicit-inline
+|-ParmVarDecl 0xa64a430 <col:21, col:40> col:41 'const new_allocator<char> &'
+`-CompoundStmt 0xa63abf0 <col:65, col:67>
+CompoundStmt 0xa63abf0
+Emitting fn: _ZNSt14pointer_traitsIPKcE10pointer_toERS0_
+CXXMethodDecl 0xb287cb0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/ptr_traits.h:145:7, line:147:37> line:146:7 used pointer_to 'pointer (__make_not_void<element_type> &) noexcept' static implicit-inline
+|-ParmVarDecl 0xb287bb0 <col:18, col:49> col:49 used __r '__make_not_void<element_type> &'
+`-CompoundStmt 0xb288418 <line:147:7, col:37>
+  `-ReturnStmt 0xb288408 <col:9, col:34>
+    `-CallExpr 0xb2883e0 <col:16, col:34> 'const char *'
+      |-ImplicitCastExpr 0xb2883c8 <col:16, col:21> 'const char *(*)(const char &) noexcept' <BuiltinFnToFnPtr>
+      | `-DeclRefExpr 0xb288368 <col:16, col:21> '<builtin fn type>' Function 0xb288180 'addressof' 'const char *(const char &) noexcept' (FunctionTemplate 0xa45c378 'addressof')
+      `-DeclRefExpr 0xb287fc0 <col:31> '__make_not_void<element_type>':'const char' lvalue ParmVar 0xb287bb0 '__r' '__make_not_void<element_type> &'
+CompoundStmt 0xb288418
+`-ReturnStmt 0xb288408
+  `-CallExpr 0xb2883e0 'const char *'
+    |-ImplicitCastExpr 0xb2883c8 'const char *(*)(const char &) noexcept' <BuiltinFnToFnPtr>
+    | `-DeclRefExpr 0xb288368 '<builtin fn type>' Function 0xb288180 'addressof' 'const char *(const char &) noexcept' (FunctionTemplate 0xa45c378 'addressof')
+    `-DeclRefExpr 0xb287fc0 '__make_not_void<element_type>':'const char' lvalue ParmVar 0xb287bb0 '__r' '__make_not_void<element_type> &'
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE12_M_constructIPKcEEvT_S8_St20forward_iterator_tag
+CXXMethodDecl 0xb2d09c8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:205:7, line:233:7> /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:283:9 used _M_construct 'void (const char *, const char *, std::forward_iterator_tag)'
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2d07c8 <col:22, col:35> col:35 used __beg 'const char *':'const char *'
+|-ParmVarDecl 0xb2d0840 <col:42, col:55> col:55 used __end 'const char *':'const char *'
+|-ParmVarDecl 0xb2d08a8 <line:284:8, col:13> col:33 'std::forward_iterator_tag':'std::forward_iterator_tag'
+`-CompoundStmt 0xb2d2b70 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:209:7, line:233:7>
+  |-IfStmt 0xb2d18f0 <line:211:2, line:213:42>
+  | |-BinaryOperator 0xb2d1878 <line:211:6, col:54> 'bool' '&&'
+  | | |-CallExpr 0xb2d1710 <col:6, col:40> 'bool'
+  | | | |-ImplicitCastExpr 0xb2d16f8 <col:6, col:17> 'bool (*)(const char *)' <FunctionToPointerDecay>
+  | | | | `-DeclRefExpr 0xb2d1660 <col:6, col:17> 'bool (const char *)' lvalue Function 0xb2d1318 '__is_null_pointer' 'bool (const char *)' (FunctionTemplate 0xa3be380 '__is_null_pointer')
+  | | | `-ImplicitCastExpr 0xb2d1738 <col:35> 'const char *':'const char *' <LValueToRValue>
+  | | |   `-DeclRefExpr 0xb2d1160 <col:35> 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+  | | `-BinaryOperator 0xb2d1858 <col:45, col:54> 'bool' '!='
+  | |   |-ImplicitCastExpr 0xb2d1828 <col:45> 'const char *':'const char *' <LValueToRValue>
+  | |   | `-DeclRefExpr 0xb2d17e8 <col:45> 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+  | |   `-ImplicitCastExpr 0xb2d1840 <col:54> 'const char *':'const char *' <LValueToRValue>
+  | |     `-DeclRefExpr 0xb2d1808 <col:54> 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+  | `-CallExpr 0xb2d18b0 <line:212:4, line:213:42> 'void'
+  |   |-ImplicitCastExpr 0xb2d1898 <line:212:4, col:9> 'void (*)(const char *) __attribute__((noreturn))' <FunctionToPointerDecay>
+  |   | `-DeclRefExpr 0xab33eb0 <col:4, col:9> 'void (const char *) __attribute__((noreturn))' lvalue Function 0xa33d1b8 '__throw_logic_error' 'void (const char *) __attribute__((noreturn))'
+  |   `-ImplicitCastExpr 0xb2d18d8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/x86_64-linux-gnu/c++/9/bits/c++config.h:590:24, col:30> 'const char *' <ArrayToPointerDecay>
+  |     `-ParenExpr 0xab33fa0 <col:24, col:30> 'const char[42]' lvalue
+  |       `-StringLiteral 0xab33f58 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:212:33, line:213:12> 'const char[42]' lvalue "basic_string::_M_construct null not valid"
+  |-DeclStmt 0xb2d1f68 <line:215:2, col:72>
+  | `-VarDecl 0xb2d1920 <col:2, col:71> col:12 used __dnew 'size_type':'unsigned long' cinit
+  |   `-CXXStaticCastExpr 0xb2d1f38 <col:21, col:71> 'size_type':'unsigned long' static_cast<size_type> <NoOp>
+  |     `-ImplicitCastExpr 0xb2d1f20 <col:44, col:70> 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+  |       `-CallExpr 0xb2d1ec0 <col:44, col:70> 'typename iterator_traits<const char *>::difference_type':'long'
+  |         |-ImplicitCastExpr 0xb2d1ea8 <col:44, col:49> 'typename iterator_traits<const char *>::difference_type (*)(const char *, const char *)' <FunctionToPointerDecay>
+  |         | `-DeclRefExpr 0xb2d1e18 <col:44, col:49> 'typename iterator_traits<const char *>::difference_type (const char *, const char *)' lvalue Function 0xb2d1d08 'distance' 'typename iterator_traits<const char *>::difference_type (const char *, const char *)' (FunctionTemplate 0xa552160 'distance')
+  |         |-ImplicitCastExpr 0xb2d1ef0 <col:58> 'const char *':'const char *' <LValueToRValue>
+  |         | `-DeclRefExpr 0xb2d19e0 <col:58> 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+  |         `-ImplicitCastExpr 0xb2d1f08 <col:65> 'const char *':'const char *' <LValueToRValue>
+  |           `-DeclRefExpr 0xb2d1a00 <col:65> 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+  |-IfStmt 0xb2d2358 <line:217:2, line:221:4>
+  | |-BinaryOperator 0xb2d20b0 <line:217:6, col:42> 'bool' '>'
+  | | |-ImplicitCastExpr 0xb2d2098 <col:6> 'size_type':'unsigned long' <LValueToRValue>
+  | | | `-DeclRefExpr 0xb2d2008 <col:6> 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+  | | `-CXXFunctionalCastExpr 0xb2d2070 <col:15, col:42> 'size_type':'unsigned long' functional cast to size_type <NoOp>
+  | |   `-ImplicitCastExpr 0xb2d2058 <col:25> 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+  | |     `-DeclRefExpr 0xb2d2038 <col:25> 'std::basic_string<char>::(unnamed enum at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)' EnumConstant 0xaa58bb8 '_S_local_capacity' 'std::basic_string<char>::(unnamed enum at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)'
+  | `-CompoundStmt 0xb2d2338 <line:218:4, line:221:4>
+  |   |-CXXMemberCallExpr 0xb2d2270 <line:219:6, col:45> 'void'
+  |   | |-MemberExpr 0xb2d2240 <col:6> '<bound member function type>' ->_M_data 0xaa59438
+  |   | | `-CXXThisExpr 0xb2d2230 <col:6> 'std::basic_string<char> *' implicit this
+  |   | `-CXXMemberCallExpr 0xb2d2200 <col:14, col:44> 'pointer':'char *'
+  |   |   |-MemberExpr 0xb2d2160 <col:14> '<bound member function type>' ->_M_create 0xaa59f58
+  |   |   | `-CXXThisExpr 0xb2d2150 <col:14> 'std::basic_string<char> *' implicit this
+  |   |   |-DeclRefExpr 0xb2d2190 <col:24> 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+  |   |   `-CXXFunctionalCastExpr 0xb2d21d8 <col:32, col:43> 'size_type':'unsigned long' functional cast to size_type <NoOp>
+  |   |     `-ImplicitCastExpr 0xb2d21c0 <col:42> 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+  |   |       `-IntegerLiteral 0xab34448 <col:42> 'int' 0
+  |   `-CXXMemberCallExpr 0xb2d22f8 <line:220:6, col:24> 'void'
+  |     |-MemberExpr 0xb2d22a8 <col:6> '<bound member function type>' ->_M_capacity 0xaa59ab0
+  |     | `-CXXThisExpr 0xb2d2298 <col:6> 'std::basic_string<char> *' implicit this
+  |     `-ImplicitCastExpr 0xb2d2320 <col:18> 'size_type':'unsigned long' <LValueToRValue>
+  |       `-DeclRefExpr 0xb2d22d8 <col:18> 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+  |-CXXTryStmt 0xb2d2ab0 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/exception_defines.h:40:21, /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:230:4>
+  | |-CompoundStmt 0xb2d29f8 <line:225:4, col:52>
+  | | `-CallExpr 0xb2d2990 <col:6, col:49> 'void'
+  | |   |-ImplicitCastExpr 0xb2d2978 <col:6, col:12> 'void (*)(char *, const char *, const char *) noexcept' <FunctionToPointerDecay>
+  | |   | `-MemberExpr 0xb2d28f0 <col:6, col:12> 'void (char *, const char *, const char *) noexcept' lvalue ->_S_copy_chars 0xaa5e030
+  | |   |   `-CXXThisExpr 0xb2d2378 <col:6> 'std::basic_string<char> *' this
+  | |   |-CXXMemberCallExpr 0xb2d24c0 <col:26, col:34> 'pointer':'char *'
+  | |   | `-MemberExpr 0xb2d2490 <col:26> '<bound member function type>' ->_M_data 0xaa59708
+  | |   |   `-ImplicitCastExpr 0xb2d24e0 <col:26> 'const std::basic_string<char> *' <NoOp>
+  | |   |     `-CXXThisExpr 0xb2d2480 <col:26> 'std::basic_string<char> *' implicit this
+  | |   |-ImplicitCastExpr 0xb2d29c8 <col:37> 'const char *':'const char *' <LValueToRValue>
+  | |   | `-DeclRefExpr 0xb2d24f8 <col:37> 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+  | |   `-ImplicitCastExpr 0xb2d29e0 <col:44> 'const char *':'const char *' <LValueToRValue>
+  | |     `-DeclRefExpr 0xb2d2518 <col:44> 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+  | `-CXXCatchStmt 0xb2d2a90 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/exception_defines.h:41:21, /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:230:4>
+  |   |-<<<NULL>>>
+  |   `-CompoundStmt 0xb2d2a70 <line:227:4, line:230:4>
+  |     |-CXXMemberCallExpr 0xb2d2a50 <line:228:6, col:17> 'void'
+  |     | `-MemberExpr 0xb2d2a20 <col:6> '<bound member function type>' ->_M_dispose 0xaa5a020
+  |     |   `-CXXThisExpr 0xb2d2a10 <col:6> 'std::basic_string<char> *' implicit this
+  |     `-CXXThrowExpr 0xab34818 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/exception_defines.h:42:34> 'void'
+  `-CXXMemberCallExpr 0xb2d2b30 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.tcc:232:2, col:22> 'void'
+    |-MemberExpr 0xb2d2ae0 <col:2> '<bound member function type>' ->_M_set_length 0xaa59c10
+    | `-CXXThisExpr 0xb2d2ad0 <col:2> 'std::basic_string<char> *' implicit this
+    `-ImplicitCastExpr 0xb2d2b58 <col:16> 'size_type':'unsigned long' <LValueToRValue>
+      `-DeclRefExpr 0xb2d2b10 <col:16> 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+CompoundStmt 0xb2d2b70
+|-IfStmt 0xb2d18f0
+| |-BinaryOperator 0xb2d1878 '_Bool' '&&'
+| | |-CallExpr 0xb2d1710 '_Bool'
+| | | |-ImplicitCastExpr 0xb2d16f8 '_Bool (*)(const char *)' <FunctionToPointerDecay>
+| | | | `-DeclRefExpr 0xb2d1660 '_Bool (const char *)' lvalue Function 0xb2d1318 '__is_null_pointer' '_Bool (const char *)' (FunctionTemplate 0xa3be380 '__is_null_pointer')
+| | | `-ImplicitCastExpr 0xb2d1738 'const char *':'const char *' <LValueToRValue>
+| | |   `-DeclRefExpr 0xb2d1160 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+| | `-BinaryOperator 0xb2d1858 '_Bool' '!='
+| |   |-ImplicitCastExpr 0xb2d1828 'const char *':'const char *' <LValueToRValue>
+| |   | `-DeclRefExpr 0xb2d17e8 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+| |   `-ImplicitCastExpr 0xb2d1840 'const char *':'const char *' <LValueToRValue>
+| |     `-DeclRefExpr 0xb2d1808 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+| `-CallExpr 0xb2d18b0 'void'
+|   |-ImplicitCastExpr 0xb2d1898 'void (*)(const char *) __attribute__((noreturn))' <FunctionToPointerDecay>
+|   | `-DeclRefExpr 0xab33eb0 'void (const char *) __attribute__((noreturn))' lvalue Function 0xa33d1b8 '__throw_logic_error' 'void (const char *) __attribute__((noreturn))'
+|   `-ImplicitCastExpr 0xb2d18d8 'const char *' <ArrayToPointerDecay>
+|     `-ParenExpr 0xab33fa0 'const char[42]' lvalue
+|       `-StringLiteral 0xab33f58 'const char[42]' lvalue "basic_string::_M_construct null not valid"
+|-DeclStmt 0xb2d1f68
+| `-VarDecl 0xb2d1920  used __dnew 'size_type':'unsigned long' cinit
+|   `-CXXStaticCastExpr 0xb2d1f38 'size_type':'unsigned long' static_cast<size_type> <NoOp>
+|     `-ImplicitCastExpr 0xb2d1f20 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+|       `-CallExpr 0xb2d1ec0 'typename iterator_traits<const char *>::difference_type':'long'
+|         |-ImplicitCastExpr 0xb2d1ea8 'typename iterator_traits<const char *>::difference_type (*)(const char *, const char *)' <FunctionToPointerDecay>
+|         | `-DeclRefExpr 0xb2d1e18 'typename iterator_traits<const char *>::difference_type (const char *, const char *)' lvalue Function 0xb2d1d08 'distance' 'typename iterator_traits<const char *>::difference_type (const char *, const char *)' (FunctionTemplate 0xa552160 'distance')
+|         |-ImplicitCastExpr 0xb2d1ef0 'const char *':'const char *' <LValueToRValue>
+|         | `-DeclRefExpr 0xb2d19e0 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+|         `-ImplicitCastExpr 0xb2d1f08 'const char *':'const char *' <LValueToRValue>
+|           `-DeclRefExpr 0xb2d1a00 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+|-IfStmt 0xb2d2358
+| |-BinaryOperator 0xb2d20b0 '_Bool' '>'
+| | |-ImplicitCastExpr 0xb2d2098 'size_type':'unsigned long' <LValueToRValue>
+| | | `-DeclRefExpr 0xb2d2008 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+| | `-CXXFunctionalCastExpr 0xb2d2070 'size_type':'unsigned long' functional cast to size_type <NoOp>
+| |   `-ImplicitCastExpr 0xb2d2058 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+| |     `-DeclRefExpr 0xb2d2038 'enum std::basic_string<char>::(unnamed at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)' EnumConstant 0xaa58bb8 '_S_local_capacity' 'enum std::basic_string<char>::(unnamed at /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:173:7)'
+| `-CompoundStmt 0xb2d2338
+|   |-CXXMemberCallExpr 0xb2d2270 'void'
+|   | |-MemberExpr 0xb2d2240 '<bound member function type>' ->_M_data 0xaa59438
+|   | | `-CXXThisExpr 0xb2d2230 'class std::basic_string<char> *' implicit this
+|   | `-CXXMemberCallExpr 0xb2d2200 'pointer':'char *'
+|   |   |-MemberExpr 0xb2d2160 '<bound member function type>' ->_M_create 0xaa59f58
+|   |   | `-CXXThisExpr 0xb2d2150 'class std::basic_string<char> *' implicit this
+|   |   |-DeclRefExpr 0xb2d2190 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+|   |   `-CXXFunctionalCastExpr 0xb2d21d8 'size_type':'unsigned long' functional cast to size_type <NoOp>
+|   |     `-ImplicitCastExpr 0xb2d21c0 'size_type':'unsigned long' <IntegralCast> part_of_explicit_cast
+|   |       `-IntegerLiteral 0xab34448 'int' 0
+|   `-CXXMemberCallExpr 0xb2d22f8 'void'
+|     |-MemberExpr 0xb2d22a8 '<bound member function type>' ->_M_capacity 0xaa59ab0
+|     | `-CXXThisExpr 0xb2d2298 'class std::basic_string<char> *' implicit this
+|     `-ImplicitCastExpr 0xb2d2320 'size_type':'unsigned long' <LValueToRValue>
+|       `-DeclRefExpr 0xb2d22d8 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+|-CXXTryStmt 0xb2d2ab0
+| |-CompoundStmt 0xb2d29f8
+| | `-CallExpr 0xb2d2990 'void'
+| |   |-ImplicitCastExpr 0xb2d2978 'void (*)(char *, const char *, const char *) noexcept' <FunctionToPointerDecay>
+| |   | `-MemberExpr 0xb2d28f0 'void (char *, const char *, const char *) noexcept' lvalue ->_S_copy_chars 0xaa5e030
+| |   |   `-CXXThisExpr 0xb2d2378 'class std::basic_string<char> *' this
+| |   |-CXXMemberCallExpr 0xb2d24c0 'pointer':'char *'
+| |   | `-MemberExpr 0xb2d2490 '<bound member function type>' ->_M_data 0xaa59708
+| |   |   `-ImplicitCastExpr 0xb2d24e0 'const class std::basic_string<char> *' <NoOp>
+| |   |     `-CXXThisExpr 0xb2d2480 'class std::basic_string<char> *' implicit this
+| |   |-ImplicitCastExpr 0xb2d29c8 'const char *':'const char *' <LValueToRValue>
+| |   | `-DeclRefExpr 0xb2d24f8 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+| |   `-ImplicitCastExpr 0xb2d29e0 'const char *':'const char *' <LValueToRValue>
+| |     `-DeclRefExpr 0xb2d2518 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+| `-CXXCatchStmt 0xb2d2a90
+|   |-<<<NULL>>>
+|   `-CompoundStmt 0xb2d2a70
+|     |-CXXMemberCallExpr 0xb2d2a50 'void'
+|     | `-MemberExpr 0xb2d2a20 '<bound member function type>' ->_M_dispose 0xaa5a020
+|     |   `-CXXThisExpr 0xb2d2a10 'class std::basic_string<char> *' implicit this
+|     `-CXXThrowExpr 0xab34818 'void'
+`-CXXMemberCallExpr 0xb2d2b30 'void'
+  |-MemberExpr 0xb2d2ae0 '<bound member function type>' ->_M_set_length 0xaa59c10
+  | `-CXXThisExpr 0xb2d2ad0 'class std::basic_string<char> *' implicit this
+  `-ImplicitCastExpr 0xb2d2b58 'size_type':'unsigned long' <LValueToRValue>
+    `-DeclRefExpr 0xb2d2b10 'size_type':'unsigned long' lvalue Var 0xb2d1920 '__dnew' 'size_type':'unsigned long'
+warning, not performing catches for try: CXXTryStmt 0xb2d2ab0
+|-CompoundStmt 0xb2d29f8
+| `-CallExpr 0xb2d2990 'void'
+|   |-ImplicitCastExpr 0xb2d2978 'void (*)(char *, const char *, const char *) noexcept' <FunctionToPointerDecay>
+|   | `-MemberExpr 0xb2d28f0 'void (char *, const char *, const char *) noexcept' lvalue ->_S_copy_chars 0xaa5e030
+|   |   `-CXXThisExpr 0xb2d2378 'class std::basic_string<char> *' this
+|   |-CXXMemberCallExpr 0xb2d24c0 'pointer':'char *'
+|   | `-MemberExpr 0xb2d2490 '<bound member function type>' ->_M_data 0xaa59708
+|   |   `-ImplicitCastExpr 0xb2d24e0 'const class std::basic_string<char> *' <NoOp>
+|   |     `-CXXThisExpr 0xb2d2480 'class std::basic_string<char> *' implicit this
+|   |-ImplicitCastExpr 0xb2d29c8 'const char *':'const char *' <LValueToRValue>
+|   | `-DeclRefExpr 0xb2d24f8 'const char *':'const char *' lvalue ParmVar 0xb2d07c8 '__beg' 'const char *':'const char *'
+|   `-ImplicitCastExpr 0xb2d29e0 'const char *':'const char *' <LValueToRValue>
+|     `-DeclRefExpr 0xb2d2518 'const char *':'const char *' lvalue ParmVar 0xb2d0840 '__end' 'const char *':'const char *'
+`-CXXCatchStmt 0xb2d2a90
+  |-<<<NULL>>>
+  `-CompoundStmt 0xb2d2a70
+    |-CXXMemberCallExpr 0xb2d2a50 'void'
+    | `-MemberExpr 0xb2d2a20 '<bound member function type>' ->_M_dispose 0xaa5a020
+    |   `-CXXThisExpr 0xb2d2a10 'class std::basic_string<char> *' implicit this
+    `-CXXThrowExpr 0xab34818 'void'
+Emitting fn: _ZNSt20forward_iterator_tagC1EOS_
+CXXConstructorDecl 0xa6f0148 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_types.h:95:10> col:10 implicit used constexpr forward_iterator_tag 'void (std::forward_iterator_tag &&) noexcept' inline default trivial
+|-ParmVarDecl 0xa6f0268 <col:10> col:10 used 'std::forward_iterator_tag &&'
+|-CXXCtorInitializer 'input_iterator_tag':'std::input_iterator_tag'
+| `-CXXConstructExpr 0xb277358 <col:10> 'input_iterator_tag':'std::input_iterator_tag' 'void (std::input_iterator_tag &&) noexcept'
+|   `-ImplicitCastExpr 0xb277300 <col:10> 'input_iterator_tag':'std::input_iterator_tag' xvalue <UncheckedDerivedToBase (input_iterator_tag)>
+|     `-CXXStaticCastExpr 0xb2772d0 <col:10> 'std::forward_iterator_tag' xvalue static_cast<struct std::forward_iterator_tag &&> <NoOp>
+|       `-DeclRefExpr 0xb2772a0 <col:10> 'std::forward_iterator_tag' lvalue ParmVar 0xa6f0268 '' 'std::forward_iterator_tag &&'
+`-CompoundStmt 0xb2773c0 <col:10>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb277358 'input_iterator_tag':'struct std::input_iterator_tag' 'void (struct std::input_iterator_tag &&) noexcept'
+`-ImplicitCastExpr 0xb277300 'input_iterator_tag':'struct std::input_iterator_tag' xvalue <UncheckedDerivedToBase (input_iterator_tag)>
+  `-CXXStaticCastExpr 0xb2772d0 'struct std::forward_iterator_tag' xvalue static_cast<struct std::forward_iterator_tag &&> <NoOp>
+    `-DeclRefExpr 0xb2772a0 'struct std::forward_iterator_tag' lvalue ParmVar 0xa6f0268 '' 'struct std::forward_iterator_tag &&'
+CompoundStmt 0xb2773c0
+Emitting fn: _ZN9__gnu_cxx17__is_null_pointerIKcEEbPT_
+FunctionDecl 0xb2d1318 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/ext/type_traits.h:151:5, line:153:26> line:152:5 used __is_null_pointer 'bool (const char *)' inline
+|-TemplateArgument type 'const char'
+| `-QualType 0xa2f0451 'const char' const
+|   `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2d1228 <col:23, col:30> col:30 used __ptr 'const char *'
+`-CompoundStmt 0xb2d2c28 <line:153:5, col:26>
+  `-ReturnStmt 0xb2d2c18 <col:7, col:23>
+    `-BinaryOperator 0xb2d2bf8 <col:14, col:23> 'bool' '=='
+      |-ImplicitCastExpr 0xb2d2bc8 <col:14> 'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d2ba8 <col:14> 'const char *' lvalue ParmVar 0xb2d1228 '__ptr' 'const char *'
+      `-ImplicitCastExpr 0xb2d2be0 <col:23> 'const char *' <NullToPointer>
+        `-IntegerLiteral 0xa3be478 <col:23> 'int' 0
+CompoundStmt 0xb2d2c28
+`-ReturnStmt 0xb2d2c18
+  `-BinaryOperator 0xb2d2bf8 '_Bool' '=='
+    |-ImplicitCastExpr 0xb2d2bc8 'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d2ba8 'const char *' lvalue ParmVar 0xb2d1228 '__ptr' 'const char *'
+    `-ImplicitCastExpr 0xb2d2be0 'const char *' <NullToPointer>
+      `-IntegerLiteral 0xa3be478 'int' 0
+Emitting fn: _ZSt8distanceIPKcENSt15iterator_traitsIT_E15difference_typeES3_S3_
+FunctionDecl 0xb2d1d08 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_funcs.h:136:5, line:143:5> line:138:5 used distance 'typename iterator_traits<const char *>::difference_type (const char *, const char *)' inline
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2d1b70 <col:14, col:29> col:29 used __first 'const char *':'const char *'
+|-ParmVarDecl 0xb2d1be8 <col:38, col:53> col:53 used __last 'const char *':'const char *'
+`-CompoundStmt 0xb2d3ec8 <line:139:5, line:143:5>
+  `-ReturnStmt 0xb2d3eb8 <line:141:7, line:142:42>
+    `-ExprWithCleanups 0xb2d3ea0 <line:141:14, line:142:42> 'typename iterator_traits<const char *>::difference_type':'long'
+      `-CallExpr 0xb2d3df0 <line:141:14, line:142:42> 'typename iterator_traits<const char *>::difference_type':'long'
+        |-ImplicitCastExpr 0xb2d3dd8 <line:141:14, col:19> 'typename iterator_traits<const char *>::difference_type (*)(const char *, const char *, random_access_iterator_tag)' <FunctionToPointerDecay>
+        | `-DeclRefExpr 0xb2d3d40 <col:14, col:19> 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' lvalue Function 0xb2d3bc8 '__distance' 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' (FunctionTemplate 0xa550fb0 '__distance')
+        |-ImplicitCastExpr 0xb2d3e28 <col:30> 'const char *':'const char *' <LValueToRValue>
+        | `-DeclRefExpr 0xb2d2ca0 <col:30> 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+        |-ImplicitCastExpr 0xb2d3e40 <col:39> 'const char *':'const char *' <LValueToRValue>
+        | `-DeclRefExpr 0xb2d2cc0 <col:39> 'const char *':'const char *' lvalue ParmVar 0xb2d1be8 '__last' 'const char *':'const char *'
+        `-CXXConstructExpr 0xb2d3e70 <line:142:9, col:41> 'random_access_iterator_tag':'std::random_access_iterator_tag' 'void (std::random_access_iterator_tag &&) noexcept' elidable
+          `-MaterializeTemporaryExpr 0xb2d3e58 <col:9, col:41> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag' xvalue
+            `-CallExpr 0xb2d33a0 <col:9, col:41> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag'
+              |-ImplicitCastExpr 0xb2d3388 <col:9, col:14> 'typename iterator_traits<const char *>::iterator_category (*)(const char *const &)' <FunctionToPointerDecay>
+              | `-DeclRefExpr 0xb2d30c0 <col:9, col:14> 'typename iterator_traits<const char *>::iterator_category (const char *const &)' lvalue Function 0xb2d2fb8 '__iterator_category' 'typename iterator_traits<const char *>::iterator_category (const char *const &)' (FunctionTemplate 0xa54ae80 '__iterator_category')
+              `-ImplicitCastExpr 0xb2d33c8 <col:34> 'const char *const':'const char *const' lvalue <NoOp>
+                `-DeclRefExpr 0xb2d2d28 <col:34> 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+CompoundStmt 0xb2d3ec8
+`-ReturnStmt 0xb2d3eb8
+  `-ExprWithCleanups 0xb2d3ea0 'typename iterator_traits<const char *>::difference_type':'long'
+    `-CallExpr 0xb2d3df0 'typename iterator_traits<const char *>::difference_type':'long'
+      |-ImplicitCastExpr 0xb2d3dd8 'typename iterator_traits<const char *>::difference_type (*)(const char *, const char *, random_access_iterator_tag)' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb2d3d40 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' lvalue Function 0xb2d3bc8 '__distance' 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' (FunctionTemplate 0xa550fb0 '__distance')
+      |-ImplicitCastExpr 0xb2d3e28 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d2ca0 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+      |-ImplicitCastExpr 0xb2d3e40 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d2cc0 'const char *':'const char *' lvalue ParmVar 0xb2d1be8 '__last' 'const char *':'const char *'
+      `-CXXConstructExpr 0xb2d3e70 'random_access_iterator_tag':'struct std::random_access_iterator_tag' 'void (struct std::random_access_iterator_tag &&) noexcept' elidable
+        `-MaterializeTemporaryExpr 0xb2d3e58 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' xvalue
+          `-CallExpr 0xb2d33a0 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag'
+            |-ImplicitCastExpr 0xb2d3388 'typename iterator_traits<const char *>::iterator_category (*)(const char *const &)' <FunctionToPointerDecay>
+            | `-DeclRefExpr 0xb2d30c0 'typename iterator_traits<const char *>::iterator_category (const char *const &)' lvalue Function 0xb2d2fb8 '__iterator_category' 'typename iterator_traits<const char *>::iterator_category (const char *const &)' (FunctionTemplate 0xa54ae80 '__iterator_category')
+            `-ImplicitCastExpr 0xb2d33c8 'const char *const':'const char *const' lvalue <NoOp>
+              `-DeclRefExpr 0xb2d2d28 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+cleanup of materialized not handledCallExpr 0xb2d3df0 'typename iterator_traits<const char *>::difference_type':'long'
+|-ImplicitCastExpr 0xb2d3dd8 'typename iterator_traits<const char *>::difference_type (*)(const char *, const char *, random_access_iterator_tag)' <FunctionToPointerDecay>
+| `-DeclRefExpr 0xb2d3d40 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' lvalue Function 0xb2d3bc8 '__distance' 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' (FunctionTemplate 0xa550fb0 '__distance')
+|-ImplicitCastExpr 0xb2d3e28 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2d2ca0 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+|-ImplicitCastExpr 0xb2d3e40 'const char *':'const char *' <LValueToRValue>
+| `-DeclRefExpr 0xb2d2cc0 'const char *':'const char *' lvalue ParmVar 0xb2d1be8 '__last' 'const char *':'const char *'
+`-CXXConstructExpr 0xb2d3e70 'random_access_iterator_tag':'struct std::random_access_iterator_tag' 'void (struct std::random_access_iterator_tag &&) noexcept' elidable
+  `-MaterializeTemporaryExpr 0xb2d3e58 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' xvalue
+    `-CallExpr 0xb2d33a0 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag'
+      |-ImplicitCastExpr 0xb2d3388 'typename iterator_traits<const char *>::iterator_category (*)(const char *const &)' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb2d30c0 'typename iterator_traits<const char *>::iterator_category (const char *const &)' lvalue Function 0xb2d2fb8 '__iterator_category' 'typename iterator_traits<const char *>::iterator_category (const char *const &)' (FunctionTemplate 0xa54ae80 '__iterator_category')
+      `-ImplicitCastExpr 0xb2d33c8 'const char *const':'const char *const' lvalue <NoOp>
+        `-DeclRefExpr 0xb2d2d28 'const char *':'const char *' lvalue ParmVar 0xb2d1b70 '__first' 'const char *':'const char *'
+cleanup not handled
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE13_S_copy_charsEPcPKcS7_
+CXXMethodDecl 0xaa5e030 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:399:7, line:402:42> line:400:7 used _S_copy_chars 'void (char *, const char *, const char *) noexcept' static implicit-inline
+|-ParmVarDecl 0xaa5de10 <col:21, col:29> col:29 used __p 'char *'
+|-ParmVarDecl 0xaa5de88 <col:34, col:48> col:48 used __k1 'const char *'
+|-ParmVarDecl 0xaa5df00 <col:54, col:68> col:68 used __k2 'const char *'
+`-CompoundStmt 0xb2d4178 <line:402:7, col:42>
+  `-CallExpr 0xb2d40f8 <col:9, col:39> 'void'
+    |-ImplicitCastExpr 0xb2d40e0 <col:9> 'void (*)(char *, const char *, size_type)' <FunctionToPointerDecay>
+    | `-DeclRefExpr 0xb2d3f98 <col:9> 'void (char *, const char *, size_type)' lvalue CXXMethod 0xaa5ca58 '_S_copy' 'void (char *, const char *, size_type)'
+    |-ImplicitCastExpr 0xb2d4130 <col:17> 'char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d3fb8 <col:17> 'char *' lvalue ParmVar 0xaa5de10 '__p' 'char *'
+    |-ImplicitCastExpr 0xb2d4148 <col:22> 'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d3fd8 <col:22> 'const char *' lvalue ParmVar 0xaa5de88 '__k1' 'const char *'
+    `-ImplicitCastExpr 0xb2d4160 <col:28, col:35> 'size_type':'unsigned long' <IntegralCast>
+      `-BinaryOperator 0xb2d40c0 <col:28, col:35> 'long' '-'
+        |-ImplicitCastExpr 0xb2d4090 <col:28> 'const char *' <LValueToRValue>
+        | `-DeclRefExpr 0xb2d4050 <col:28> 'const char *' lvalue ParmVar 0xaa5df00 '__k2' 'const char *'
+        `-ImplicitCastExpr 0xb2d40a8 <col:35> 'const char *' <LValueToRValue>
+          `-DeclRefExpr 0xb2d4070 <col:35> 'const char *' lvalue ParmVar 0xaa5de88 '__k1' 'const char *'
+CompoundStmt 0xb2d4178
+`-CallExpr 0xb2d40f8 'void'
+  |-ImplicitCastExpr 0xb2d40e0 'void (*)(char *, const char *, size_type)' <FunctionToPointerDecay>
+  | `-DeclRefExpr 0xb2d3f98 'void (char *, const char *, size_type)' lvalue CXXMethod 0xaa5ca58 '_S_copy' 'void (char *, const char *, size_type)'
+  |-ImplicitCastExpr 0xb2d4130 'char *' <LValueToRValue>
+  | `-DeclRefExpr 0xb2d3fb8 'char *' lvalue ParmVar 0xaa5de10 '__p' 'char *'
+  |-ImplicitCastExpr 0xb2d4148 'const char *' <LValueToRValue>
+  | `-DeclRefExpr 0xb2d3fd8 'const char *' lvalue ParmVar 0xaa5de88 '__k1' 'const char *'
+  `-ImplicitCastExpr 0xb2d4160 'size_type':'unsigned long' <IntegralCast>
+    `-BinaryOperator 0xb2d40c0 'long' '-'
+      |-ImplicitCastExpr 0xb2d4090 'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d4050 'const char *' lvalue ParmVar 0xaa5df00 '__k2' 'const char *'
+      `-ImplicitCastExpr 0xb2d40a8 'const char *' <LValueToRValue>
+        `-DeclRefExpr 0xb2d4070 'const char *' lvalue ParmVar 0xaa5de88 '__k1' 'const char *'
+Emitting fn: _ZNSt18input_iterator_tagC1EOS_
+CXXConstructorDecl 0xa6efdd8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_types.h:89:10> col:10 implicit used constexpr input_iterator_tag 'void (std::input_iterator_tag &&) noexcept' inline default trivial
+|-ParmVarDecl 0xa6efef8 <col:10> col:10 'std::input_iterator_tag &&'
+`-CompoundStmt 0xb277348 <col:10>
+CompoundStmt 0xb277348
+Emitting fn: _ZSt10__distanceIPKcENSt15iterator_traitsIT_E15difference_typeES3_S3_St26random_access_iterator_tag
+FunctionDecl 0xb2d3bc8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_funcs.h:96:5, line:105:5> line:98:5 used __distance 'typename iterator_traits<const char *>::difference_type (const char *, const char *, random_access_iterator_tag)' inline
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2d39b0 <col:16, col:38> col:38 used __first 'const char *':'const char *'
+|-ParmVarDecl 0xb2d3a28 <col:47, col:69> col:69 used __last 'const char *':'const char *'
+|-ParmVarDecl 0xb2d3a90 <line:99:16> col:42 'random_access_iterator_tag':'std::random_access_iterator_tag'
+`-CompoundStmt 0xb2d3f80 <line:100:5, line:105:5>
+  `-ReturnStmt 0xb2d3f70 <line:104:7, col:23>
+    `-BinaryOperator 0xb2d3f50 <col:14, col:23> 'long' '-'
+      |-ImplicitCastExpr 0xb2d3f20 <col:14> 'const char *':'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb2d3ee0 <col:14> 'const char *':'const char *' lvalue ParmVar 0xb2d3a28 '__last' 'const char *':'const char *'
+      `-ImplicitCastExpr 0xb2d3f38 <col:23> 'const char *':'const char *' <LValueToRValue>
+        `-DeclRefExpr 0xb2d3f00 <col:23> 'const char *':'const char *' lvalue ParmVar 0xb2d39b0 '__first' 'const char *':'const char *'
+CompoundStmt 0xb2d3f80
+`-ReturnStmt 0xb2d3f70
+  `-BinaryOperator 0xb2d3f50 'long' '-'
+    |-ImplicitCastExpr 0xb2d3f20 'const char *':'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb2d3ee0 'const char *':'const char *' lvalue ParmVar 0xb2d3a28 '__last' 'const char *':'const char *'
+    `-ImplicitCastExpr 0xb2d3f38 'const char *':'const char *' <LValueToRValue>
+      `-DeclRefExpr 0xb2d3f00 'const char *':'const char *' lvalue ParmVar 0xb2d39b0 '__first' 'const char *':'const char *'
+Emitting fn: _ZNSt26random_access_iterator_tagC1EOS_
+CXXConstructorDecl 0xa6f0828 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_types.h:103:10> col:10 implicit used constexpr random_access_iterator_tag 'void (std::random_access_iterator_tag &&) noexcept' inline default trivial
+|-ParmVarDecl 0xa6f0948 <col:10> col:10 used 'std::random_access_iterator_tag &&'
+|-CXXCtorInitializer 'bidirectional_iterator_tag':'std::bidirectional_iterator_tag'
+| `-CXXConstructExpr 0xb284250 <col:10> 'bidirectional_iterator_tag':'std::bidirectional_iterator_tag' 'void (std::bidirectional_iterator_tag &&) noexcept'
+|   `-ImplicitCastExpr 0xb2840b0 <col:10> 'bidirectional_iterator_tag':'std::bidirectional_iterator_tag' xvalue <UncheckedDerivedToBase (bidirectional_iterator_tag)>
+|     `-CXXStaticCastExpr 0xb284080 <col:10> 'std::random_access_iterator_tag' xvalue static_cast<struct std::random_access_iterator_tag &&> <NoOp>
+|       `-DeclRefExpr 0xb284050 <col:10> 'std::random_access_iterator_tag' lvalue ParmVar 0xa6f0948 '' 'std::random_access_iterator_tag &&'
+`-CompoundStmt 0xb2842b8 <col:10>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb284250 'bidirectional_iterator_tag':'struct std::bidirectional_iterator_tag' 'void (struct std::bidirectional_iterator_tag &&) noexcept'
+`-ImplicitCastExpr 0xb2840b0 'bidirectional_iterator_tag':'struct std::bidirectional_iterator_tag' xvalue <UncheckedDerivedToBase (bidirectional_iterator_tag)>
+  `-CXXStaticCastExpr 0xb284080 'struct std::random_access_iterator_tag' xvalue static_cast<struct std::random_access_iterator_tag &&> <NoOp>
+    `-DeclRefExpr 0xb284050 'struct std::random_access_iterator_tag' lvalue ParmVar 0xa6f0948 '' 'struct std::random_access_iterator_tag &&'
+CompoundStmt 0xb2842b8
+Emitting fn: _ZSt19__iterator_categoryIPKcENSt15iterator_traitsIT_E17iterator_categoryERKS3_
+FunctionDecl 0xb2d2fb8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_types.h:203:5, line:206:68> line:205:5 used constexpr __iterator_category 'typename iterator_traits<const char *>::iterator_category (const char *const &)' inline
+|-TemplateArgument type 'const char *'
+| `-PointerType 0xa2f0e80 'const char *'
+|   `-QualType 0xa2f0451 'const char' const
+|     `-BuiltinType 0xa2f0450 'char'
+|-ParmVarDecl 0xb2d2eb8 <col:25, col:36> col:37 'const char *const &'
+`-CompoundStmt 0xb2d3310 <line:206:5, col:68>
+  `-ReturnStmt 0xb2d3300 <col:7, col:65>
+    `-ExprWithCleanups 0xb2d32e8 <col:14, col:65> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag'
+      `-CXXConstructExpr 0xb2d32b8 <col:14, col:65> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag' 'void (std::random_access_iterator_tag &&) noexcept' elidable
+        `-MaterializeTemporaryExpr 0xb2d3278 <col:14, col:65> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag' xvalue
+          `-CXXTemporaryObjectExpr 0xb2d3248 <col:14, col:65> 'typename iterator_traits<const char *>::iterator_category':'std::random_access_iterator_tag' 'void () noexcept' zeroing
+CompoundStmt 0xb2d3310
+`-ReturnStmt 0xb2d3300
+  `-ExprWithCleanups 0xb2d32e8 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag'
+    `-CXXConstructExpr 0xb2d32b8 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' 'void (struct std::random_access_iterator_tag &&) noexcept' elidable
+      `-MaterializeTemporaryExpr 0xb2d3278 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' xvalue
+        `-CXXTemporaryObjectExpr 0xb2d3248 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' 'void (void) noexcept' zeroing
+cleanup of materialized not handledCXXConstructExpr 0xb2d32b8 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' 'void (struct std::random_access_iterator_tag &&) noexcept' elidable
+`-MaterializeTemporaryExpr 0xb2d3278 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' xvalue
+  `-CXXTemporaryObjectExpr 0xb2d3248 'typename iterator_traits<const char *>::iterator_category':'struct std::random_access_iterator_tag' 'void (void) noexcept' zeroing
+cleanup not handled
+Emitting fn: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7_S_copyEPcPKcm
+CXXMethodDecl 0xaa5ca58 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/basic_string.h:349:7, line:356:7> line:350:7 used _S_copy 'void (char *, const char *, size_type)' static implicit-inline
+|-ParmVarDecl 0xaa5c848 <col:15, col:23> col:23 used __d 'char *'
+|-ParmVarDecl 0xaa5c8c0 <col:28, col:42> col:42 used __s 'const char *'
+|-ParmVarDecl 0xaa5c938 <col:47, col:57> col:57 used __n 'size_type':'unsigned long'
+`-CompoundStmt 0xb2858d0 <line:351:7, line:356:7>
+  `-IfStmt 0xb2858a0 <line:352:2, line:355:35> has_else
+    |-BinaryOperator 0xb2854c0 <line:352:6, col:13> 'bool' '=='
+    | |-ImplicitCastExpr 0xb285490 <col:6> 'size_type':'unsigned long' <LValueToRValue>
+    | | `-DeclRefExpr 0xb285470 <col:6> 'size_type':'unsigned long' lvalue ParmVar 0xaa5c938 '__n' 'size_type':'unsigned long'
+    | `-ImplicitCastExpr 0xb2854a8 <col:13> 'size_type':'unsigned long' <IntegralCast>
+    |   `-IntegerLiteral 0xaa05258 <col:13> 'int' 1
+    |-CallExpr 0xb2856d0 <line:353:4, col:34> 'void'
+    | |-ImplicitCastExpr 0xb2856b8 <col:4, col:17> 'void (*)(char_type &, const char_type &) noexcept' <FunctionToPointerDecay>
+    | | `-DeclRefExpr 0xb285630 <col:4, col:17> 'void (char_type &, const char_type &) noexcept' lvalue CXXMethod 0xa8a2650 'assign' 'void (char_type &, const char_type &) noexcept'
+    | |-UnaryOperator 0xb2855c8 <col:24, col:25> 'char':'char' lvalue prefix '*' cannot overflow
+    | | `-ImplicitCastExpr 0xb2855b0 <col:25> 'char *' <LValueToRValue>
+    | |   `-DeclRefExpr 0xb285590 <col:25> 'char *' lvalue ParmVar 0xaa5c848 '__d' 'char *'
+    | `-UnaryOperator 0xb285618 <col:30, col:31> 'const char':'const char' lvalue prefix '*' cannot overflow
+    |   `-ImplicitCastExpr 0xb285600 <col:31> 'const char *' <LValueToRValue>
+    |     `-DeclRefExpr 0xb2855e0 <col:31> 'const char *' lvalue ParmVar 0xaa5c8c0 '__s' 'const char *'
+    `-CallExpr 0xb285820 <line:355:4, col:35> 'char_type *'
+      |-ImplicitCastExpr 0xb285808 <col:4, col:17> 'char_type *(*)(char_type *, const char_type *, size_t)' <FunctionToPointerDecay>
+      | `-DeclRefExpr 0xb285720 <col:4, col:17> 'char_type *(char_type *, const char_type *, size_t)' lvalue CXXMethod 0xa8a4fa8 'copy' 'char_type *(char_type *, const char_type *, size_t)'
+      |-ImplicitCastExpr 0xb285858 <col:22> 'char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb285750 <col:22> 'char *' lvalue ParmVar 0xaa5c848 '__d' 'char *'
+      |-ImplicitCastExpr 0xb285870 <col:27> 'const char *' <LValueToRValue>
+      | `-DeclRefExpr 0xb285770 <col:27> 'const char *' lvalue ParmVar 0xaa5c8c0 '__s' 'const char *'
+      `-ImplicitCastExpr 0xb285888 <col:32> 'size_type':'unsigned long' <LValueToRValue>
+        `-DeclRefExpr 0xb285790 <col:32> 'size_type':'unsigned long' lvalue ParmVar 0xaa5c938 '__n' 'size_type':'unsigned long'
+CompoundStmt 0xb2858d0
+`-IfStmt 0xb2858a0 has_else
+  |-BinaryOperator 0xb2854c0 '_Bool' '=='
+  | |-ImplicitCastExpr 0xb285490 'size_type':'unsigned long' <LValueToRValue>
+  | | `-DeclRefExpr 0xb285470 'size_type':'unsigned long' lvalue ParmVar 0xaa5c938 '__n' 'size_type':'unsigned long'
+  | `-ImplicitCastExpr 0xb2854a8 'size_type':'unsigned long' <IntegralCast>
+  |   `-IntegerLiteral 0xaa05258 'int' 1
+  |-CallExpr 0xb2856d0 'void'
+  | |-ImplicitCastExpr 0xb2856b8 'void (*)(char_type &, const char_type &) noexcept' <FunctionToPointerDecay>
+  | | `-DeclRefExpr 0xb285630 'void (char_type &, const char_type &) noexcept' lvalue CXXMethod 0xa8a2650 'assign' 'void (char_type &, const char_type &) noexcept'
+  | |-UnaryOperator 0xb2855c8 'char':'char' lvalue prefix '*' cannot overflow
+  | | `-ImplicitCastExpr 0xb2855b0 'char *' <LValueToRValue>
+  | |   `-DeclRefExpr 0xb285590 'char *' lvalue ParmVar 0xaa5c848 '__d' 'char *'
+  | `-UnaryOperator 0xb285618 'const char':'const char' lvalue prefix '*' cannot overflow
+  |   `-ImplicitCastExpr 0xb285600 'const char *' <LValueToRValue>
+  |     `-DeclRefExpr 0xb2855e0 'const char *' lvalue ParmVar 0xaa5c8c0 '__s' 'const char *'
+  `-CallExpr 0xb285820 'char_type *'
+    |-ImplicitCastExpr 0xb285808 'char_type *(*)(char_type *, const char_type *, size_t)' <FunctionToPointerDecay>
+    | `-DeclRefExpr 0xb285720 'char_type *(char_type *, const char_type *, size_t)' lvalue CXXMethod 0xa8a4fa8 'copy' 'char_type *(char_type *, const char_type *, size_t)'
+    |-ImplicitCastExpr 0xb285858 'char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb285750 'char *' lvalue ParmVar 0xaa5c848 '__d' 'char *'
+    |-ImplicitCastExpr 0xb285870 'const char *' <LValueToRValue>
+    | `-DeclRefExpr 0xb285770 'const char *' lvalue ParmVar 0xaa5c8c0 '__s' 'const char *'
+    `-ImplicitCastExpr 0xb285888 'size_type':'unsigned long' <LValueToRValue>
+      `-DeclRefExpr 0xb285790 'size_type':'unsigned long' lvalue ParmVar 0xaa5c938 '__n' 'size_type':'unsigned long'
+Emitting fn: _ZNSt26bidirectional_iterator_tagC1EOS_
+CXXConstructorDecl 0xa6f04b8 </usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_iterator_base_types.h:99:10> col:10 implicit used constexpr bidirectional_iterator_tag 'void (std::bidirectional_iterator_tag &&) noexcept' inline default trivial
+|-ParmVarDecl 0xa6f05d8 <col:10> col:10 used 'std::bidirectional_iterator_tag &&'
+|-CXXCtorInitializer 'forward_iterator_tag':'std::forward_iterator_tag'
+| `-CXXConstructExpr 0xb2841d8 <col:10> 'forward_iterator_tag':'std::forward_iterator_tag' 'void (std::forward_iterator_tag &&) noexcept'
+|   `-ImplicitCastExpr 0xb284188 <col:10> 'forward_iterator_tag':'std::forward_iterator_tag' xvalue <UncheckedDerivedToBase (forward_iterator_tag)>
+|     `-CXXStaticCastExpr 0xb284158 <col:10> 'std::bidirectional_iterator_tag' xvalue static_cast<struct std::bidirectional_iterator_tag &&> <NoOp>
+|       `-DeclRefExpr 0xb284128 <col:10> 'std::bidirectional_iterator_tag' lvalue ParmVar 0xa6f05d8 '' 'std::bidirectional_iterator_tag &&'
+`-CompoundStmt 0xb284240 <col:10>
+ init: - baseInit:1 memberInit:0 anyMember:0 indirectMember:0 isinClass:0 delegating:0 isPack:0
+CXXConstructExpr 0xb2841d8 'forward_iterator_tag':'struct std::forward_iterator_tag' 'void (struct std::forward_iterator_tag &&) noexcept'
+`-ImplicitCastExpr 0xb284188 'forward_iterator_tag':'struct std::forward_iterator_tag' xvalue <UncheckedDerivedToBase (forward_iterator_tag)>
+  `-CXXStaticCastExpr 0xb284158 'struct std::bidirectional_iterator_tag' xvalue static_cast<struct std::bidirectional_iterator_tag &&> <NoOp>
+    `-DeclRefExpr 0xb284128 'struct std::bidirectional_iterator_tag' lvalue ParmVar 0xa6f05d8 '' 'struct std::bidirectional_iterator_tag &&'
+CompoundStmt 0xb284240

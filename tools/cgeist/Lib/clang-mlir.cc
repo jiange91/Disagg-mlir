@@ -112,7 +112,8 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
 
   if (ShowAST) {
     llvm::errs() << "Emitting fn: " << function.getName() << "\n";
-    llvm::errs() << *fd << "\n";
+    // llvm::errs() << *fd << "\n";
+    fd->dump();
   }
 
   setEntryAndAllocBlock(function.addEntryBlock());
@@ -127,7 +128,7 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
       }
       CM->getParent()->getCaptureFields(Captures, ThisCapture);
       if (ThisCapture) {
-        llvm::errs() << " thiscapture:\n";
+        llvm::errs() << "this capture:\n";
         ThisCapture->dump();
       }
     }
@@ -177,7 +178,6 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
     builder.create<ReturnOp>(loc);
     return;
   }
-
   if (auto CC = dyn_cast<CXXConstructorDecl>(fd)) {
     const CXXRecordDecl *ClassDecl = CC->getParent();
     for (auto expr : CC->inits()) {
@@ -259,12 +259,18 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
       }
       bool isArray = false;
       Glob.getMLIRType(expr->getInit()->getType(), &isArray);
-
       auto cfl =
           CommonFieldLookup(loc, CC->getThisObjectType(), field, ThisVal.val,
                             /*isLValue*/ false);
       assert(cfl.val);
-      cfl.store(loc, builder, initexpr, isArray);
+      bool exprIsRef = expr->getInit()->isLValue() || expr->getInit()->isXValue();
+      bool vInitIsRef = initexpr.isReference;
+      if (exprIsRef) {
+        assert(vInitIsRef);
+        cfl.store(loc, builder, initexpr.val);
+      }
+      else
+        cfl.store(loc, builder, initexpr, isArray);
     }
   }
   if (auto CC = dyn_cast<CXXDestructorDecl>(fd)) {
@@ -603,9 +609,6 @@ ValueCategory MLIRScanner::VisitTypeTraitExpr(clang::TypeTraitExpr *expr) {
 }
 
 ValueCategory MLIRScanner::VisitGNUNullExpr(clang::GNUNullExpr *expr) {
-  llvm::errs() << "visit gnunull\n";
-  expr->dump();
-  expr->getType()->dump();
   auto ty = getMLIRType(expr->getType()).cast<mlir::IntegerType>();
   return ValueCategory(builder.create<arith::ConstantIntOp>(
                            getMLIRLocation(expr->getExprLoc()), 0, ty),
@@ -821,11 +824,17 @@ void MLIRScanner::StoreIntoOneUnit(clang::Expr *Init, mlir::Value address, QualT
         VisitConstructCommon(CCE, nullptr, 0, address);
       else if (auto ILE = dyn_cast<InitListExpr>(Init))
         (void)InitializeValueByInitListExpr(address, Init);
-      else if (auto IE = dyn_cast<ImplicitValueInitExpr>(Init))
+      else if (auto IE = dyn_cast<ImplicitValueInitExpr>(Init)) {
         CommonNullInitialization(IE->getType(), address);
+      }
       else {
+        llvm::errs() << "emit value and store\n";
+        Init->getExprLoc().dump(Glob.SM);
         Init->dump();
-        assert(0 && "Unsupported initialization store");
+        ValueCategory sub = Visit(Init);
+        ValueCategory(address, /*isReference*/ true)
+            .store(address.getLoc(), builder, sub, false); 
+        // assert(0 && "Unsupported initialization store");
       }
       return;
   }
@@ -837,6 +846,7 @@ void MLIRScanner::ArrayInitialization(Expr *Init, mlir::Value address, QualType 
   mlir::Value CurPtr = nullptr;
   unsigned ExplicitInitListElements = 0;
   mlir::Location loc = address.getLoc();
+  Expr *oldInit = Init;
 
   auto TryMemsetInitialization = [&]() -> bool {
     if (!Glob.CGM.getTypes().isZeroInitializable(ElementType))
@@ -845,10 +855,15 @@ void MLIRScanner::ArrayInitialization(Expr *Init, mlir::Value address, QualType 
     // Subtract explicit initialized elements
     mlir::Value RemainingSize = MemSize;
     if (ExplicitInitListElements) {
-      auto initializedSize = builder.create<arith::MulIOp>(loc, 
-        getTypeSize(loc, ElementType), 
-        getConstantIndex(ExplicitInitListElements)
+      auto initializedSize = getConstantIndex(
+        Glob.CGM.getContext().getTypeSizeInChars(ElementType).getQuantity()
+        *
+        ExplicitInitListElements
       );
+      // auto initializedSize = builder.create<arith::MulIOp>(loc, 
+      //   getTypeSize(loc, ElementType), 
+      //   getConstantIndex(ExplicitInitListElements)
+      // );
       RemainingSize = builder.create<SubIOp>(loc, RemainingSize, initializedSize);
     }
     RemainingSize = builder.create<arith::IndexCastOp>(loc, 
@@ -974,7 +989,15 @@ void MLIRScanner::ArrayInitialization(Expr *Init, mlir::Value address, QualType 
   }
 
   CurPtr = MoveCurrentPtrTo(ExplicitInitListElements);
-  assert(Init && "have trailing elements to initialize but no initializer");
+  if (!Init) {
+    llvm::errs() << "Initializing Array: \n";
+    oldInit->dump();
+    llvm::errs() << "Array Size: \n";
+    NumElements.dump();
+    llvm::errs() << "current ptr: \n";
+    CurPtr.dump();
+    assert(0 && "have trailing elements to initialize but no initializer");
+  }
   if (CXXConstructExpr *CCE = dyn_cast<CXXConstructExpr>(Init)) {
     CXXConstructorDecl *Ctor = CCE->getConstructor();
     if (Ctor->isTrivial()) {
@@ -1272,7 +1295,6 @@ ValueCategory MLIRScanner::VisitPredefinedExpr(clang::PredefinedExpr *expr) {
 
 ValueCategory MLIRScanner::VisitInitListExpr(clang::InitListExpr *expr) {
   if (expr->isTransparent()) {
-    llvm::errs() << "is transparent\n";
     return Visit(expr->getInit(0));
   } 
   mlir::Type subType = getMLIRType(expr->getType());
@@ -1414,6 +1436,7 @@ MLIRScanner::VisitCXXBindTemporaryExpr(clang::CXXBindTemporaryExpr *expr) {
   return Visit(expr->getSubExpr());
 }
 
+
 ValueCategory MLIRScanner::VisitLambdaExpr(clang::LambdaExpr *expr) {
 
   // llvm::DenseMap<const VarDecl *, FieldDecl *> InnerCaptures;
@@ -1438,6 +1461,7 @@ ValueCategory MLIRScanner::VisitLambdaExpr(clang::LambdaExpr *expr) {
       t = mt.getElementType();
     }
   }
+
   auto op = createAllocOp(t, nullptr, /*memtype*/ 0, isArray, LLVMABI);
 
   for (auto tup : llvm::zip(expr->getLambdaClass()->captures(),
@@ -1470,6 +1494,7 @@ ValueCategory MLIRScanner::VisitLambdaExpr(clang::LambdaExpr *expr) {
           goto endp;
         }
       }
+      llvm::errs() << "lambda field not vardecl\n";
       EmittingFunctionDecl->dump();
       expr->dump();
       function.dump();
@@ -1514,6 +1539,10 @@ ValueCategory MLIRScanner::VisitLambdaExpr(clang::LambdaExpr *expr) {
   return ValueCategory(op, /*isReference*/ true);
 }
 
+ValueCategory MLIRScanner::VisitCompoundLiteralExpr(clang::CompoundLiteralExpr *expr) {
+  return Visit(expr->getInitializer());
+}
+
 // TODO actually deallocate
 ValueCategory MLIRScanner::VisitMaterializeTemporaryExpr(
     clang::MaterializeTemporaryExpr *expr) {
@@ -1536,7 +1565,7 @@ ValueCategory MLIRScanner::VisitMaterializeTemporaryExpr(
   if (isArray)
     return v;
 
-  llvm::errs() << "cleanup of materialized not handled";
+  llvm::errs() << "cleanup of materialized not handled\n";
   auto op = createAllocOp(getMLIRType(expr->getSubExpr()->getType()), nullptr,
                           0, /*isArray*/ isArray, /*LLVMABI*/ LLVMABI);
 
@@ -1566,7 +1595,6 @@ ValueCategory MLIRScanner::VisitCXXDeleteExpr(clang::CXXDeleteExpr *expr) {
 void MLIRScanner::NewInitializer(clang::CXXNewExpr *expr, mlir::Value toInit, mlir::Value arraySize, mlir::Value allocSize) {
   if (expr->isArray()) {
     QualType allocType = Glob.CGM.getContext().getBaseElementType(expr->getAllocatedType());
-
     if (!isa<mlir::MemRefType>(toInit.getType())) {
       assert(arraySize && "No memref type, better pass array size to new init\n");
       assert(allocSize && "No memref type, better pass alloc size to new init\n");
@@ -1591,9 +1619,16 @@ ValueCategory MLIRScanner::VisitCXXNewExpr(clang::CXXNewExpr *expr) {
   mlir::Value count;
 
   if (expr->isArray()) {
-    count = Visit(*expr->getArraySize()).getValue(loc, builder);
-    count = builder.create<IndexCastOp>(
+    auto llvmNumElements = clang::CodeGen::ConstantEmitter(Glob.CGM).tryEmitAbstract(*expr->getArraySize(), expr->getType());
+    if (llvmNumElements) {
+      auto nc = dyn_cast<llvm::ConstantInt>(llvmNumElements);
+      count = getConstantIndex(nc->getZExtValue());
+    }
+    else {
+      count = Visit(*expr->getArraySize()).getValue(loc, builder);
+      count = builder.create<IndexCastOp>(
         loc, mlir::IndexType::get(builder.getContext()), count);
+    }
   } else {
     count = getConstantIndex(1);
   }
@@ -1746,6 +1781,7 @@ ValueCategory MLIRScanner::VisitCXXPseudoDestructorExpr(
 
 ValueCategory
 MLIRScanner::VisitCXXConstructExpr(clang::CXXConstructExpr *cons) {
+
   return VisitConstructCommon(cons, /*name*/ nullptr, /*space*/ 0);
 }
 
@@ -1793,8 +1829,9 @@ ValueCategory MLIRScanner::VisitConstructCommon(clang::CXXConstructExpr *cons,
     builder.create<LLVM::MemsetOp>(loc, val, i8_0, sizev, falsev);
   }
 
-  if (decl->isTrivial() && decl->isDefaultConstructor())
+  if (decl->isTrivial() && decl->isDefaultConstructor()) {
     return ValueCategory(op, /*isReference*/ true);
+  }
 
   mlir::Block::iterator oldpoint;
   mlir::Block *oldblock;
@@ -1827,9 +1864,11 @@ ValueCategory MLIRScanner::VisitConstructCommon(clang::CXXConstructExpr *cons,
   auto tocall = Glob.GetOrCreateMLIRFunction(cons->getConstructor());
 
   SmallVector<std::pair<ValueCategory, clang::Expr *>> args;
+  // Push this ptr
   args.emplace_back(make_pair(obj, (clang::Expr *)nullptr));
-  for (auto a : cons->arguments())
+  for (auto a : cons->arguments()) {
     args.push_back(make_pair(Visit(a), a));
+  }
   CallHelper(tocall, innerType, args,
              /*retType*/ Glob.CGM.getContext().VoidTy, false, cons);
 
@@ -1972,6 +2011,8 @@ const clang::FunctionDecl *MLIRScanner::EmitCallee(const Expr *E) {
     // Resolve direct calls.
   } else if (auto DRE = dyn_cast<DeclRefExpr>(E)) {
     if (auto FD = dyn_cast<FunctionDecl>(DRE->getDecl())) {
+      // llvm::errs() << "func decl: \n";
+      // FD->dump();
       return FD;
     }
 
@@ -3392,10 +3433,10 @@ ValueCategory MLIRScanner::VisitBinaryOperator(clang::BinaryOperator *BO) {
 
 ValueCategory MLIRScanner::VisitExprWithCleanups(ExprWithCleanups *E) {
   auto ret = Visit(E->getSubExpr());
-  for (auto &child : E->children()) {
-    child->dump();
-    llvm::errs() << "cleanup not handled\n";
-  }
+  // for (auto &child : E->children()) {
+  //   child->dump();
+  //   llvm::errs() << "cleanup not handled\n";
+  // }
   return ret;
 }
 
@@ -5530,8 +5571,9 @@ mlir::Type MLIRASTConsumer::getMLIRType(clang::QualType qt, bool *implicitRef,
     }
 
     if (types.empty())
-      if (ST->getNumElements() == 1 && ST->getElementType(0U)->isIntegerTy(8))
+      if (ST->getNumElements() == 1 && ST->getElementType(0U)->isIntegerTy(8)) {
         return typeTranslator.translateType(anonymize(ST));
+      }
 
     if (recursive) {
       auto LR = typeCache[RT].setBody(types, /*isPacked*/ false);

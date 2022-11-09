@@ -103,14 +103,21 @@ ValueCategory MLIRScanner::CallHelper(
     assert(arg.val && "expect not null");
 
     if (auto *ice = dyn_cast_or_null<ImplicitCastExpr>(a))
-      if (auto *dre = dyn_cast<DeclRefExpr>(ice->getSubExpr()))
+      if (auto *dre = dyn_cast<DeclRefExpr>(ice->getSubExpr())) {
+        // if (auto *fundcl = dyn_cast_or_null<FunctionDecl>(dre->getDecl())) {
+        //   llvm::errs() << "declref: " << fundcl->getName().str() << "\n";
+        // }
         mapFuncOperands.insert(
             make_pair(dre->getDecl()->getName().str(), arg.val));
+      }
 
     if (i >= fnType.getInputs().size() || (i != 0 && a == nullptr)) {
+      expr->getExprLoc().print(llvm::errs(), Glob.SM);
+      llvm::errs() << "\nCall error: \n";
       expr->dump();
+      llvm::errs() << "mlir func: \n";
       tocall.dump();
-      fnType.dump();
+      llvm::errs() << "args: \n";
       for (auto a : arguments) {
         std::get<1>(a)->dump();
       }
@@ -347,6 +354,7 @@ ValueCategory MLIRScanner::CallHelper(
 
 std::pair<ValueCategory, bool>
 MLIRScanner::EmitClangBuiltinCallExpr(clang::CallExpr *expr) {
+  auto loc = getMLIRLocation(expr->getExprLoc());
   switch (expr->getBuiltinCallee()) {
   case clang::Builtin::BImove:
   case clang::Builtin::BImove_if_noexcept:
@@ -354,6 +362,66 @@ MLIRScanner::EmitClangBuiltinCallExpr(clang::CallExpr *expr) {
   case clang::Builtin::BIas_const: {
     auto V = Visit(expr->getArg(0));
     return make_pair(V, true);
+  }
+  case clang::Builtin::BI__builtin_is_constant_evaluated: {
+    auto alwaysTrue = builder.create<arith::ConstantIntOp>(
+      builder.getUnknownLoc(),
+      true, 8
+    );
+    return make_pair(ValueCategory(alwaysTrue, false), true);
+  }
+  case clang::Builtin::BIaddressof:
+  case clang::Builtin::BI__addressof:
+  case clang::Builtin::BI__builtin_addressof: {
+    auto V = Visit(expr->getArg(0));
+    assert(V.isReference);
+    mlir::Value val = V.val;
+    auto T = getMLIRType(expr->getType());
+    if (T == val.getType())
+      return {ValueCategory(val, /*isRef*/ false), true};
+    if (T.isa<LLVM::LLVMPointerType>()) {
+      if (val.getType().isa<MemRefType>())
+        val = builder.create<polygeist::Memref2PointerOp>(loc, T, val);
+      else if (T != val.getType())
+        val = builder.create<LLVM::BitcastOp>(loc, T, val);
+      return {ValueCategory(val, /*isRef*/ false), true};
+    } else {
+      assert(T.isa<MemRefType>());
+      if (val.getType().isa<MemRefType>())
+        val = builder.create<polygeist::Memref2PointerOp>(
+            loc, LLVM::LLVMPointerType::get(builder.getI8Type()), val);
+      if (val.getType().isa<LLVM::LLVMPointerType>())
+        val = builder.create<polygeist::Pointer2MemrefOp>(loc, T, val);
+      return {ValueCategory(val, /*isRef*/ false), true};
+    }
+    expr->dump();
+    llvm::errs() << " val: " << val << " T: " << T << "\n";
+    assert(0 && "unhandled builtin addressof");
+  }
+  case clang::Builtin::BI__builtin_trap: {
+    // do nothing here
+    // just call exit
+    if (Glob.functions.find("exit") == Glob.functions.end()) {
+      mlir::OpBuilder mbuilder(Glob.module->getContext());
+      std::vector<mlir::Type> inputType{mbuilder.getI32Type()};
+
+      auto funcType = mbuilder.getFunctionType(inputType, {});
+      auto function = mlir::func::FuncOp(mlir::func::FuncOp::create(
+          mbuilder.getUnknownLoc(), "exit", funcType));
+      SymbolTable::setSymbolVisibility(function,
+                                        SymbolTable::Visibility::Private);
+      auto lnk = LLVM::Linkage::External;
+      NamedAttrList attrs;
+      attrs.set("llvm.linkage",
+                mlir::LLVM::LinkageAttr::get(mbuilder.getContext(), lnk));
+      function->setAttrs(attrs.getDictionary(mbuilder.getContext()));
+      Glob.module->push_back(function);
+      Glob.functions["exit"] = function;
+    }
+    mlir::Value i = builder.create<ConstantIntOp>(loc, 0, 32);
+    auto V = builder.create<CallOp>(loc, 
+      Glob.functions["exit"], i).getResult(0);
+    return {ValueCategory(V, false), true};
   }
   default:
     break;
@@ -379,7 +447,7 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
       }
     }
   */
-
+  (void) EmitCallee(expr->getCallee());
   auto valEmitted = EmitGPUCallExpr(expr);
   if (valEmitted.second)
     return valEmitted.first;

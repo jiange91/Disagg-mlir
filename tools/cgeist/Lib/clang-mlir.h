@@ -399,6 +399,8 @@ public:
 
   ValueCategory VisitCXXDefaultArgExpr(clang::CXXDefaultArgExpr *expr);
 
+  ValueCategory VisitCompoundLiteralExpr(clang::CompoundLiteralExpr *expr);
+
   ValueCategory
   VisitMaterializeTemporaryExpr(clang::MaterializeTemporaryExpr *expr);
 
@@ -437,6 +439,7 @@ public:
 
   ValueCategory VisitArrayInitIndexExpr(clang::ArrayInitIndexExpr *expr);
 
+  // Return address to the field in QT
   ValueCategory CommonFieldLookup(mlir::Location loc, clang::QualType OT,
                                   const FieldDecl *FD, mlir::Value val,
                                   bool isLValue);

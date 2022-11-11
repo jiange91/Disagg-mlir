@@ -1,5 +1,6 @@
 add_mlir_dialect_library(MLIRRMEMTransforms
   DeterminePoolSource.cpp
+  InstrBandwidth.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

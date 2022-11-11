@@ -21,7 +21,9 @@ namespace rmem {
 Type getIntBitType(MLIRContext *ctx, unsigned bitwidth);
 Value createIntConstant(OpBuilder &builder, Location loc, int64_t value, Type resultType);
 LLVM::LLVMStructType getCacheTokenType(MLIRContext *ctx);
+LLVM::LLVMVoidType getVoidType(MLIRContext *ctx);
 LLVM::LLVMPointerType getVoidPtrType(MLIRContext *ctx);
+bool isCacheAccessOp(const StringRef calless);
 
 // calcualte sizeof(elemType) * arraySize in bytes
 // not considering 
@@ -51,8 +53,24 @@ LLVM::LLVMFuncOp lookupOrCreateCacheCreateFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp);
 // Deprecated global cacehs[n]
 LLVM::GlobalOp lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n);
+// get or create global counter name for llvm instr
+LLVM::GlobalOp lookupOrCreateGlobalCtrName(ModuleOp moduleOp, StringRef ctrName, StringRef fname);
+
 // void init_client();
 LLVM::LLVMFuncOp lookupOrCreateInitClientFn(ModuleOp moduleOp);
+// uint64_t n_access_snaphot();
+LLVM::LLVMFuncOp lookupOrCreateAccSnapshotFn(ModuleOp moduleOp);
+
+/* instrumentation intrinsics 
+1. void @llvm.instrprof.increment(ptr <name>, i64 <hash>,
+                                       i32 <num-counters>, i32 <index>)
+
+2. void @llvm.instrprof.increment.step(ptr <name>, i64 <hash>,
+                                            i32 <num-counters>,
+                                            i32 <index>, i64 <step>)
+*/
+LLVM::LLVMFuncOp lookupOrCreateInstrInc(ModuleOp moduleOp);
+LLVM::LLVMFuncOp lookupOrCreateInstrIncStep(ModuleOp moduleOp);
 
 
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);

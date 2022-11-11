@@ -14,12 +14,18 @@ static constexpr llvm::StringRef kFree = "_disagg_free";
 static constexpr llvm::StringRef kCacheRequest = "cache_request";
 static constexpr llvm::StringRef kCacheAccessMut = "cache_access_mut";
 static constexpr llvm::StringRef kCacheAccess = "cache_access";
+static constexpr llvm::StringRef kCacheAccessNRTCMut = "cache_access_nrtc_mut";
+static constexpr llvm::StringRef kCacheAccessNRTC = "cache_access_nrtc";
 static constexpr llvm::StringRef kInitDevice = "init_device";
 static constexpr llvm::StringRef kInitBuffers = "init_bufs";
 static constexpr llvm::StringRef kCacheInit = "cache_init";
 static constexpr llvm::StringRef kCacheCreate = "cache_create";
 static constexpr llvm::StringRef kShutdownDevice = "shutdown_device";
 static constexpr llvm::StringRef kInitClient= "init_client";
+static constexpr llvm::StringRef kAccSnapshot = "n_access_snapshot";
+static constexpr llvm::StringRef kInstrProfInc = "llvm.instrprof.increment";
+static constexpr llvm::StringRef kInstrProfIncStep = "llvm.instrprof.increment.step";
+
 
 //==============================================================================
 // Utility functions
@@ -35,7 +41,7 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateFn(ModuleOp moduleOp,
   OpBuilder b(moduleOp.getBodyRegion());
   return b.create<LLVM::LLVMFuncOp>(
     moduleOp->getLoc(), name,
-    LLVM::LLVMFunctionType::get(resultType, inputTypes)
+    LLVM::LLVMFunctionType::get(resultType ? resultType : getVoidType(moduleOp.getContext()), inputTypes)
   );
 }
 
@@ -89,6 +95,10 @@ LLVM::LLVMStructType mlir::rmem::getCacheTokenType(MLIRContext *ctx) {
   );
 }
 
+LLVM::LLVMVoidType mlir::rmem::getVoidType(MLIRContext *ctx) {
+  return LLVM::LLVMVoidType::get(ctx);
+}
+
 LLVM::LLVMPointerType mlir::rmem::getVoidPtrType(MLIRContext *ctx) {
   return LLVM::LLVMPointerType::get(getIntBitType(ctx, 8));
 }
@@ -99,6 +109,13 @@ Value mlir::rmem::calculateBufferSize(OpBuilder &builder, Location loc, Type ele
   Value gepPtr = builder.create<LLVM::GEPOp>(loc, 
     elePtrType, nullPtr, arraySize);
   return builder.create<LLVM::PtrToIntOp>(loc, rmem::getIntBitType(loc.getContext(), 64), gepPtr);
+}
+
+bool mlir::rmem::isCacheAccessOp(const StringRef callee) {
+  return (callee.equals(kCacheAccess) ||
+          callee.equals(kCacheAccessMut) ||
+          callee.equals(kCacheAccessNRTC) || 
+          callee.equals(kCacheAccessNRTCMut));
 }
 
 
@@ -220,6 +237,15 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitClientFn(ModuleOp moduleOp) {
   );
 }
 
+LLVM::LLVMFuncOp lookupOrCreateAccSnapshotFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kAccSnapshot,
+    {},
+    getIntBitType(moduleOp->getContext(), 64)
+  );
+}
+
 LLVM::GlobalOp mlir::rmem::lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n) {
   llvm_unreachable("now using static cache id");
   auto globalCaches = moduleOp.lookupSymbol<LLVM::GlobalOp>("caches");
@@ -244,6 +270,42 @@ LLVM::GlobalOp mlir::rmem::lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigne
     ary
   );
   return globalCaches;
+}
+
+LLVM::GlobalOp mlir::rmem::lookupOrCreateGlobalCtrName(ModuleOp moduleOp, StringRef ctrName, StringRef fname) {
+  auto globalCtrName = moduleOp.lookupSymbol<LLVM::GlobalOp>(ctrName);
+  if (globalCtrName) return globalCtrName;
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp.getLoc(),
+    LLVM::LLVMArrayType::get(
+      getIntBitType(moduleOp.getContext(), 8),
+      fname.size()
+      ),
+    true, /* is constant */
+    LLVM::Linkage::Private,
+    ctrName,
+    b.getStringAttr(fname)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInstrInc(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kInstrProfInc,
+    {getVoidPtrType(ctx), getIntBitType(ctx, 64), getIntBitType(ctx, 32), getIntBitType(ctx, 32)},
+    {}
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInstrIncStep(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kInstrProfIncStep,
+    {getVoidPtrType(ctx), getIntBitType(ctx, 64), getIntBitType(ctx, 32), getIntBitType(ctx, 32)},
+    {}
+  );
 }
 
 // ==============================================================

@@ -8,6 +8,7 @@ namespace mlir {
 #include "Dialect/Transforms/Passes.h.inc"
 
 std::unique_ptr<Pass> createRemoteMemDPSPass();
+std::unique_ptr<Pass> createRemoteMemInstrBWProf();
 
 #define GEN_PASS_REGISTRATION
 #include "Dialect/Transforms/Passes.h.inc"

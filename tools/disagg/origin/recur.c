@@ -12,6 +12,7 @@ typedef struct A {
 } A;
 
 A **glob;
+char eg[] = "expand";
 
 A *expand(A* node, int v) {
   A* new_node = (A*)malloc(sizeof(A));

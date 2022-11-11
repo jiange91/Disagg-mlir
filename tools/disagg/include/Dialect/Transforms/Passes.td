@@ -9,4 +9,11 @@ def RMEMDeterminePoolSource : Pass<"rmem-decide-pool", "mlir::ModuleOp"> {
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect"];
 }
 
+def RMEMInstrBandwidthProf : Pass<"rmem-instr-bw", "LLVM::LLVMFuncOp"> {
+  let summary = "Instrument counter at each remote memory access site in each function";
+  let description = "Current impl can only apply this pass to the IR after lowering";
+  let constructor = "mlir::createRemoteMemInstrBWProf()";
+  let dependentDialects = ["LLVM::LLVMDialect"];
+} 
+
 #endif

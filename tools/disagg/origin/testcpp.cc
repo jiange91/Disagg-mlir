@@ -57,6 +57,20 @@ void addrof(int &a) {
   printf("%p\n", std::addressof(a));
 }
 
+class Test
+{  
+private:
+  int val; 
+public:
+  static int count;
+
+  Test()
+  {
+    count++;
+  }
+  // some other stuff in class
+};
+
 int main(int argc, char **argv) {
 
   // std::chrono::time_point<std::chrono::steady_clock> time0 = std::chrono::steady_clock::now();
@@ -77,24 +91,24 @@ int main(int argc, char **argv) {
   // printf("%zu\n", ss.size());
   // printf("%s\n", ss.c_str());
 
-  int i = 2;
-  int &b = i;
-  int &c = b;
+  // int i = 2;
+  // int &b = i;
+  // int &c = b;
 
-  EB eb(c);
-  printf("eb = %d\n", eb.a);
-  for (int i = 0; i < 10; i++) {
-    printf("%d\n", eb.ary[i]);
-  }
+  // EB eb(c);
+  // printf("eb = %d\n", eb.a);
+  // for (int i = 0; i < 10; i++) {
+  //   printf("%d\n", eb.ary[i]);
+  // }
 
-  ([&]() {
-    printf("no ctor %d\n", i);
-  }) ();
+  // ([&]() {
+  //   printf("no ctor %d\n", i);
+  // }) ();
 
-  auto pss = [&]() {
-    printf("copy %d\n", i);
-  };
-  pss();
+  // auto pss = [&]() {
+  //   printf("copy %d\n", i);
+  // };
+  // pss();
 
   // i = atoi(argv[1]);
   // pss();

@@ -41,16 +41,10 @@ LLVM::LLVMFuncOp lookupOrCreateCacheRequestFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp);
 // void local_ptr = _cache_access(*cache_token_t);
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessFn(ModuleOp moduleOp);
-// void init_device();
-LLVM::LLVMFuncOp lookupOrCreateInitDeviceFn(ModuleOp moduleOp);
-// void init_bufs(); /* init sbuf and rbuf */
-LLVM::LLVMFuncOp lookupOrCreateInitBuffersFn(ModuleOp moduleOp);
 // void cache_init(); /* config linebase to use sbuf */
 LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
-// unsigned cache_create(unsigned cache_size, unsigned cache_line_size);
-LLVM::LLVMFuncOp lookupOrCreateCacheCreateFn(ModuleOp moduleOp);
-// void shutdown_device();
-LLVM::LLVMFuncOp lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp);
+// void init_offload(); 
+LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
 // Deprecated global cacehs[n]
 LLVM::GlobalOp lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n);
 // get or create global counter name for llvm instr
@@ -60,6 +54,9 @@ LLVM::GlobalOp lookupOrCreateGlobalCtrName(ModuleOp moduleOp, StringRef ctrName,
 LLVM::LLVMFuncOp lookupOrCreateInitClientFn(ModuleOp moduleOp);
 // uint64_t n_access_snaphot();
 LLVM::LLVMFuncOp lookupOrCreateAccSnapshotFn(ModuleOp moduleOp);
+// int __llvm_profile_write_file();
+LLVM::LLVMFuncOp lookupOrCreateProfileWriteFn(ModuleOp moduleOp);
+
 
 /* instrumentation intrinsics 
 1. void @llvm.instrprof.increment(ptr <name>, i64 <hash>,
@@ -87,8 +84,8 @@ LLVM::LLVMFuncOp lookupOrCreateFn(ModuleOp moduleOp,
 Operation::result_range createLLVMCall(OpBuilder &builder,
                                        Location loc,
                                        LLVM::LLVMFuncOp fn,
-                                       ValueRange inputs = {},
-                                       ArrayRef<Type> resultTypes = {});
+                                       ValueRange inputs = {});
+                                       
 }
 }
 

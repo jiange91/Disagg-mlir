@@ -50,8 +50,8 @@ class RMEMInstrBandwidthProf : public impl::RMEMInstrBandwidthProfBase<RMEMInstr
     auto hash = createIntConstant(eb, funcOp.getLoc(), 0, getIntBitType(funcOp.getContext(), 64));
     auto nctrs = createIntConstant(eb, funcOp.getLoc(), nobj, getIntBitType(funcOp.getContext(), 32)); 
 
+    // add prof instr at every access site
     unsigned objI = 0;
-
     funcOp->walk([&](LLVM::CallOp access) {
       auto callee = access.getCallee();
       if (!callee.has_value() || !isCacheAccessOp(*callee)) {
@@ -74,6 +74,15 @@ class RMEMInstrBandwidthProf : public impl::RMEMInstrBandwidthProfBase<RMEMInstr
       objI ++;
       return WalkResult::advance();
     });
+
+    /* No need to do this, clang frontend will do the trick */
+    // if its main function, add dump before return
+    // if (funcOp.getName().equals("main")) {
+    //   auto dumpProfileOp = lookupOrCreateProfileWriteFn(m);
+    //   eb.setInsertionPoint(&funcOp.getBody().back().back());
+    //   rmem::createLLVMCall(eb, funcOp.getLoc(), dumpProfileOp);
+    //   funcOp.dump();
+    // }
   }
 };
 }

@@ -32,6 +32,7 @@ bool isRecursiveStruct(Type *T, Type *Meta, SmallPtrSetImpl<Type *> &seen) {
 }
 
 Type *anonymize(Type *T) {
+  return T;
   // TODO handle opaque pointers
   // getPointerElementType() is deprecated
   if (auto *PT = dyn_cast<PointerType>(T))

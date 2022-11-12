@@ -337,9 +337,9 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
 
   Stmt *stmt = fd->getBody();
   if (stmt) {
-    if (ShowAST) {
-      stmt->dump();
-    }
+    // if (ShowAST) {
+    //   stmt->dump();
+    // }
     Visit(stmt);
 
     loc = getMLIRLocation(stmt->getEndLoc());
@@ -3223,7 +3223,6 @@ ValueCategory MLIRScanner::VisitBinaryOperator(clang::BinaryOperator *BO) {
   case clang::BinaryOperator::Opcode::BO_AddAssign: {
     assert(lhs.isReference);
     auto prev = lhs.getValue(loc, builder);
-
     mlir::Value result;
     if (auto postTy = prev.getType().dyn_cast<mlir::FloatType>()) {
       mlir::Value rhsV = rhs.getValue(loc, builder);

@@ -32,7 +32,7 @@ std::tuple<Value, Value> RMemAllocationOpLLVMLowering::allocateBufferManuallyAli
   LLVM::LLVMFuncOp allocFuncOp = rmem::lookupOrCreateAllocFn(
       op->getParentOfType<ModuleOp>());
   auto results = rmem::createLLVMCall(rewriter, loc, allocFuncOp, 
-  {poolId, sizeBytes}, getVoidPtrType());
+  {poolId, sizeBytes});
   Value allocatedPtr = rewriter.create<LLVM::BitcastOp>(loc, elementPtrType,
                                                         results);
 

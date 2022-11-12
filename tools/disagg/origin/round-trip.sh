@@ -50,42 +50,25 @@ function cpp_from_llvm_dialect () {
   echo "Compile $1 complete"
 }
 
-# cmd [opt-level] [src.c]
-function c_high_obj() {
-  mkd_out
-  cgeist -v -S -std=c11 -O$1 -g -memref-abi=0 $2 -o out/base.mlir
-
-  # lower to llvm dialect
-  polygeist-opt --convert-polygeist-to-llvm out/base.mlir -o out/base_llvm.mlir
-
-  # Translate to llvm ir
-  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
-
-  llc -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
-  echo "Compile $2 complete"
-}
-
 # cmd [lowered.mlir]
-function c_from_lowered() {
+function from_remote_lowered() {
   mkd_out
 
   # lower to llvm dialect
   polygeist-opt --convert-polygeist-to-llvm $1 -o out/base_llvm.mlir
 
   # Translate to llvm ir
-  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
+  mlir-translate -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll
 
-  llc -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
+  llc-b -filetype=obj -relocation-model=pic out/base.ll -o ./out/base.o
   echo "Compile $1 complete"
 }
 
 # cmd target.c bin
 function compile_target() {
-  mkd_out
   mkd_libs
   cp /users/Zijian/fake-rt/build/src/CMakeFiles/dissrt.dir/* libs/
-  clang -g -fPIC -c $1 -o out/base.o
-  clang -lpthread -lprofiler -flto=thin -fuse-ld=ld out/base.o libs/cache.c.o libs/common.c.o libs/remote_pool.c.o libs/tcp_rt.c.o -o out/$2
+  clang-b -fprofile-generate -lpthread -flto=thin -fuse-ld=ld libs/cache.c.o libs/common.c.o libs/remote_pool.c.o libs/tcp_rt.c.o libs/offload.c.o out/base.o -o out/run
   echo "Compile $1 complete"
 }
 

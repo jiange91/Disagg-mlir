@@ -16,15 +16,12 @@ static constexpr llvm::StringRef kCacheAccessMut = "cache_access_mut";
 static constexpr llvm::StringRef kCacheAccess = "cache_access";
 static constexpr llvm::StringRef kCacheAccessNRTCMut = "cache_access_nrtc_mut";
 static constexpr llvm::StringRef kCacheAccessNRTC = "cache_access_nrtc";
-static constexpr llvm::StringRef kInitDevice = "init_device";
-static constexpr llvm::StringRef kInitBuffers = "init_bufs";
 static constexpr llvm::StringRef kCacheInit = "cache_init";
-static constexpr llvm::StringRef kCacheCreate = "cache_create";
-static constexpr llvm::StringRef kShutdownDevice = "shutdown_device";
 static constexpr llvm::StringRef kInitClient= "init_client";
 static constexpr llvm::StringRef kAccSnapshot = "n_access_snapshot";
 static constexpr llvm::StringRef kInstrProfInc = "llvm.instrprof.increment";
 static constexpr llvm::StringRef kInstrProfIncStep = "llvm.instrprof.increment.step";
+static constexpr llvm::StringRef kDumpProfile = "__llvm_profile_write_file";
 
 
 //==============================================================================
@@ -48,12 +45,11 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateFn(ModuleOp moduleOp,
 Operation::result_range mlir::rmem::createLLVMCall(OpBuilder &builder,
                                        Location loc,
                                        LLVM::LLVMFuncOp fn,
-                                       ValueRange inputs, 
-                                       ArrayRef<Type> resultTypes) {
+                                       ValueRange inputs) {
+                                       
   return builder.create<LLVM::CallOp>(
     loc,
-    resultTypes,
-    SymbolRefAttr::get(fn),
+    fn,
     inputs
   )->getResults();
 }
@@ -183,46 +179,10 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessFn(ModuleOp moduleOp) {
   );
 }
 
-LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitDeviceFn(ModuleOp moduleOp) {
-  return rmem::lookupOrCreateFn(
-    moduleOp,
-    kInitDevice,
-    {},
-    LLVM::LLVMVoidType::get(moduleOp->getContext())
-  );
-}
-
-LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInitBuffersFn(ModuleOp moduleOp) {
-  return rmem::lookupOrCreateFn(
-    moduleOp,
-    kInitBuffers,
-    {},
-    LLVM::LLVMVoidType::get(moduleOp->getContext())
-  );
-}
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheInitFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheInit,
-    {},
-    LLVM::LLVMVoidType::get(moduleOp->getContext())
-  );
-}
-
-LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheCreateFn(ModuleOp moduleOp) {
-  return rmem::lookupOrCreateFn(
-    moduleOp,
-    kCacheCreate,
-    {getIntBitType(moduleOp->getContext(), 32), 
-     getIntBitType(moduleOp->getContext(), 32)},
-    getIntBitType(moduleOp->getContext(), 32)
-  );
-}
-
-LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateShutdownDeviceFn(ModuleOp moduleOp) {
-  return rmem::lookupOrCreateFn(
-    moduleOp,
-    kShutdownDevice,
     {},
     LLVM::LLVMVoidType::get(moduleOp->getContext())
   );
@@ -308,6 +268,16 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateInstrIncStep(ModuleOp moduleOp) {
   );
 }
 
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateProfileWriteFn(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kDumpProfile,
+    {},
+    {getIntBitType(ctx, 32)}
+  ); 
+}
+
 // ==============================================================
 // Helper Wrapper for type casting
 // ==============================================================
@@ -322,10 +292,7 @@ Value mlir::rmem::cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM
   auto addr = builder.create<LLVM::PtrToIntOp>(
     loc, getIntBitType(loc.getContext(), 64), ptr
   );
-  auto result = createLLVMCall(builder, loc, reqFn, 
-    {addr},
-    rmem::getIntBitType(loc.getContext(), 128)
-  );
+  auto result = createLLVMCall(builder, loc, reqFn, {addr});
   return result.front();
 }
 
@@ -337,10 +304,7 @@ Value mlir::rmem::cacheAccessCallWrapper(OpBuilder &builder, Location loc, LLVM:
   2. result = llvm.bitcast voidPtr to P
   */
 
-  auto voidPtr = createLLVMCall(builder, loc, accFn, 
-    token_ptr, 
-    getVoidPtrType(loc.getContext())
-  );
+  auto voidPtr = createLLVMCall(builder, loc, accFn, token_ptr);
   auto result = builder.create<LLVM::BitcastOp>(
     loc, castPtrType, voidPtr
   );

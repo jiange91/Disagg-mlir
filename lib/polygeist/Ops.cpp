@@ -2093,7 +2093,9 @@ public:
       lhs_v = ext.getIn();
       if (lhs_v.getType().cast<IntegerType>().getWidth() != 1)
         return failure();
-    } else if (matchPattern(op.getTrueValue(), m_Constant(&lhs))) {
+    } else if (matchPattern(op.getTrueValue(), m_Constant(&lhs)) &&
+               (matchPattern(op.getTrueValue(), m_One()) ||
+               matchPattern(op.getTrueValue(), m_Zero()))) {
     } else
       return failure();
 
@@ -2101,14 +2103,18 @@ public:
       rhs_v = ext.getIn();
       if (rhs_v.getType().cast<IntegerType>().getWidth() != 1)
         return failure();
-    } else if (matchPattern(op.getFalseValue(), m_Constant(&rhs))) {
+    } else if (matchPattern(op.getFalseValue(), m_Constant(&rhs)) &&
+               (matchPattern(op.getFalseValue(), m_One()) ||
+               matchPattern(op.getFalseValue(), m_Zero()))) {
     } else
       return failure();
 
-    if (!lhs_v)
+    if (!lhs_v) {
       lhs_v = rewriter.create<ConstantIntOp>(op.getLoc(), lhs.getInt(), 1);
-    if (!rhs_v)
+    }
+    if (!rhs_v) {
       rhs_v = rewriter.create<ConstantIntOp>(op.getLoc(), rhs.getInt(), 1);
+    }
 
     rewriter.replaceOpWithNewOp<ExtUIOp>(
         op, op.getType(),

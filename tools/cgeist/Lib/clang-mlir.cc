@@ -3294,8 +3294,41 @@ ValueCategory MLIRScanner::VisitBinaryOperator(clang::BinaryOperator *BO) {
       }
       assert(right.getType() == prev.getType());
       result = builder.create<SubFOp>(loc, prev, right);
-    } else {
-      result = builder.create<SubIOp>(loc, prev, rhs.getValue(loc, builder));
+    } 
+    else if (auto pt = prev.getType().dyn_cast<mlir::LLVM::LLVMPointerType>()) {
+      mlir::Value rhsV = rhs.getValue(loc, builder);
+      auto rhsTy = rhsV.getType().cast<mlir::IntegerType>();
+      auto s64Ty = builder.getI64Type();
+      if (rhsTy.getWidth() < 64) {
+        rhsV = builder.create<arith::ExtSIOp>(loc, s64Ty, rhsV);
+      }
+      mlir::Value negIdx = builder.create<SubIOp>(
+        loc, 
+        builder.create<arith::ConstantOp>(loc, builder.getIntegerAttr(s64Ty, 0), s64Ty),
+        rhsV
+      );
+      result = builder.create<LLVM::GEPOp>(
+        loc, pt, prev,
+        ArrayRef<LLVM::GEPArg>{negIdx}
+      );
+    }
+    else if (auto postTy = prev.getType().dyn_cast<mlir::IntegerType>()) {
+      mlir::Value rhsV = rhs.getValue(loc, builder);
+      auto prevTy = rhsV.getType().cast<mlir::IntegerType>();
+      if (prevTy == postTy) {
+      } else if (prevTy.getWidth() < postTy.getWidth()) {
+        if (signedType) {
+          rhsV = builder.create<arith::ExtSIOp>(loc, postTy, rhsV);
+        } else {
+          rhsV = builder.create<arith::ExtUIOp>(loc, postTy, rhsV);
+        }
+      } else {
+        rhsV = builder.create<arith::TruncIOp>(loc, postTy, rhsV);
+      }
+      assert(rhsV.getType() == prev.getType());
+      result = builder.create<arith::SubIOp>(loc, prev, rhsV);
+    } else if (auto postTy = prev.getType().dyn_cast<mlir::MemRefType>()) {
+      llvm_unreachable("subassign for memref is not implemented");
     }
     lhs.store(loc, builder, result);
     return lhs;
@@ -5311,7 +5344,6 @@ void MLIRASTConsumer::HandleDeclContext(DeclContext *DC) {
       continue;
     if (name == "cudaGetDevice" || name == "cudaMalloc")
       continue;
-
     if ((emitIfFound.count("*") && name != "fpclassify" && !fd->isStatic() &&
          externLinkage) ||
         emitIfFound.count(name)) {
@@ -5386,7 +5418,6 @@ bool MLIRASTConsumer::HandleTopLevelDecl(DeclGroupRef dg) {
       continue;
     if (name == "cudaGetDevice" || name == "cudaMalloc")
       continue;
-
     if ((emitIfFound.count("*") && name != "fpclassify" && !fd->isStatic() &&
          externLinkage) ||
         emitIfFound.count(name)) {

@@ -1514,7 +1514,6 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
             args.push_back(getLLVM(a));
           }
           mlir::Value called;
-
           if (callee) {
             auto strcmpF = Glob.GetOrCreateLLVMFunction(callee);
             called = builder.create<mlir::LLVM::CallOp>(loc, strcmpF, args)
@@ -1528,6 +1527,7 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
             called =
                 builder.create<mlir::LLVM::CallOp>(loc, RTs, args).getResult();
           }
+          if (!called) return ValueCategory();
           return ValueCategory(called, /*isReference*/ expr->isLValue() ||
                                            expr->isXValue());
         }

@@ -1,77 +1,37 @@
 #include <vector>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
 #include <chrono>
 #include <memory>
-#include <string.h>
+#include <string>
+#include <cstdio>
+#include <stdarg.h>
+#include <random>
+
 
 using namespace std;
-
-void isNUll(void *p) {
-  if (p) {
-    printf("not null\n");
-  } else {
-    printf("null\n");
-  }
-}
-
-struct EB { 
-  int &a;
-  int ary[10];
-  EB(int &b): a(b), ary{1,2,3,4} {}
-};
-
-struct A {
-  int a;
-public:
-  A() = default;
-  A(int a): a(a) {}
-  void demo(int i) {
-   auto pp = [&]() {
-    printf("demo %d\n", this->a > i ? this->a : i);
-    this->a = i;
-   };
-   pp();
-  }
-};
-
-struct B {
-  double x[3];
-  // double x;
-  // int y;
-};
-
-union Data {
-  int i;
-  float f;
-  char str[20];
-};
-
-template<typename T>
-T _T_min(T a, T b) {
-  return a < b? a : b;
-}
-
-void addrof(int &a) {
-  printf("%p\n", std::addressof(a));
-}
-
-class Test
-{  
-private:
-  int val; 
-public:
-  static int count;
-
-  Test()
-  {
-    count++;
-  }
-  // some other stuff in class
-};
+static const int64_t kRandSeed = 27491095;
 
 int main(int argc, char **argv) {
+  // auto s = chrono::high_resolution_clock::now();
+  // double k = atof(argv[1]);
+  // printf("%f\n", k);
+
+  // uniform_int_distribution<int> r(0, 10000);
+  // std::mt19937 rng(kRandSeed);
+  // printf("%d\n", r(rng));
+
+  // std::mt19937 frng;
+  // std::uniform_real_distribution<float> fr(0, 1.0f);
+  // frng.seed(kRandSeed + 1);
+  // float f = fr(frng);
+  // printf("%f\n", f);
+
+  int lz = __builtin_clzl(kRandSeed);
+  printf("%d\n", lz);
+
+  // auto e = chrono::high_resolution_clock::now();
+  // double us = chrono::duration_cast<chrono::duration<double, std::micro>>(e - s).count();
+  // printf("time %f\n", us);
+  return 0;
 
   // std::chrono::time_point<std::chrono::steady_clock> time0 = std::chrono::steady_clock::now();
   // vector<int> a = {1,2,3,4,5};

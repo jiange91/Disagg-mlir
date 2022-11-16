@@ -398,7 +398,8 @@ MLIRScanner::EmitClangBuiltinCallExpr(clang::CallExpr *expr) {
     llvm::errs() << " val: " << val << " T: " << T << "\n";
     assert(0 && "unhandled builtin addressof");
   }
-  case clang::Builtin::BI__builtin_trap: {
+  case clang::Builtin::BI__builtin_trap: 
+  case clang::Builtin::BI__builtin_unreachable: {
     // do nothing here
     // just call exit
     if (Glob.functions.find("exit") == Glob.functions.end()) {
@@ -422,6 +423,124 @@ MLIRScanner::EmitClangBuiltinCallExpr(clang::CallExpr *expr) {
     auto V = builder.create<CallOp>(loc, 
       Glob.functions["exit"], i).getResult(0);
     return {ValueCategory(V, false), true};
+  }
+  case clang::Builtin::BInextafterf:
+  case clang::Builtin::BI__builtin_nextafterf: {
+    if (Glob.functions.find("nextafterf") == Glob.functions.end()) {
+      mlir::OpBuilder mbuilder(Glob.module->getContext());
+      std::vector<mlir::Type> inputType{
+        getMLIRType(expr->getArg(0)->getType()),
+        getMLIRType(expr->getArg(1)->getType())
+      };
+      auto funcType = mbuilder.getFunctionType(inputType, {getMLIRType(expr->getType())});
+      NamedAttrList attrs;
+      attrs.set("llvm.linkage",
+                mlir::LLVM::LinkageAttr::get(mbuilder.getContext(), LLVM::Linkage::External));
+      auto function = mbuilder.create<mlir::func::FuncOp>(
+        mbuilder.getUnknownLoc(), 
+        "nextafterf", funcType,
+        attrs
+      );
+      Glob.functions["nextafterf"] = function;
+      SymbolTable::setSymbolVisibility(function,
+                                SymbolTable::Visibility::Private);
+      Glob.module->push_back(function);
+    }
+
+    auto v0 = Visit(expr->getArg(0)).getValue(loc, builder);
+    auto v1 = Visit(expr->getArg(1)).getValue(loc, builder);
+    mlir::Value nfv = builder.create<CallOp>(loc,
+      Glob.functions["nextafterf"], ArrayRef<mlir::Value>{v0, v1}
+    ).getResult(0);
+    return {ValueCategory(nfv, false), true};
+  }
+  case clang::Builtin::BI__builtin_constant_p: {
+    QualType ArgType = expr->getArg(0)->getType();
+    if (!ArgType->isIntegralOrEnumerationType() && !ArgType->isFloatingType())
+        return {
+          ValueCategory(builder.create<arith::ConstantIntOp>(loc, 0, 1), /*isRef*/ false), 
+          true
+        };
+    if (expr->getArg(0)->HasSideEffects(Glob.CGM.getContext()))
+      return {
+        ValueCategory(builder.create<arith::ConstantIntOp>(loc, 0, 1), /*isRef*/ false), 
+        true
+      };
+    llvm::Function *F = Glob.CGM.getIntrinsic(
+          llvm::Intrinsic::is_constant, Glob.CGM.getTypes().ConvertType(ArgType));
+    std::string fname = F->getName().str();
+    if (Glob.functions.find(fname) == Glob.functions.end()) {
+      mlir::OpBuilder mbuilder(Glob.module->getContext());
+      std::vector<mlir::Type> inputType{
+        getMLIRType(ArgType)
+      };
+      auto funcType = mbuilder.getFunctionType(inputType, {mbuilder.getI1Type()});
+      NamedAttrList attrs;
+      attrs.set("llvm.linkage",
+                mlir::LLVM::LinkageAttr::get(mbuilder.getContext(), LLVM::Linkage::External));
+      auto function = mbuilder.create<mlir::func::FuncOp>(
+        mbuilder.getUnknownLoc(), 
+        fname, funcType,
+        attrs
+      );
+      Glob.functions[fname] = function;
+      SymbolTable::setSymbolVisibility(function,
+                                SymbolTable::Visibility::Private);
+      Glob.module->push_back(function);
+    }
+    auto argValue = Visit(expr->getArg(0)).getValue(loc, builder);
+    mlir::Value res = builder.create<CallOp>(loc, 
+      Glob.functions[fname], ArrayRef<mlir::Value>{argValue}
+    ).getResult(0);
+    mlir::Type relType = getMLIRType(expr->getType());
+    if (res.getType() != relType) {
+      res = builder.create<arith::ExtUIOp>(loc, relType, res);
+    }
+    return {ValueCategory(res, false), true};
+  }
+  case Builtin::BI__builtin_clzs:
+  case Builtin::BI__builtin_clz:
+  case Builtin::BI__builtin_clzl:
+  case Builtin::BI__builtin_clzll: {
+    QualType ArgType = expr->getArg(0)->getType();
+    llvm::Function *F = Glob.CGM.getIntrinsic(llvm::Intrinsic::ctlz, 
+      Glob.CGM.getTypes().ConvertType(ArgType));
+    std::string fname = F->getName().str(); 
+    if (Glob.functions.find(fname) == Glob.functions.end()) {
+      mlir::OpBuilder mbuilder(Glob.module->getContext());
+      std::vector<mlir::Type> inputType{
+        getMLIRType(ArgType),
+        mbuilder.getI1Type()
+      };
+      auto funcType = mbuilder.getFunctionType(inputType, {getMLIRType(ArgType)});
+      NamedAttrList attrs;
+      attrs.set("llvm.linkage",
+                mlir::LLVM::LinkageAttr::get(mbuilder.getContext(), LLVM::Linkage::External));
+      auto function = mbuilder.create<mlir::func::FuncOp>(
+        mbuilder.getUnknownLoc(), 
+        fname, funcType,
+        attrs
+      );
+      Glob.functions[fname] = function;
+      SymbolTable::setSymbolVisibility(function,
+                                SymbolTable::Visibility::Private);
+      Glob.module->push_back(function);
+    }
+    auto ArgVal = Visit(expr->getArg(0)).getValue(loc, builder);
+    mlir::Value ZeroUndef = builder.create<arith::ConstantIntOp>(loc, Glob.CGM.getTarget().isCLZForZeroUndef(), 1);
+    mlir::Value result = builder.create<CallOp>(loc,
+      Glob.functions[fname], ArrayRef<mlir::Value>{ArgVal, ZeroUndef}
+    ).getResult(0);
+    auto RelTy = getMLIRType(expr->getType()).cast<mlir::IntegerType>();
+    auto reltype = result.getType().cast<mlir::IntegerType>();
+    if (RelTy == reltype) {
+    } else if (RelTy.getWidth() > reltype.getWidth()) {
+      result = builder.create<arith::ExtUIOp>(loc, RelTy, result);
+    } else {
+      result = builder.create<arith::TruncIOp>(loc, RelTy, result);
+    }
+    assert(RelTy == result.getType() && "type missmatch for clz");
+    return {ValueCategory(result, false), true};
   }
   default:
     break;
@@ -447,7 +566,7 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
       }
     }
   */
-  (void) EmitCallee(expr->getCallee());
+
   auto valEmitted = EmitGPUCallExpr(expr);
   if (valEmitted.second)
     return valEmitted.first;

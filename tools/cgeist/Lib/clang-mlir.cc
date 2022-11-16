@@ -215,7 +215,7 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
 
           Expr *init = expr->getInit();
           if (auto clean = dyn_cast<ExprWithCleanups>(init)) {
-            llvm::errs() << "TODO: cleanup\n";
+            // llvm::errs() << "TODO: cleanup\n";
             init = clean->getSubExpr();
           }
 
@@ -227,7 +227,7 @@ void MLIRScanner::init(mlir::func::FuncOp function, const FunctionDecl *fd) {
 
           Expr *init = expr->getInit();
           if (auto clean = dyn_cast<ExprWithCleanups>(init)) {
-            llvm::errs() << "TODO: cleanup\n";
+            // llvm::errs() << "TODO: cleanup\n";
             init = clean->getSubExpr();
           }
 
@@ -1565,7 +1565,7 @@ ValueCategory MLIRScanner::VisitMaterializeTemporaryExpr(
   if (isArray)
     return v;
 
-  llvm::errs() << "cleanup of materialized not handled\n";
+  // llvm::errs() << "cleanup of materialized not handled\n";
   auto op = createAllocOp(getMLIRType(expr->getSubExpr()->getType()), nullptr,
                           0, /*isArray*/ isArray, /*LLVMABI*/ LLVMABI);
 
@@ -1576,6 +1576,7 @@ ValueCategory MLIRScanner::VisitMaterializeTemporaryExpr(
 ValueCategory MLIRScanner::VisitCXXDeleteExpr(clang::CXXDeleteExpr *expr) {
   auto loc = getMLIRLocation(expr->getExprLoc());
   expr->dump();
+  expr->getExprLoc().dump(Glob.SM);
   llvm::errs() << "warning not calling destructor on delete\n";
 
   mlir::Value toDelete = Visit(expr->getArgument()).getValue(loc, builder);
@@ -2012,7 +2013,6 @@ const clang::FunctionDecl *MLIRScanner::EmitCallee(const Expr *E) {
   } else if (auto DRE = dyn_cast<DeclRefExpr>(E)) {
     if (auto FD = dyn_cast<FunctionDecl>(DRE->getDecl())) {
       // llvm::errs() << "func decl: \n";
-      // FD->dump();
       return FD;
     }
 
@@ -2363,6 +2363,7 @@ mlir::Value MLIRScanner::getConstantIndex(int x) {
   return constants[x] =
              subbuilder.create<ConstantIndexOp>(subbuilder.getUnknownLoc(), x);
 }
+
 
 ValueCategory MLIRScanner::VisitMSPropertyRefExpr(MSPropertyRefExpr *expr) {
   assert(0 && "unhandled ms propertyref");
@@ -4688,7 +4689,7 @@ MLIRASTConsumer::GetOrCreateLLVMFunction(const FunctionDecl *FD) {
   if (llvmFunctions.find(name) != llvmFunctions.end()) {
     return llvmFunctions[name];
   }
-
+  
   std::vector<mlir::Type> types;
   if (auto CC = dyn_cast<CXXMethodDecl>(FD)) {
     types.push_back(typeTranslator.translateType(
@@ -4704,7 +4705,6 @@ MLIRASTConsumer::GetOrCreateLLVMFunction(const FunctionDecl *FD) {
 
   auto llvmFnType = LLVM::LLVMFunctionType::get(rt, types,
                                                 /*isVarArg=*/FD->isVariadic());
-
   LLVM::Linkage lnk;
   switch (CGM.getFunctionLinkage(FD)) {
   case llvm::GlobalValue::LinkageTypes::InternalLinkage:
@@ -5301,6 +5301,10 @@ void MLIRASTConsumer::HandleDeclContext(DeclContext *DC) {
     if (!fd) {
       continue;
     }
+    // if (fd->getNameInfo().getAsString() == "__to_xstring") {
+    //   llvm::errs() << "found xstring\n";
+    //   fd->dump();
+    // }
     if (!fd->doesThisDeclarationHaveABody()) {
       if (!fd->doesDeclarationForceExternallyVisibleDefinition()) {
         continue;
@@ -5827,8 +5831,9 @@ mlir::Type MLIRASTConsumer::getMLIRType(clang::QualType qt, bool *implicitRef,
     if (T->isDoubleTy()) {
       return builder.getF64Type();
     }
-    if (T->isX86_FP80Ty())
+    if (T->isX86_FP80Ty()) {
       return builder.getF80Type();
+    }
     if (T->isFP128Ty())
       return builder.getF128Type();
 

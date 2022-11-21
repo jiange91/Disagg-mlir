@@ -1,26 +1,37 @@
+#include <cstdio>
 
-#include <stdarg.h>
+class A {
+public:
+    void trigger() {
+        dispatch();
+    }
+    void dispatch() {
+        printf("dispatch A\n");
+    }
+};
 
-int AddNumbers(int n, ...)
-{
-    int Sum = 0;
- 
-    // Declaring pointer to the
-    // argument list
-    va_list ptr;
- 
-    // Initializing argument to the
-    // list pointer
-    va_start(ptr, n);
- 
-    for (int i = 0; i < n; i++)
- 
-        // Accessing current variable
-        // and pointing to next one
-        Sum += va_arg(ptr, int);
- 
-    // Ending argument list traversal
-    va_end(ptr);
- 
-    return Sum;
+class B : public A {
+public:
+    void dispatch() {
+        printf("dispatch B\n");
+        A::dispatch();
+    }
+};
+
+class C : public B {
+public:
+    void trigger() {
+        dispatch();
+    }
+    void dispatch() {
+        printf("dispatch C\n");
+        B::dispatch();
+    }
+};
+
+
+int main(int argc, char **argv) {
+    C c;
+    c.trigger();
+    return 0;
 }

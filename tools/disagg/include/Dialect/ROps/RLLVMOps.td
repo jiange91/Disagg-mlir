@@ -14,6 +14,56 @@ def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [Pure]> {
   }];
 }
 
+def RemoteMem_SizeOfOp : RemoteMem_Op<"trivial.sizeof", [Pure]> {
+  let summary = "Get size of a type, placeholder";
+  let arguments = (ins TypeAttr: $src);
+  let results = (outs AnyType: $size);
+  let assemblyFormat = [{
+    attr-dict `:` type($size)
+  }];
+}
+
+def RemoteMem_ChannelCreateOp : RemoteMem_Op<"channel.create"> {
+  let arguments = (ins
+    RemoteMemRef: $baseVaddr,
+    Index: $upperBound,
+    I32: $sizeEach,
+    I32: $numSlots,
+    I32: $batch,
+    I32: $dist,
+    I32: $kind
+  );
+  let results = (outs I32: $channel);
+  let assemblyFormat = [{
+    operands attr-dict `:` functional-type(operands,results)
+  }];
+}
+
+def RemoteMem_ChannelAccessOp : RemoteMem_Op<"channel.access"> {
+  let arguments = (ins
+    I32:$channel,
+    Index:$phi
+  );
+  let results = (outs 
+    Arg<AnyTypeOf<
+          [LLVM_PointerTo<LLVM_LoadableType>, 
+          RemoteMemRef]>,"",[MemRead]>:$addr
+  );
+  let assemblyFormat = [{
+    $channel `,` $phi attr-dict `:` functional-type(operands,results)
+  }];
+}
+
+def RemoteMem_PrefetchOp : RemoteMem_Op<"llvm.prefetch"> {
+  let summary = "Access (no mutation) memory speculatively";
+  let arguments = (ins 
+    Arg<RemoteMemRef,"",[MemWrite]>:$addr
+  );
+  let assemblyFormat = [{
+    $addr attr-dict `:` type($addr)
+  }];
+}
+
 def RemoteMem_LoadOp: RemoteMem_Op<"llvm.load"> {
   let summary = "Load from memory";
   let description = [{

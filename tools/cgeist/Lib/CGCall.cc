@@ -542,6 +542,33 @@ MLIRScanner::EmitClangBuiltinCallExpr(clang::CallExpr *expr) {
     assert(RelTy == result.getType() && "type missmatch for clz");
     return {ValueCategory(result, false), true};
   }
+  case Builtin::BIceil:
+  case Builtin::BIceilf:
+  case Builtin::BIceill:
+  case Builtin::BI__builtin_ceil:
+  case Builtin::BI__builtin_ceilf:
+  case Builtin::BI__builtin_ceilf16:
+  case Builtin::BI__builtin_ceill:
+  case Builtin::BI__builtin_ceilf128: {
+    QualType ArgType = expr->getArg(0)->getType(); 
+    llvm::Function *F = Glob.CGM.getIntrinsic(
+      llvm::Intrinsic::ceil, 
+      Glob.CGM.getTypes().ConvertType(ArgType));
+    std::string fname = F->getName().str();  
+    mlir::Type inoutType = getMLIRType(ArgType);
+    auto function = Glob.GetOrCreateFunctionDecl(
+      fname, LLVM::Linkage::External, SymbolTable::Visibility::Private,
+      {},
+      ArrayRef<mlir::Type>(inoutType),
+      inoutType
+    );
+
+    mlir::Value Src0 = Visit(expr->getArg(0)).getValue(loc, builder);
+    mlir::Value result = builder.create<CallOp>(loc, 
+      function, ArrayRef<mlir::Value>(Src0)
+    ).getResult(0);
+    return { ValueCategory(result, false), true };
+  }
   default:
     break;
   }

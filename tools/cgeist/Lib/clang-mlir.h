@@ -108,6 +108,12 @@ struct MLIRASTConsumer : public ASTConsumer {
 
   mlir::func::FuncOp GetOrCreateMLIRFunction(const FunctionDecl *FD,
                                              bool getDeviceStub = false);
+  mlir::func::FuncOp GetOrCreateFunctionDecl(std::string funcName,
+                                             mlir::LLVM::Linkage linkage,
+                                             SymbolTable::Visibility symV,
+                                             ArrayRef<NamedAttribute> attrs,
+                                             ArrayRef<mlir::Type> inputTypes = {},
+                                             mlir::Type resultType = {});
 
   mlir::LLVM::LLVMFuncOp GetOrCreateLLVMFunction(const FunctionDecl *FD);
   mlir::LLVM::LLVMFuncOp GetOrCreateFreeFunction();
@@ -185,7 +191,6 @@ private:
     vec.push_back(rs);
     return rs;
   }
-
   mlir::Location getMLIRLocation(clang::SourceLocation loc);
 
   llvm::Type *getLLVMType(clang::QualType t);

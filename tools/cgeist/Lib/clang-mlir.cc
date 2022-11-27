@@ -3691,9 +3691,25 @@ ValueCategory MLIRScanner::VisitCXXTypeidExpr(clang::CXXTypeidExpr *E) {
   else
     T = E->getExprOperand()->getType();
   llvm::Constant *C = Glob.CGM.GetAddrOfRTTIDescriptor(T);
+  mlir::Type StdTypeInfoPtrTy = getMLIRType(T);
+
+  // bitcast from C (value) to T
+  // auto loc = getMLIRLocation(E->getExprLoc());
+  // ValueCategory cval;
+  // if (auto *constExpr = dyn_cast<llvm::ConstantExpr>(C))
+  // mlir::Value v = builder.create<LLVM::BitcastOp>(loc,
+  //   StdTypeInfoPtrTy, 
+  //   cval
+  // );
+
   llvm::errs() << *C << "\n";
   auto ty = getMLIRType(E->getType());
   llvm::errs() << ty << "\n";
+  llvm::errs() << "typeid expr src loc\n";
+  E->getBeginLoc().dump(Glob.SM);
+  // E->dump();
+  // return ValueCategory(v, false);
+
   assert(0 && "unhandled typeid");
 }
 
@@ -5254,6 +5270,28 @@ MLIRASTConsumer::GetOrCreateMLIRFunction(const FunctionDecl *FD,
   }
   assert(function->getParentOp() == module.get());
   return function;
+}
+
+mlir::func::FuncOp MLIRASTConsumer::GetOrCreateFunctionDecl(std::string funcName,
+                                            mlir::LLVM::Linkage linkage,
+                                            SymbolTable::Visibility symV,
+                                            ArrayRef<NamedAttribute> attrs, 
+                                            ArrayRef<mlir::Type> inputTypes,
+                                            mlir::Type resultType) {
+  if (functions.find(funcName) == functions.end()) {
+    mlir::OpBuilder mbuilder(module->getContext());
+    auto funcType = mbuilder.getFunctionType(inputTypes, { resultType ? resultType : LLVM::LLVMVoidType::get(module->getContext()) });
+    NamedAttrList attrl(attrs);
+    attrl.set("llvm.linkage", mlir::LLVM::LinkageAttr::get(mbuilder.getContext(), linkage));
+    auto function = mbuilder.create<mlir::func::FuncOp>(
+      mbuilder.getUnknownLoc(),
+      funcName, funcType, attrs
+    );
+    functions[funcName] = function;
+    SymbolTable::setSymbolVisibility(function, symV);
+    module->push_back(function);
+  }
+  return functions[funcName];
 }
 
 void MLIRASTConsumer::run() {

@@ -16,4 +16,10 @@ def RMEMInstrBandwidthProf : Pass<"rmem-instr-bw", "LLVM::LLVMFuncOp"> {
   let dependentDialects = ["LLVM::LLVMDialect"];
 } 
 
+def RMEMForloopPrefetch : Pass<"rmem-for-prefetch", "mlir::ModuleOp"> {
+  let summary = "Add prefetch instructions for rmem access within for-loops";
+  let constructor = "mlir::createRemoteMemPrefetchForloopPass()";
+  let dependentDialects = ["scf::SCFDialect", "rmem::RemoteMemDialect", "func::FuncDialect", "LLVM::LLVMDialect"];
+}
+
 #endif

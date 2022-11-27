@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
   int lz = __builtin_clzl(kRandSeed);
   printf("%d\n", lz);
 
+  double in = atof(argv[1]);
+  printf("%f\n", __builtin_ceil(in));
   // auto e = chrono::high_resolution_clock::now();
   // double us = chrono::duration_cast<chrono::duration<double, std::micro>>(e - s).count();
   // printf("time %f\n", us);

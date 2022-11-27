@@ -35,16 +35,18 @@ LLVM::LLVMFuncOp lookupOrCreateAllocFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateStackAllocaFn(ModuleOp moduleOp);
 // void _disagg_free(virt_ptr);
 LLVM::LLVMFuncOp lookupOrCreateFreeFn(ModuleOp moduleOp);
-// cache_token_t = _cache_request(virt_ptr);
+// cache_token_t = cache_request(virt_ptr);
 LLVM::LLVMFuncOp lookupOrCreateCacheRequestFn(ModuleOp moduleOp);
-// void local_ptr = _cache_access_mut(*cache_token_t); 
+// cache_token_t = cahe_prefetch(virt_prt);
+LLVM::LLVMFuncOp lookupOrCreateCachePrefetchFn(ModuleOp moduleOp);
+// void local_ptr = cache_access_mut(*cache_token_t); 
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp);
-// void local_ptr = _cache_access(*cache_token_t);
+// void local_ptr = cache_access(*cache_token_t);
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessFn(ModuleOp moduleOp);
 // void cache_init(); /* config linebase to use sbuf */
 LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
-// void init_offload(); 
-LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);
+// void channel_init(); 
+LLVM::LLVMFuncOp lookupOrCreateChannelInitFn(ModuleOp moduleOp);
 // Deprecated global cacehs[n]
 LLVM::GlobalOp lookupOrCreateGlobalCaches(ModuleOp moduleOp, unsigned n);
 // get or create global counter name for llvm instr
@@ -56,6 +58,22 @@ LLVM::LLVMFuncOp lookupOrCreateInitClientFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateAccSnapshotFn(ModuleOp moduleOp);
 // int __llvm_profile_write_file();
 LLVM::LLVMFuncOp lookupOrCreateProfileWriteFn(ModuleOp moduleOp);
+
+// unsigned channel_create(
+//   uint64_t original_start_vaddr, 
+//   uint64_t upper_bound, 
+//   size_t size_each, 
+//   unsigned num_slots, 
+//   unsigned batch, 
+//   unsigned dist, 
+//   int kind);
+LLVM::LLVMFuncOp lookupOrCreateChannelCreateFn(ModuleOp moduleOp);
+
+// void * channel_access(unsigned channel, unsigned i);
+LLVM::LLVMFuncOp lookupOrCreateChannelAccessFn(ModuleOp moduleOp);
+
+// void channel_destroy(unsigned channel);
+LLVM::LLVMFuncOp lookupOrCreateChannelDestroyFn(ModuleOp moduleOp);
 
 
 /* instrumentation intrinsics 

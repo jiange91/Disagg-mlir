@@ -12,17 +12,21 @@ static constexpr llvm::StringRef kAlloc = "_disagg_alloc";
 static constexpr llvm::StringRef kStackAlloca = "_disagg_stack_alloc";
 static constexpr llvm::StringRef kFree = "_disagg_free";
 static constexpr llvm::StringRef kCacheRequest = "cache_request";
+static constexpr llvm::StringRef kCachePrefetch = "cache_prefetch";
 static constexpr llvm::StringRef kCacheAccessMut = "cache_access_mut";
 static constexpr llvm::StringRef kCacheAccess = "cache_access";
 static constexpr llvm::StringRef kCacheAccessNRTCMut = "cache_access_nrtc_mut";
 static constexpr llvm::StringRef kCacheAccessNRTC = "cache_access_nrtc";
 static constexpr llvm::StringRef kCacheInit = "cache_init";
+static constexpr llvm::StringRef kChannelInit = "channel_init";
 static constexpr llvm::StringRef kInitClient= "init_client";
 static constexpr llvm::StringRef kAccSnapshot = "n_access_snapshot";
 static constexpr llvm::StringRef kInstrProfInc = "llvm.instrprof.increment";
 static constexpr llvm::StringRef kInstrProfIncStep = "llvm.instrprof.increment.step";
 static constexpr llvm::StringRef kDumpProfile = "__llvm_profile_write_file";
-
+static constexpr llvm::StringRef kChannelCreate = "channel_create";
+static constexpr llvm::StringRef kChannelAccess = "channel_access";
+static constexpr llvm::StringRef kChannelDestroy = "channel_destroy";
 
 //==============================================================================
 // Utility functions
@@ -161,6 +165,19 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheRequestFn(ModuleOp moduleOp) {
   );
 }
 
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCachePrefetchFn(ModuleOp moduleOp) {
+  auto func = moduleOp.lookupSymbol<LLVM::LLVMFuncOp>(kCachePrefetch);
+  if (func)
+    return func;
+
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kCachePrefetch,
+    getIntBitType(moduleOp->getContext(), 64),
+    getIntBitType(moduleOp->getContext(), 128)
+  );
+}
+
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
@@ -183,6 +200,15 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheInitFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheInit,
+    {},
+    LLVM::LLVMVoidType::get(moduleOp->getContext())
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelInitFn(ModuleOp moduleOp) {
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kChannelInit,
     {},
     LLVM::LLVMVoidType::get(moduleOp->getContext())
   );
@@ -277,6 +303,42 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateProfileWriteFn(ModuleOp moduleOp) {
     {getIntBitType(ctx, 32)}
   ); 
 }
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelCreateFn(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kChannelCreate, 
+    ArrayRef<Type>(
+      { getIntBitType(ctx, 64),
+        getIntBitType(ctx, 64),
+        getIntBitType(ctx, 32),
+        getIntBitType(ctx, 32),
+        getIntBitType(ctx, 32),
+        getIntBitType(ctx, 32),
+        getIntBitType(ctx, 32) }
+    ),
+    getIntBitType(ctx, 32)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelAccessFn(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kChannelAccess,
+    ArrayRef<Type>({getIntBitType(ctx, 32), getIntBitType(ctx, 64)}),
+    getVoidPtrType(ctx)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelDestroyFn(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kChannelDestroy,
+    ArrayRef<Type>(getIntBitType(ctx, 32)),
+    getVoidType(ctx)
+  );
+}
+
 
 // ==============================================================
 // Helper Wrapper for type casting

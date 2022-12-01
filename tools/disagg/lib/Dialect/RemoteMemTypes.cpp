@@ -142,6 +142,49 @@ Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
   return type;
 }
 
+Type RemoteMemRefType::getInnerElementType() {
+  Type addr = getElementType();
+  if (auto ptr = addr.dyn_cast<LLVM::LLVMPointerType>()) {
+    return ptr.getElementType();
+  }
+  else if (auto memref = addr.dyn_cast<mlir::MemRefType>()) {
+    return memref.getElementType();
+  }
+  else {
+    llvm::errs() << "unable to get inner element type of remote memref type: \n";
+    dump();
+    return addr;
+  }
+}
+
+Type mlir::rmem::getAggrIndexType(Type base, ArrayRef<int32_t> constIndices) {
+  Type eleType;
+  if (auto ptr = base.dyn_cast<LLVM::LLVMPointerType>()) {
+    eleType = ptr.getElementType();
+  }
+  else if (auto rmref = base.dyn_cast<rmem::RemoteMemRefType>()) {
+    eleType = rmref.getInnerElementType();
+  }
+  else if (auto memref = base.dyn_cast<mlir::MemRefType>()) {
+    eleType = memref.getElementType();
+  }
+  for (size_t i = 1; i < constIndices.size(); ++ i) {
+    if (!eleType) return nullptr;
+    int32_t idx = constIndices[i];
+    eleType = TypeSwitch<Type, Type>(eleType)
+      .Case<VectorType, LLVM::LLVMScalableVectorType, LLVM::LLVMFixedVectorType, LLVM::LLVMArrayType>([](auto containerType) {
+        return containerType.getElementType();
+      })
+      .Case([&](LLVM::LLVMStructType structType) -> Type {
+        if (idx >= 0 && 
+            static_cast<size_t>(idx) < structType.getBody().size())
+          return structType.getBody()[idx];
+        return nullptr;
+      })
+      .Default([](Type) { return nullptr; });
+  }
+  return eleType;
+}
 
 // Type RemoteMemRefType::parse(AsmParser &parser) {
 //   FailureOr<Type> elemType;

@@ -50,6 +50,7 @@ def Detail_RemoteMemRefType: Detail_RemoteMemType<"RemoteMemRef", "rmref", [
   let extraClassDeclaration = [{
     static bool isValidElementType(Type elementType);
     Type getRawSourceType();
+    Type getInnerElementType();
   }];
 
 }

@@ -16,6 +16,7 @@ namespace rmem {
 bool hasRemoteTarget(Type type);
 
 Type getRawTypeFromRemotedType(Type type);
+Type getAggrIndexType(Type base, ArrayRef<int32_t> constIndices);
 }
 }
 

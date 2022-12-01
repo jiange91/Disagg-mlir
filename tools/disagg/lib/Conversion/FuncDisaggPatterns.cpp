@@ -85,19 +85,23 @@ class FuncReturnOpDisagg : public OpConversionPattern<func::ReturnOp> {
 
 class FuncCallOpDisagg : public OpConversionPattern<func::CallOp> {
   using OpConversionPattern<func::CallOp>::OpConversionPattern;
-  LogicalResult matchAndRewrite(func::CallOp funcOp, func::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+  LogicalResult matchAndRewrite(func::CallOp callOp, func::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     SmallVector<Type, 4> resultTypes;
-    if (auto rts = funcOp->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+    StringAttr calleeAttr = callOp.getCalleeAttrName();
+    if (auto calleeName = callOp->getAttrOfType<mlir::StringAttr>("remote_callee")) {
+      calleeAttr = calleeName;
+    }
+    if (auto rts = callOp->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
       for (Type en : rts.getAsValueRange<mlir::TypeAttr>())
         resultTypes.push_back(en);
     } else {
-      for (Type en : funcOp.getResultTypes())
+      for (Type en : callOp.getResultTypes())
         resultTypes.push_back(en);
     } 
     auto newCall = rewriter.create<func::CallOp> (
-      funcOp.getLoc(), adaptor.getCalleeAttr(), resultTypes, adaptor.getOperands()
+      callOp.getLoc(), calleeAttr, resultTypes, adaptor.getOperands()
     );
-    rewriter.replaceOp(funcOp, newCall.getResults());
+    rewriter.replaceOp(callOp, newCall.getResults());
     return mlir::success();
   }
 };

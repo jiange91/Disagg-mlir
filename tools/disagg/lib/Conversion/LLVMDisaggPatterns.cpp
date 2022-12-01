@@ -122,7 +122,14 @@ class LLVMStoreDisagg : public OpConversionPattern<LLVM::StoreOp> {
 class LLVMLoadDisagg : public OpConversionPattern<LLVM::LoadOp> {
   using OpConversionPattern<LLVM::LoadOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::LoadOp op, LLVM::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    Type relType = op.getRes().getType(); 
+    Type addrType = adaptor.getAddr().getType();
+    Type relType = op.getRes().getType();
+    if (auto ptrType = addrType.dyn_cast<LLVM::LLVMPointerType>()) {
+      relType = ptrType.getElementType();
+    } 
+    else if (auto rmemType = addrType.dyn_cast<rmem::RemoteMemRefType>()) {
+      relType = rmemType.getInnerElementType();
+    }
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types"))
       relType = rts[0].dyn_cast<mlir::TypeAttr>().getValue();
     auto newLoad = rewriter.create<rmem::LoadOp>(
@@ -144,13 +151,29 @@ class LLVMLoadDisagg : public OpConversionPattern<LLVM::LoadOp> {
 class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
   using OpConversionPattern<LLVM::GEPOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(LLVM::GEPOp op, LLVM::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    SmallVector<int32_t> filteredStructIndices;
+    SmallVector<int32_t> filteredConstIndices;
     for (auto i : adaptor.getRawConstantIndices()) {
       if (i == LLVM::GEPOp::kDynamicIndex) continue;
-      filteredStructIndices.push_back(i);
+      filteredConstIndices.push_back(i);
     }
 
     Type resultType = op.getResult().getType();
+    Type baseAddr = adaptor.getBase().getType();
+    Type idxType = getAggrIndexType(baseAddr, adaptor.getRawConstantIndices());
+    if (idxType) {
+      auto addressSpace = resultType.cast<LLVM::LLVMPointerType>().getAddressSpace();
+      auto ptrEle = LLVM::LLVMPointerType::get(idxType, addressSpace);
+      if (auto ptrType = baseAddr.dyn_cast<LLVM::LLVMPointerType>())
+        resultType = ptrEle;
+      else if (auto mrefType = baseAddr.dyn_cast<RemoteMemRefType>())
+        resultType = RemoteMemRefType::get(ptrEle, mrefType.getCanRemote());
+      else {
+        llvm::errs() << "gepop unsupported type: ";
+        baseAddr.dump();
+        return mlir::failure();
+      }
+    }
+
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types"))
       resultType = rts[0].dyn_cast<mlir::TypeAttr>().getValue();
 
@@ -162,7 +185,7 @@ class LLVMGEPOpDisagg : public OpConversionPattern<LLVM::GEPOp> {
       resultType,
       adaptor.getBase(),
       adaptor.getDynamicIndices(),
-      rewriter.getDenseI32ArrayAttr(filteredStructIndices),
+      rewriter.getDenseI32ArrayAttr(filteredConstIndices),
       adaptor.getElemTypeAttr()
     );
 

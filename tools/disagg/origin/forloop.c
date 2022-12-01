@@ -25,5 +25,9 @@ int main(int argc, char **argv) {
     *di = (dat_t) { i, i * i };
     i ++;
   }
+  dat_t *stop = ds + n;
+  for (int i = 0; i < stop - ds; ++ i) {
+    ds[i] = (dat_t) {i, i + i};
+  }
   return 0;
 }

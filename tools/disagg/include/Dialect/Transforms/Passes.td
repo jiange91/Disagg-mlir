@@ -22,4 +22,10 @@ def RMEMForloopPrefetch : Pass<"rmem-for-prefetch", "mlir::ModuleOp"> {
   let dependentDialects = ["scf::SCFDialect", "rmem::RemoteMemDialect", "func::FuncDialect", "LLVM::LLVMDialect"];
 }
 
+def RMEMLoopFusion : Pass<"rmem-loop-fusion", "mlir::ModuleOp"> {
+  let summary = "Fuse neighbour loops when possible to hide data movement";
+  let constructor = "mlir::createRemoteMemLoopFusionPass()";
+  let dependentDialects = ["scf::SCFDialect", "rmem::RemoteMemDialect", "func::FuncDialect", "LLVM::LLVMDialect", "arith::ArithDialect"];
+}
+
 #endif

@@ -1073,17 +1073,17 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
   llvm::VectorType *VType =
     dyn_cast<llvm::VectorType>(Glob.CGM.getTypes().ConvertType(E->getType()));
 
-  // TODO: complete scalar init
-  if (!VType) {
-    if (NumInitElements == 0) {
-      // C++11 value-initialization for the scalar.
-      CommonNullInitialization(E->getType(), mem);
-      return mlir::DenseElementsAttr();
-    }
-    // We have a scalar in braces. Just use the first element.
-    StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
-    return mlir::DenseElementsAttr();
-  }
+  // // TODO: complete scalar init
+  // if (!VType) {
+  //   if (NumInitElements == 0) {
+  //     // C++11 value-initialization for the scalar.
+  //     CommonNullInitialization(E->getType(), mem);
+  //     return mlir::DenseElementsAttr();
+  //   }
+  //   // We have a scalar in braces. Just use the first element.
+  //   StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
+  //   return mlir::DenseElementsAttr();
+  // }
 
   // Handle initialization of an array.
   if (E->getType()->isArrayType()) {

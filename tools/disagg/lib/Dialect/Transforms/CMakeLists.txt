@@ -2,6 +2,7 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   DeterminePoolSource.cpp
   InstrBandwidth.cpp
   PrefetchForloop.cpp
+  LoopFusion.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

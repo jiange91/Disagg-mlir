@@ -87,7 +87,7 @@ class FuncCallOpDisagg : public OpConversionPattern<func::CallOp> {
   using OpConversionPattern<func::CallOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(func::CallOp callOp, func::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     SmallVector<Type, 4> resultTypes;
-    StringAttr calleeAttr = callOp.getCalleeAttrName();
+    StringAttr calleeAttr = rewriter.getStringAttr(callOp.getCallee());
     if (auto calleeName = callOp->getAttrOfType<mlir::StringAttr>("remote_callee")) {
       calleeAttr = calleeName;
     }
@@ -97,9 +97,24 @@ class FuncCallOpDisagg : public OpConversionPattern<func::CallOp> {
     } else {
       for (Type en : callOp.getResultTypes())
         resultTypes.push_back(en);
-    } 
+    }
+    SmallVector<Value, 4> inputs;
+    ValueRange oldInputs = adaptor.getOperands();
+    if (auto argts = callOp->getAttrOfType<mlir::ArrayAttr>("need_conv")) {
+      for (size_t i = 0; i < oldInputs.size(); ++ i) {
+        Type afterConv = argts[i].cast<TypeAttr>().getValue();
+        if (afterConv != oldInputs[i].getType()) {
+          Value cast = rewriter.create<rmem::BitCastOp>(callOp.getLoc(), afterConv, oldInputs[i]);
+          inputs.push_back(cast);
+        } else {
+          inputs.push_back(oldInputs[i]);
+        }
+      }
+    } else {
+      inputs = oldInputs;
+    }
     auto newCall = rewriter.create<func::CallOp> (
-      callOp.getLoc(), calleeAttr, resultTypes, adaptor.getOperands()
+      callOp.getLoc(), calleeAttr, resultTypes, inputs
     );
     rewriter.replaceOp(callOp, newCall.getResults());
     return mlir::success();

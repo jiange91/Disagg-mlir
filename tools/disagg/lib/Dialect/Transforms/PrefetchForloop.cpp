@@ -106,7 +106,7 @@ public:
         rewriter.create<arith::ConstantIntOp>(loc, 512, 32),
         typeSize
       ); // i32
-      Value dist = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
+      Value dist = rewriter.create<arith::ConstantIntOp>(loc, ahead, 32);
       Value numSlots = rewriter.create<arith::AddIOp>(loc, batch, dist);
       Value asmId = rewriter.create<arith::ConstantIntOp>(loc, 0, 16);
       Value kind;
@@ -165,6 +165,7 @@ protected:
   // prefetches map {load/store: (addr, set{ dfs } )}
   DenseMap<Operation*, std::pair<Value, std::set<Operation*>>> prefetches;
   DenseMap<Operation*, unsigned> distances;
+
   unsigned maxDistance = 0;
 
   std::set<Operation *> addrPathDFS(Operation *op) {

@@ -1,7 +1,8 @@
 #include <vector>
 #include <cstdio>
-#include "rvec.h"
 #include <cstdlib>
+#include <cstdint>
+#include "rvec.h"
 
 using namespace std;
 
@@ -15,13 +16,16 @@ class Visitor {
   void operator()(int a, int b) {sum += a; sum += b;}  
 };
 
+typedef size_t index_type;
+typedef uint64_t dat_type;
+
 template <typename I, typename D>
 class MaxVisitor {
 public:
-  D max_ {};
-  I index_ {};
+  I index_ = 0;
+  D max_ = 0;
+  bool is_first = true;
 
-  bool is_first { true };
   void pre() {}
   void post() {}
   void operator()(I idx, D dat) {
@@ -36,10 +40,10 @@ public:
 template <typename I, typename D>
 class MinVisitor {
 public:
-  D min_ {};
-  I index_ {};
+  I index_ = 0;
+  D min_ = 0;
+  bool is_first = true;
 
-  bool is_first { true };
   void pre() {}
   void post() {}
   void operator()(I idx, D dat) {
@@ -51,23 +55,26 @@ public:
   }
 };
 
-template<typename I, typename D, typename V>
-V visit (std::vector<I>& indices_, std::vector<D>& vec, V &visitor)  {
+template<typename I, typename D, typename V1, typename V2>
+static inline void visit (std::vector<I>& indices_, std::vector<D>& vec, V1 &visitor1, V2 &visitor2)  {
+
   const size_type idx_s = indices_.size();
   const size_type min_s = std::min<size_type>(vec.size(), idx_s);
   size_type       i = 0;
-
-  visitor.pre();
+  visitor1.pre();
   for (; i < min_s; ++i) {
-    visitor (indices_[i], vec[i]);
+    visitor1 (indices_[i], vec[i]);
   }
-  visitor.post();
+  visitor1.post();
 
-  return (visitor);
+  visitor2.pre();
+  for (i = 0; i < min_s; ++i) {
+    visitor2 (indices_[i], vec[i]);
+  }
+  visitor2.post();
+
 }
 
-typedef unsigned long index_type;
-typedef int dat_type;
 
 int main () {
 
@@ -80,11 +87,10 @@ int main () {
   MaxVisitor<index_type, dat_type> maxVst;
   MinVisitor<index_type, dat_type> minVst;
 
-  (void)visit(indices, v, maxVst);
-  (void)visit(indices, v, minVst);
+  visit(indices, v, maxVst, minVst);
 
-  printf("Max vst = %lu %d\n", maxVst.index_, maxVst.max_);
-  printf("Min vst = %lu %d\n", minVst.index_, minVst.min_);
+  printf("Max vst = %lu %lu\n", maxVst.index_, maxVst.max_);
+  printf("Min vst = %lu %lu\n", minVst.index_, minVst.min_);
 
   return 0;
 }

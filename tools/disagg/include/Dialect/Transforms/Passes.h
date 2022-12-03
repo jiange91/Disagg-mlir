@@ -10,6 +10,7 @@ namespace mlir {
 std::unique_ptr<Pass> createRemoteMemDPSPass();
 std::unique_ptr<Pass> createRemoteMemInstrBWProf();
 std::unique_ptr<Pass> createRemoteMemPrefetchForloopPass();
+std::unique_ptr<Pass> createRemoteMemLoopFusionPass();
 
 #define GEN_PASS_REGISTRATION
 #include "Dialect/Transforms/Passes.h.inc"

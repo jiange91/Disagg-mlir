@@ -1635,7 +1635,27 @@ ValueCategory MLIRScanner::VisitCallExpr(clang::CallExpr *expr) {
       "clock_gettime",
       "cudaOccupancyMaxActiveBlocksPerMultiprocessor",
       "cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",
-      "cudaEventRecord"};
+      "cudaEventRecord",
+      "_disagg_alloc",
+      "_disagg_stack_alloc",
+      "_disagg_free",
+      "cache_request",
+      "cache_prefetch",
+      "cache_access_mut",
+      "cache_access",
+      "cache_access_nrtc_mut",
+      "cache_access_nrtc",
+      "cache_init",
+      "channel_init",
+      "init_client",
+      "n_access_snapshot",
+      "llvm.instrprof.increment",
+      "llvm.instrprof.increment.step",
+      "__llvm_profile_write_file",
+      "channel_create",
+      "channel_access",
+      "channel_destroy"
+      };
   if (!CStyleMemRef) {
     if (auto *ic = dyn_cast<ImplicitCastExpr>(expr->getCallee()))
       if (auto *sr = dyn_cast<DeclRefExpr>(ic->getSubExpr())) {

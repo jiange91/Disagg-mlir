@@ -26,10 +26,10 @@ cmake -G Ninja ../llvm \
   -DLLVM_ENABLE_ASSERTIONS=ON \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_INSTALL_UTILS=ON \
-  -DLLVM_BINUTILS_INCDIR=/users/Zijian/gold/binutils/include \
+  -DLLVM_BINUTILS_INCDIR=/home/wuklab/gold/binutils/include \
   -DCMAKE_C_COMPILER="clang" \
   -DCMAKE_CXX_COMPILER="clang++" \
-  -DC_INCLUDE_DIRS="/users/Zijian/Disagg-mlir/llvm-project/build/lib/clang/16.0.0/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/include" \
+  -DC_INCLUDE_DIRS="/mnt/data/PL-mlir/Disagg-mlir/llvm-project/build/lib/clang/16.0.0/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/include" \
    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
   -DLIBCXXABI_USE_LLVM_UNWINDER=YES \
   -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \

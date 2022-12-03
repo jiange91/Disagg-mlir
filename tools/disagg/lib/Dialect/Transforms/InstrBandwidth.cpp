@@ -52,6 +52,7 @@ class RMEMInstrBandwidthProf : public impl::RMEMInstrBandwidthProfBase<RMEMInstr
 
     // add prof instr at every access site
     unsigned objI = 0;
+    auto instrInc = lookupOrCreateInstrInc(m);
     funcOp->walk([&](LLVM::CallOp access) {
       auto callee = access.getCallee();
       if (!callee.has_value() || !isCacheAccessOp(*callee)) {
@@ -62,7 +63,6 @@ class RMEMInstrBandwidthProf : public impl::RMEMInstrBandwidthProfBase<RMEMInstr
       // the name of this counter will be pfx + funcname
       // the index is the visit order (function wise)
       OpBuilder b(access);
-      auto instrInc = lookupOrCreateInstrInc(m);
       (void) createLLVMCall(b, access.getLoc(), instrInc,
         {
           ptrCtr, 

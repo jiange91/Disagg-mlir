@@ -101,12 +101,14 @@ public:
       else
         eleType = rawType.cast<MemRefType>().getElementType();
       Value typeSize = rewriter.create<rmem::SizeOfOp>(loc, rewriter.getI32Type(), eleType); // i32
+      Value oriSize = rewriter.create<rmem::SizeOfOp>(loc, rewriter.getI64Type(), eleType); // i64
       Value batch = rewriter.create<arith::CeilDivUIOp>(loc, 
         rewriter.create<arith::ConstantIntOp>(loc, 512, 32),
         typeSize
       ); // i32
-      Value dist = rewriter.create<arith::ConstantIntOp>(loc, ahead, 32);
+      Value dist = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
       Value numSlots = rewriter.create<arith::AddIOp>(loc, batch, dist);
+      Value asmId = rewriter.create<arith::ConstantIntOp>(loc, 0, 16);
       Value kind;
       if (isa<rmem::LoadOp>(target)) {
         kind = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
@@ -115,9 +117,9 @@ public:
       }
       mlir::Value channel = rewriter.create<rmem::ChannelCreateOp>(loc, 
         rewriter.getI32Type(), 
-        baseAddr, loop.getUpperBound(), typeSize,
-        numSlots, batch, dist, 
-        kind
+        baseAddr, loop.getUpperBound(), oriSize,
+        typeSize, numSlots, batch, dist, 
+        asmId, kind
       );
 
       Type castTo = addr_dfs.first.getType();
@@ -167,6 +169,8 @@ protected:
 
   std::set<Operation *> addrPathDFS(Operation *op) {
     std::set<Operation *> search;
+    // rewriter.cloneRegionBefore(loop.getBodyRegion(), loop.getBodyRegion(), loop.getBodyRegion().);
+    rewriter.setInsertionPoint(&loop.getBody()->back());
     for (OpOperand &opd : op->getOpOperands()) {
       if (opd.get() == loop.getInductionVar())
         search.insert(op);
@@ -206,6 +210,7 @@ protected:
   }
 
   // set rewriter to the correct position before calling this
+  // calculate the access address for "target" given the induction variable "phi"
   Value getAddrByInduction(Operation* target, Value phi) {
     DenseMap<Value, Value> valueMapping;
     // initialize induction variable mapping

@@ -27,10 +27,12 @@ def RemoteMem_ChannelCreateOp : RemoteMem_Op<"channel.create"> {
   let arguments = (ins
     RemoteMemRef: $baseVaddr,
     Index: $upperBound,
+    I64: $oriUnitSize,
     I32: $sizeEach,
     I32: $numSlots,
     I32: $batch,
     I32: $dist,
+    I16: $assem_id,
     I32: $kind
   );
   let results = (outs I32: $channel);

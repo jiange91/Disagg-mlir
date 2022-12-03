@@ -311,10 +311,12 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelCreateFn(ModuleOp moduleOp) {
     ArrayRef<Type>(
       { getIntBitType(ctx, 64),
         getIntBitType(ctx, 64),
+        getIntBitType(ctx, 64),
         getIntBitType(ctx, 32),
         getIntBitType(ctx, 32),
         getIntBitType(ctx, 32),
         getIntBitType(ctx, 32),
+        getIntBitType(ctx, 16),
         getIntBitType(ctx, 32) }
     ),
     getIntBitType(ctx, 32)

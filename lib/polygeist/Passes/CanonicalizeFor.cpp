@@ -762,7 +762,7 @@ struct WhileToForHelper {
     if (!addIOp) {
       return false;
     }
-
+    /* after args: [2] */
     for (auto afterArg : afterArgs) {
       auto arg = loop.getAfter().getArgument(afterArg);
       if (addIOp.getOperand(0) == arg) {
@@ -776,7 +776,7 @@ struct WhileToForHelper {
         break;
       }
     }
-
+  /* after arg idx = 2 */
     if (!step) {
       return false;
     }
@@ -797,7 +797,7 @@ struct WhileToForHelper {
       if (cop.value() < 0)
         negativeStep = true;
     }
-
+    /* indVar: arg1 [0] */
     if (!negativeStep)
       lb = loop.getOperand(indVar.getArgNumber());
     else {

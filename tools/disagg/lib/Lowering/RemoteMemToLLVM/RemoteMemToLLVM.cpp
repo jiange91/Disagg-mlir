@@ -106,7 +106,7 @@ class RemoteMemSizeOfOpLowering : public RemoteMemOpLoweringPattern<rmem::SizeOf
         op, relType, rewriter.getIntegerAttr(relType, DLI.getTypeSize(srcType)));
       return success();
     }
-
+    // if is both i64, leave to folder to remove this case
     Value size = rewriter.create<arith::TruncIOp>(op.getLoc(), 
       op.getResult().getType(), getSizeInBytes(op.getLoc(), srcType, rewriter)
     );
@@ -191,10 +191,12 @@ class RemoteMemChannelCreateLowering : public RemoteMemOpLoweringPattern<rmem::C
       {
         ptrInt,
         rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), op.getUpperBound()),
+        op.getOriUnitSize(),
         adaptor.getSizeEach(),
         adaptor.getNumSlots(),
         adaptor.getBatch(),
         adaptor.getDist(),
+        adaptor.getAssemId(),
         adaptor.getKind()
       }
     ).front();

@@ -39,7 +39,6 @@ class RemoteSCFWhileLowering : public RemoteMemOpLoweringPattern<scf::WhileOp> {
     for (auto &en : llvm::enumerate(adaptor.getOperands())) {
       bfArgs.addInputs(en.index(), en.value().getType());
     }
-
     // Prepare type mapping for after region
     // Result types match after block args
     TypeConverter::SignatureConversion afArgs(op.getAfterArguments().size());

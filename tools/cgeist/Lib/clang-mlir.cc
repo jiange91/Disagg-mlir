@@ -1063,11 +1063,27 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
   if (E->hadArrayRangeDesignator())
     assert(0 && "Poly: GNU array range designator not supported");
   if (E->isTransparent()) {
+    llvm::errs() << "trans: \n";
+    E->dump();
     StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
     return mlir::DenseElementsAttr();
   }
 
   uint64_t NumInitElements = E->getNumInits();
+  llvm::VectorType *VType =
+    dyn_cast<llvm::VectorType>(Glob.CGM.getTypes().ConvertType(E->getType()));
+
+  // TODO: complete scalar init
+  if (!VType) {
+    if (NumInitElements == 0) {
+      // C++11 value-initialization for the scalar.
+      CommonNullInitialization(E->getType(), mem);
+      return mlir::DenseElementsAttr();
+    }
+    // We have a scalar in braces. Just use the first element.
+    StoreIntoOneUnit(E->getInit(0), mem, E->getInit(0)->getType());
+    return mlir::DenseElementsAttr();
+  }
 
   // Handle initialization of an array.
   if (E->getType()->isArrayType()) {
@@ -1088,6 +1104,7 @@ mlir::Attribute MLIRScanner::InitializeValueByInitListExpr(mlir::Value mem,
 
     return mlir::DenseElementsAttr();
   }
+  // E->getType().dump();
   assert(E->getType()->isRecordType() && "Only support structs/unions here!");
   /*
     Poly struct type example
@@ -1313,6 +1330,7 @@ ValueCategory MLIRScanner::VisitInitListExpr(clang::InitListExpr *expr) {
           Glob.CGM.getContext().getLValueReferenceType(expr->getType()));
   }
   auto mem = createAllocOp(subType, nullptr, /*memtype*/ 0, isArray, LLVMABI);
+
   (void)InitializeValueByInitListExpr(mem, expr);
   return ValueCategory(mem, true); 
 }

@@ -110,6 +110,7 @@ protected:
                          Value allocatedPtr, Value alignedPtr,
                          ArrayRef<Value> sizes, ArrayRef<Value> strides,
                          ConversionPatternRewriter &rewriter) const;
+
 };
 
 template<typename SourceOp>
@@ -155,6 +156,8 @@ public:
     rewrite(op, adaptor, rewriter);
     return success();
   }
+
+  Value getTypeSize(Type t, ConversionPatternRewriter &rewriter);
 private:
   using RemoteMemLoweringPattern::matchAndRewrite;
 };

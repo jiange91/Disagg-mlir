@@ -21,6 +21,18 @@ namespace mlir {
 using namespace mlir::rmem;
 
 namespace {
+
+static void filterFuncAttributes(ArrayRef<NamedAttribute> attrs,
+                                 SmallVectorImpl<NamedAttribute> &result) {
+  for (const auto &attr : attrs) {
+    if (attr.getName() == SymbolTable::getSymbolAttrName() ||
+        attr.getName() == FunctionOpInterface::getTypeAttrName() ||
+        attr.getName() == "func.varargs")
+      continue;
+    result.push_back(attr);
+  }
+}
+
 /* Patterns */
 class RemoteFuncFuncOpLowering : public RemoteMemOpLoweringPattern<func::FuncOp> {
   using RemoteMemOpLoweringPattern<func::FuncOp>::RemoteMemOpLoweringPattern;
@@ -31,8 +43,14 @@ class RemoteFuncFuncOpLowering : public RemoteMemOpLoweringPattern<func::FuncOp>
       llvm::errs() << "Failed to convert function signature\n";
       return mlir::failure();
     }
+
+    // propagate attributes
+    SmallVector<NamedAttribute, 4> attrs;
+    filterFuncAttributes(op->getAttrs(), attrs);
+
     auto newFuncOp = rewriter.create<func::FuncOp>(
-      op.getLoc(), op.getSymName(), newFuncType
+      op.getLoc(), op.getSymName(), newFuncType,
+      attrs
     );
     rewriter.inlineRegionBefore(op.getBody(), newFuncOp.getBody(), newFuncOp.getBody().end());
     if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result))) {

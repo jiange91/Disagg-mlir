@@ -38,6 +38,14 @@ def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   }];
 }
 
+def RemoteMem_OffloadOp : RemoteMem_Op<"offload"> {
+  let summary = "Offload current function call to remote server";
+  let arguments = (ins I32: $fid, Variadic<AnyType>: $inputs);
+  let results = (outs Variadic<AnyType>: $ret);
+  let assemblyFormat = [{
+    operands attr-dict `:` functional-type(operands, results)
+  }];
+}
 
 def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [Pure]> {
   let arguments = (ins 

@@ -40,7 +40,8 @@ public:
   // calculate prefetch distance
   bool preparePrefetches() {
     // estimate loop workload
-    unsigned loopInterval = analyzer.visitBlock(loop.getBody());
+    // unsigned loopInterval = analyzer.visitBlock(loop.getBody());
+    unsigned loopInterval = 100;
 
     // incase we want to handle call or other complex ops
     // in address computation

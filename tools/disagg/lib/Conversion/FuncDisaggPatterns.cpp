@@ -51,13 +51,26 @@ class FuncFuncOpDisagg : public OpConversionPattern<func::FuncOp> {
         resultTypes.push_back(en);
     }
 
-    auto newFuncOpType = mlir::FunctionType::get(funcOp.getContext(), result.getConvertedTypes(), resultTypes);
+    auto newFuncOpType = mlir::FunctionType::get(
+      funcOp.getContext(), 
+      result.getConvertedTypes(), 
+      resultTypes
+    );
     if (!newFuncOpType) return nullptr;
 
-    // propagate attributes ?
+    // propagate attributes
+    SmallVector<NamedAttribute, 4> attrs;
+    llvm::SmallSet<StringRef, 4> funcFilter;
+    funcFilter.insert(SymbolTable::getSymbolAttrName());
+    funcFilter.insert(FunctionOpInterface::getTypeAttrName());
+    rmem::filterTargetAttributes(funcOp->getAttrs(), attrs, funcFilter);
+
     // newFuncOpType.dump();
 
-    auto newFuncOp = rewriter.create<func::FuncOp>(funcOp.getLoc(), funcOp.getName(), newFuncOpType);
+    auto newFuncOp = rewriter.create<func::FuncOp>(funcOp.getLoc(), 
+      funcOp.getName(), newFuncOpType,
+      attrs
+    );
     rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
     rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
     // if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), *getTypeConverter(), &result)))
@@ -113,10 +126,20 @@ class FuncCallOpDisagg : public OpConversionPattern<func::CallOp> {
     } else {
       inputs = oldInputs;
     }
-    auto newCall = rewriter.create<func::CallOp> (
-      callOp.getLoc(), calleeAttr, resultTypes, inputs
-    );
-    rewriter.replaceOp(callOp, newCall.getResults());
+
+    if (auto needOffload = callOp->getAttrOfType<mlir::IntegerAttr>("remote_offload")) {
+      auto offload = rewriter.create<rmem::OffloadOp>(callOp.getLoc(), 
+        resultTypes, 
+        rewriter.create<arith::ConstantIntOp>(callOp.getLoc(), needOffload.getValue().getZExtValue(), 32),
+        inputs
+      );
+      rewriter.replaceOp(callOp, offload.getResults());
+    } else {
+      auto newCall = rewriter.create<func::CallOp> (
+        callOp.getLoc(), calleeAttr, resultTypes, inputs
+      );
+      rewriter.replaceOp(callOp, newCall.getResults());
+    }
     return mlir::success();
   }
 };

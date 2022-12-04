@@ -25,6 +25,10 @@ LLVM::LLVMVoidType getVoidType(MLIRContext *ctx);
 LLVM::LLVMPointerType getVoidPtrType(MLIRContext *ctx);
 bool isCacheAccessOp(const StringRef calless);
 
+// get offload return buf
+LLVM::GlobalOp getOrCreateOffloadArgBuf(ModuleOp moduleOp);
+LLVM::GlobalOp getOrCreateOffloadRetBuf(ModuleOp moduleOp);
+
 // calcualte sizeof(elemType) * arraySize in bytes
 // not considering 
 Value calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize);
@@ -86,6 +90,7 @@ LLVM::LLVMFuncOp lookupOrCreateChannelDestroyFn(ModuleOp moduleOp);
 */
 LLVM::LLVMFuncOp lookupOrCreateInstrInc(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateInstrIncStep(ModuleOp moduleOp);
+LLVM::LLVMFuncOp lookupOrCreateCallOffloadService(ModuleOp moduleOp);
 
 
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);

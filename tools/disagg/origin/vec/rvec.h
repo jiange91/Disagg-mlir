@@ -48,7 +48,7 @@ void remotelize(std::vector<T> &v) {
 
     // replace with remotelize code
     void * raddr = _disagg_alloc(2, sizeof(T) * c);
-
+    
     unsigned channel = channel_create(
       (uint64_t)raddr, c, sizeof(T),
       sizeof(T), 1024/sizeof(T), 1024/sizeof(T), 0, 0, 1
@@ -62,6 +62,9 @@ void remotelize(std::vector<T> &v) {
     // __int128_t token = cache_request((uintptr_t) raddr);
     // void * rdata = cache_access_mut(&token);
     // memcpy(rdata, rv->head, c * sizeof(T));
+
+    v.clear();
+    v.shrink_to_fit();
 
     rv->head = (T *) (raddr);
     rv->end = rv->head + s;

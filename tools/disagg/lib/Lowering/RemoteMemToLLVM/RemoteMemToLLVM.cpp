@@ -9,6 +9,7 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Analysis/DataLayoutAnalysis.h"
@@ -95,6 +96,7 @@ class RemoteMemReturnLowering : public RemoteMemOpLoweringPattern<rmem::ReturnOp
   }
 };
 
+
 class RemoteMemSizeOfOpLowering : public RemoteMemOpLoweringPattern<rmem::SizeOfOp> {
   using RemoteMemOpLoweringPattern<rmem::SizeOfOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::SizeOfOp op, rmem::SizeOfOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -151,6 +153,63 @@ class RemoteMemBitCastLowering : public RemoteMemOpLoweringPattern<rmem::BitCast
       adaptor.getOperands()
     );
     rewriter.replaceOp(op, {newPtr});
+    return mlir::success();
+  }
+};
+
+class RemoteMemOffloadLowering : public RemoteMemOpLoweringPattern<rmem::OffloadOp> {
+  using RemoteMemOpLoweringPattern<rmem::OffloadOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::OffloadOp op, rmem::OffloadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    Value argSize = rewriter.create<arith::ConstantIntOp>(loc, 0, 64);
+    Value retSize = rewriter.create<arith::ConstantIntOp>(loc, 0, 64);
+
+    if (adaptor.getInputs().size()) {
+      
+      auto ofldArgBuf = getOrCreateOffloadArgBuf(op->getParentOfType<ModuleOp>());
+      Value ptrArg = rewriter.create<LLVM::AddressOfOp>(loc, ofldArgBuf);
+      Value argBuf = rewriter.create<LLVM::LoadOp>(loc, ptrArg);
+      
+      // awayls point to the last byte being stored
+      Value curMem = argBuf;
+
+      // move cursor and store to offload arg buf
+      for (auto const &[old, adp] : llvm::zip(op.getInputs(), adaptor.getInputs())) {
+        Type currentType = adp.getType();
+        Value toStore = adp;
+        if (old.getType().isa<LLVM::LLVMPointerType>()) {
+          currentType = adp.getType().cast<LLVM::LLVMPointerType>().getElementType();
+          toStore = rewriter.create<LLVM::LoadOp>(loc, adp);
+        }
+
+        curMem = rewriter.create<LLVM::BitcastOp>(loc, LLVM::LLVMPointerType::get(currentType), curMem);
+        rewriter.create<LLVM::StoreOp>(loc, toStore, curMem);
+        curMem = rewriter.create<LLVM::GEPOp>(loc, curMem.getType(), curMem, ArrayRef<LLVM::GEPArg>(1));
+      }
+
+      Value startP = rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), argBuf);
+      Value endP = rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), curMem);
+      argSize = rewriter.create<arith::SubIOp>(loc, rewriter.getI64Type(), endP, startP);
+    }
+
+    // currently we only permit 0/1 return
+    Type relType;
+    if (op.getRet().size()) {
+      relType = getTypeConverter()->convertType(op.getResult(0).getType());
+      retSize = getSizeInBytes(loc, relType, rewriter);
+    }
+
+    auto callRoutine = lookupOrCreateCallOffloadService(op->getParentOfType<ModuleOp>());
+    Value retPtr = createLLVMCall(rewriter, loc, callRoutine, {adaptor.getFid(), argSize, retSize}).front();
+
+    if (op.getRet().size()) {
+      Value castRet = rewriter.create<LLVM::BitcastOp>(loc, LLVM::LLVMPointerType::get(relType), retPtr);
+      Value retValue = rewriter.create<LLVM::LoadOp>(loc, castRet);
+      rewriter.replaceOp(op, retValue);
+    } else {
+      rewriter.eraseOp(op);
+    }
+
     return mlir::success();
   }
 };
@@ -399,7 +458,8 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemAddrCmpLowering,
   RemoteMemSizeOfOpLowering,
   RemoteMemChannelCreateLowering,
-  RemoteMemChannelAccessLowering
+  RemoteMemChannelAccessLowering,
+  RemoteMemOffloadLowering
   >(converter, &converter.getContext());
 }
 

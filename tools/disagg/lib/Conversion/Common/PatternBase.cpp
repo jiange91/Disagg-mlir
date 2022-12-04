@@ -18,6 +18,9 @@ void mlir::rmem::filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVec
     if (attr.getName() == "remote_target" ||
         attr.getName() == "rel_types" || 
         attr.getName() == "remote_global_type" ||
+        attr.getName() == "operand_types" ||
+        attr.getName() == "remote_callee" ||
+        attr.getName() == "remote_offload" ||
         filter.contains(attr.getName())) {
           continue;
         }

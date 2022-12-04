@@ -74,6 +74,12 @@ function compile_target() {
 
 function cpp_from_mlir() {
   polygeist-opt --convert-polygeist-to-llvm $1 -o out/base_llvm.mlir 
-  mlir-translate --disable-i2p-p2i-opt -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll 
-  clang-b++ -std=c++11 -O0 out/base.ll -o out/base
+  mlir-translate -mlir-to-llvmir out/base_llvm.mlir -o out/base.ll 
+  clang-b++ -std=c++14 out/base.ll -o out/base
+}
+
+
+function after_disagg_passes() {
+  polygeist-opt --pass-pipeline="cse,canonicalize,convert-polygeist-to-llvm" $1 | mlir-translate --mlir-to-llvmir -o out/base.ll
+  clang-b++ -std=c++14 -c out/base.ll -o /home/wuklab/projects/pl-zijian/raw_eth_pktgen/from_mlir/manual/base.o
 }

@@ -27,6 +27,9 @@ static constexpr llvm::StringRef kDumpProfile = "__llvm_profile_write_file";
 static constexpr llvm::StringRef kChannelCreate = "channel_create";
 static constexpr llvm::StringRef kChannelAccess = "channel_access";
 static constexpr llvm::StringRef kChannelDestroy = "channel_destroy";
+static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
+static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
+static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
 
 //==============================================================================
 // Utility functions
@@ -118,6 +121,35 @@ bool mlir::rmem::isCacheAccessOp(const StringRef callee) {
           callee.equals(kCacheAccessNRTCMut));
 }
 
+LLVM::GlobalOp mlir::rmem::getOrCreateOffloadArgBuf(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kOffloadArgBuf);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    getVoidPtrType(ctx), 
+    false, 
+    LLVM::Linkage::External, 
+    kOffloadArgBuf,
+    nullptr
+  );
+}
+
+LLVM::GlobalOp mlir::rmem::getOrCreateOffloadRetBuf(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kOffloadRetBuf);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    getVoidPtrType(ctx), 
+    false, 
+    LLVM::Linkage::External, 
+    kOffloadRetBuf,
+    nullptr
+  );
+}
 
 //===----------------------------------------------------------------------===
 // Func creation
@@ -338,6 +370,15 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelDestroyFn(ModuleOp moduleOp) {
     moduleOp, kChannelDestroy,
     ArrayRef<Type>(getIntBitType(ctx, 32)),
     getVoidType(ctx)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCallOffloadService(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kCallOffloadService,
+    ArrayRef<Type>({getIntBitType(ctx, 32), getIntBitType(ctx, 64), getIntBitType(ctx, 64)}),
+    getVoidPtrType(ctx)
   );
 }
 

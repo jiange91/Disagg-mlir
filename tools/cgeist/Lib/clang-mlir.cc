@@ -54,17 +54,17 @@ static cl::opt<bool>
     memRefFullRank("memref-fullrank", cl::init(false),
                    cl::desc("Get the full rank of the memref."));
 
-static cl::opt<bool> memRefABI("memref-abi", cl::init(true),
+static cl::opt<bool> memRefABI("memref-abi", cl::init(false),
                                cl::desc("Use memrefs when possible"));
 
 cl::opt<std::string> PrefixABI("prefix-abi", cl::init(""),
                                cl::desc("Prefix for emitted symbols"));
 
-cl::opt<bool> CStyleMemRef("c-style-memref", cl::init(true),
+cl::opt<bool> CStyleMemRef("c-style-memref", cl::init(false),
                            cl::desc("Use c style memrefs when possible"));
 
 static cl::opt<bool>
-    CombinedStructABI("struct-abi", cl::init(true),
+    CombinedStructABI("struct-abi", cl::init(false),
                       cl::desc("Use literal LLVM ABI for structs"));
 
 bool isLLVMStructABI(const RecordDecl *RD, llvm::StructType *ST) {

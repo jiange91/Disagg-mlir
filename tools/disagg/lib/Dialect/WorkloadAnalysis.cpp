@@ -77,6 +77,7 @@ unsigned WorkloadComplexityAnalyzer::visitOperation(Operation *op) {
 
 unsigned WorkloadComplexityAnalyzer::visitBlock(Block *block) {
   unsigned complexity = 0;
+  if (block->empty()) return 0;
   for (auto &op : block->getOperations()) {
     complexity += visitOperation(&op);
     if (complexity > WorkloadComplexityAnalyzer::uncertain) {

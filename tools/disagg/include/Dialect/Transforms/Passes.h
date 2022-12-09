@@ -11,6 +11,7 @@ std::unique_ptr<Pass> createRemoteMemDPSPass();
 std::unique_ptr<Pass> createRemoteMemInstrBWProf();
 std::unique_ptr<Pass> createRemoteMemPrefetchForloopPass();
 std::unique_ptr<Pass> createRemoteMemLoopFusionPass();
+std::unique_ptr<Pass> createRemoteMemSearchRemotePass();
 
 #define GEN_PASS_REGISTRATION
 #include "Dialect/Transforms/Passes.h.inc"

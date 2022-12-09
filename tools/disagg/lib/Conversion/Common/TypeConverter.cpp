@@ -5,22 +5,39 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
-RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx): rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()) {
-  assert(rmemDialect && "RemoteMem Dialect is not registered");
+RemoteMemTypeConverter::RemoteMemTypeConverter(MLIRContext *ctx, DictionaryAttr &rule):
+  rmemDialect(ctx->getOrLoadDialect<rmem::RemoteMemDialect>()), rule(rule) {
 
-  addConversion(
-    [&](LLVM::LLVMPointerType type) { return convertLLVMPointerType(type); });
-  addConversion(
-    [&](LLVM::LLVMStructType type, SmallVectorImpl<Type> &results, ArrayRef<Type> callStack) { return convertLLVMStructType(type, results, callStack); });
-  addConversion(
-    [&](LLVM::LLVMArrayType type) { return convertLLVMArrayType(type); });
-  addConversion(
-    [&](LLVM::LLVMFunctionType type) { return convertLLVMFunctionType(type); });
-  addConversion(
-    [&](FunctionType type) { return convertFunctionType(type); });
-  addConversion(
-    [&](MemRefType type) { return convertMemRefType(type); });
+  assert(rmemDialect && "RemoteMem Dialect is not registered");
   addConversion([&](Type type) { return type; });
+  addConversion(
+    [&](LLVM::LLVMPointerType type) -> llvm::Optional<Type> {
+      if (type.isOpaque())
+        return type;
+      if (auto pointee = convertType(type.getElementType())) {
+        return LLVM::LLVMPointerType::get(pointee, type.getAddressSpace());
+      }
+      return llvm::None;
+    });
+  addConversion(
+    [&](LLVM::LLVMStructType type) -> Optional<Type> { 
+      if (type.isIdentified()) {
+        if (auto mapping = rule.get(type.getName())) {
+          return mapping.cast<TypeAttr>().getValue();
+        }
+      }
+      return type;
+    });
+
+  // addConversion(
+  //   [&](LLVM::LLVMArrayType type) { return convertLLVMArrayType(type); });
+  // addConversion(
+  //   [&](LLVM::LLVMFunctionType type) { return convertLLVMFunctionType(type); });
+  // addConversion(
+  //   [&](FunctionType type) { return convertFunctionType(type); });
+  // addConversion(
+  //   [&](MemRefType type) { return convertMemRefType(type); });
+  // addConversion([&](Type type) { return type; });
     // addConversion([&](Type type, SmallVectorImpl<Type> &results) -> Optional<LogicalResult> { 
     //   results.push_back(type);
     //   results.push_back(type);

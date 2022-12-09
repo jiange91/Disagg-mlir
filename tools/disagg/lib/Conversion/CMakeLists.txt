@@ -6,7 +6,10 @@ add_mlir_conversion_library(MLIRMemDisagg
   FuncDisaggPatterns.cpp
   MemRefDisaggPatterns.cpp
   AffineDisaggPatterns.cpp
+  ArithDisaggPatterns.cpp
+  TrivialDisaggPatterns.cpp
   MemDisagg.cpp
+
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

@@ -28,4 +28,10 @@ def RMEMLoopFusion : Pass<"rmem-loop-fusion", "mlir::ModuleOp"> {
   let dependentDialects = ["scf::SCFDialect", "rmem::RemoteMemDialect", "func::FuncDialect", "LLVM::LLVMDialect", "arith::ArithDialect"];
 }
 
+def RMEMSearchRemote : Pass<"search-rmem", "ModuleOp"> {
+  let summary = "Mark operation as remote target if hit remote type";
+  let constructor = "mlir::createRemoteMemSearchRemotePass()";
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect"];
+}
+
 #endif

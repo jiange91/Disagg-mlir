@@ -11,7 +11,7 @@ class Location;
 class RewritePatternSet;
 class ConversionPatternRewriter;
 
-#define GEN_PASS_DECL
+#define GEN_PASS_DECL_MEMDISAGGREGATION
 #include "Conversion/Passes.h.inc"
 
 namespace rmem {
@@ -22,13 +22,14 @@ namespace disagg {
 
 // aggregate pattens below
 void populateMemDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
-
 // separate conversion patterns
 void populateMemRefDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateLLVMDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateSCFDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateFuncDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateAffineDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateArithDissaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateTrivialDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 
 std::unique_ptr<Pass> createMemDisaggregationPass();
 }

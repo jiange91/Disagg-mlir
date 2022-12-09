@@ -4,6 +4,7 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "Conversion/Common/PatternBase.h"
 
 using namespace mlir;
 
@@ -12,9 +13,6 @@ mlir::RemoteMemConversionTarget::RemoteMemConversionTarget(MLIRContext &ctx) : C
   addLegalDialect<rmem::RemoteMemDialect>();
   addLegalOp<UnrealizedConversionCastOp>();
   markUnknownOpDynamicallyLegal([](Operation *op) {
-    if (auto remoteAttr = op->getAttrOfType<IntegerAttr>("remote_target")) {
-      if (!remoteAttr.getValue().isZero()) return false;
-    }
-    return true;
+    return !( rmem::hasRemoteTarget(op) || rmem::hasRemoteCheckUse(op) );
   });
 }

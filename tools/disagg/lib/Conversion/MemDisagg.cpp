@@ -23,6 +23,7 @@ namespace mlir {
 
 // =================================================================================================================
 
+
 namespace disagg {
 class MemDisaggregationPass: public impl::MemDisaggregationBase<MemDisaggregationPass> {
 public:
@@ -30,7 +31,9 @@ public:
   void runOnOperation() override {
     Operation *op = getOperation();
     RewritePatternSet patterns(&getContext());
+
     populateMemDisaggPatterns(&getContext(), patterns);
+
     RemoteMemConversionTarget target(getContext());
 
     if (failed(applyPartialConversion(op, target, std::move(patterns)))) {
@@ -45,6 +48,8 @@ void populateMemDisaggPatterns (MLIRContext *ctx, RewritePatternSet &patterns) {
   populateFuncDisaggregationPatterns(ctx, patterns);
   populateMemRefDisaggregationPatterns(ctx, patterns);
   populateAffineDisaggregationPatterns(ctx, patterns);
+  populateArithDissaggregationPatterns(ctx, patterns);
+  populateTrivialDisaggPatterns(ctx, patterns);
 }
 
 std::unique_ptr<Pass> createMemDisaggregationPass() {

@@ -6,9 +6,9 @@ include "RemoteMemTypes.td"
 include "mlir/IR/SymbolInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def RemoteMem_UndefOp: RemoteMem_Op<"ptr.undef", [Pure]> {
+def RemoteMem_UndefOp: RemoteMem_Op<"undef", [Pure]> {
   let summary = "Create an undefined value of remote memref wrapping llvm ptr";
-  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer, RemoteMemRef]>: $undef);
+  let results = (outs AnyType: $undef);
   let assemblyFormat = [{
     attr-dict `:` type($undef)
   }];
@@ -113,10 +113,10 @@ def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
   // let hasVerifier = 1;
 }
 
-def RemoteMem_AddrCmpOp: RemoteMem_Op<"addrcmp"> {
+def RemoteMem_AddrCmpOp: RemoteMem_Op<"addrcmp", [SameTypeOperands]> {
   let summary = "Compare the address of two remote mem refs";
-  let arguments = (ins RemoteMemRef: $lhs,
-                       RemoteMemRef: $rhs,
+  let arguments = (ins AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]>: $lhs,
+                       AnyTypeOf<[RemoteMemRef, LLVM_AnyPointer]>: $rhs,
                        RemoteMem_AddrCmpPredicate:$predicate
   );
   let results = (outs I1: $rel);
@@ -128,7 +128,7 @@ def RemoteMem_AddrCmpOp: RemoteMem_Op<"addrcmp"> {
 def RemoteMem_LLVMMallocOp: RemoteMem_Op<"malloc_ptr"> {
   let summary = "remote memory allocation counterpart for llvm malloc";
   let arguments = (ins
-    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "0">:$poolId,
+    DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "1">:$poolId,
     I64: $memSize
   );
   let results = (outs 
@@ -145,13 +145,30 @@ def RemoteMem_LLVMAllocaOp : RemoteMem_Op<"alloca_ptr"> {
   let arguments = (ins AnyInteger:$arraySize,
                    OptionalAttr<I64Attr>:$alignment,
                    OptionalAttr<TypeAttr>:$elem_type);
-  let results = (outs Res<RemoteMemRefOf<[ LLVM_AnyPointer]>,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $rmemref);
+  let results = (outs Res<AnyTypeOf<[RemoteMemRefOf<[LLVM_AnyPointer]>, LLVM_AnyPointer]>,"",[MemAlloc<AutomaticAllocationScopeResource>]>: $mem);
   // let builders = [
   //   OpBuilder<(ins "Type":$resultType, "Value":$arraySize, "unsigned":$alignment)>,
   //   OpBuilder<(ins "Type":$resultType, "Type":$elementType, "Value":$arraySize, CArg<"unsigned", "0">:$alignment)>
   // ];
   let assemblyFormat = [{
     $arraySize `x` $elem_type attr-dict `:` functional-type(operands, results)
+  }];
+}
+
+def RemoteMem_LLVMCallocOp : RemoteMem_Op<"calloc_ptr"> {
+  let arguments = (ins DefaultValuedAttr<ConfinedAttr<I32Attr, [IntNonNegative]>, "1">:$poolId,
+                       I64:$num,
+                       I64:$unitSize);
+  let results = (outs Res<RemoteMemRefOf<[LLVM_AnyPointer]>,"",[MemAlloc]>: $rmemref);
+  let assemblyFormat = [{
+    $poolId`,` $num `x` $unitSize attr-dict `:` functional-type(operands, results) 
+  }];
+}
+
+def RemoteMem_LLVMMemsetOp : RemoteMem_Op<"memset"> {
+  let arguments = (ins Arg<AnyType,"",[MemWrite]>:$dst, AnyType:$val, AnyType:$len, AnyType:$isVolatile);
+  let assemblyFormat = [{
+    operands attr-dict `:` functional-type(operands, results)
   }];
 }
 
@@ -206,6 +223,22 @@ def RemoteMem_GEPOp : RemoteMem_Op<"llvm.getelementptr", [Pure]> {
   let extraClassDeclaration = [{
     /// Returns the type pointed to by the pointer argument of this GEP.
     Type getSourceElementType();
+  }];
+}
+
+def RemoteMem_PtrToIntOp : RemoteMem_Op<"llvm.ptr2int", [Pure]> {
+  let arguments = (ins AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$ptr);
+  let results = (outs AnyInteger:$res);
+  let assemblyFormat = [{
+    $ptr attr-dict `:` functional-type(operands, results)
+  }];
+}
+
+def RemoteMem_IntToPtrOp : RemoteMem_Op<"llvm.int2ptr", [Pure]> {
+  let arguments = (ins AnyInteger:$arg);
+  let results = (outs AnyTypeOf<[LLVM_AnyPointer, RemoteMemRef]>:$ptr);
+  let assemblyFormat = [{
+    $arg attr-dict `:` functional-type(operands, results)
   }];
 }
 

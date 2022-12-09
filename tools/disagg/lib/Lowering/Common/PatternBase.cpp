@@ -42,15 +42,6 @@ Value RemoteMemLoweringPattern::materializeDisaggVirtualAddress (
     dvaddr
   );
 
-  // allocate token pointer on stack and store
-  auto tkPtr = rewriter.create<LLVM::AllocaOp>(
-    loc,
-    LLVM::LLVMPointerType::get(rmem::getIntBitType(op->getContext(), 128)),
-    rmem::createIntConstant(rewriter, loc, 1, rmem::getIntBitType(op->getContext(), 64)),
-    0
-  );
-  rewriter.create<LLVM::StoreOp>(loc, tk, tkPtr);
-
   // call _cache_access
   // TODO: add no runtime check routines
   auto chooseAccessFunc = [](unsigned type) {
@@ -67,7 +58,7 @@ Value RemoteMemLoweringPattern::materializeDisaggVirtualAddress (
   return rmem::cacheAccessCallWrapper(
     rewriter, loc,
     cacheAccOp,
-    tkPtr,
+    tk,
     relType
   );
 }

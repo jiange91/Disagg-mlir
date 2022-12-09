@@ -13,7 +13,8 @@ class RemoteMemDialect;
 class RemoteMemTypeConverter : public TypeConverter {
 public:
   using TypeConverter::convertType;
-  RemoteMemTypeConverter(MLIRContext *ctx);
+  RemoteMemTypeConverter(MLIRContext *ctx, DictionaryAttr &rule);
+
   FunctionType convertFunctionSignature(FunctionType funcTy, SignatureConversion &result);
   LLVM::LLVMFunctionType convertLLVMFunctionSignature(LLVM::LLVMFunctionType funcTy, bool isVariadic, SignatureConversion &result);
 
@@ -29,6 +30,7 @@ public:
 
 protected:
   rmem::RemoteMemDialect *rmemDialect;
+  DictionaryAttr &rule;
 
 private:
   // Routine that recursively convert llvm.ptr to rmref

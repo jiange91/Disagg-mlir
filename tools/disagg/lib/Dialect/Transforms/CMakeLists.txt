@@ -3,6 +3,7 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   InstrBandwidth.cpp
   PrefetchForloop.cpp
   LoopFusion.cpp
+  SearchRemote.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

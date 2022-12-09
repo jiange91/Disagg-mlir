@@ -36,14 +36,25 @@ int main(int argc, char **argv) {
   int l = atoi(argv[1]);
   int n = atoi(argv[2]);
 
-  A head;
   glob = malloc(sizeof(A*) * l);
-  A *prev = &head;
-  for (int i = 0; i < l; ++i) {
+
+  A p0;
+  A *prev = &p0;
+
+  // for (int i = 0; i < l; ++i) {
+  //   A *an = expand(prev, i);
+  //   glob[i] = an;
+  //   prev = an;
+  // }
+  int i = 0;
+
+  while (i < l) {
     A *an = expand(prev, i);
     glob[i] = an;
     prev = an;
+    i ++;
   }
+  printf("%p\n", prev);
 
   visit(n);
   return 0;

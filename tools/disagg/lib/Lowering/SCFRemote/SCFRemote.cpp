@@ -66,6 +66,31 @@ class RemoteSCFWhileLowering : public RemoteMemOpLoweringPattern<scf::WhileOp> {
   }
 };
 
+class RemoteSCFIfLowering : public RemoteMemOpLoweringPattern<scf::IfOp> {
+  using RemoteMemOpLoweringPattern<scf::IfOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(scf::IfOp op, scf::IfOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    SmallVector<Type, 4> resultTypes;
+    resultTypes.reserve(op.getResults().size());
+    if (failed(getTypeConverter()->convertTypes(op.getResultTypes(), resultTypes))) {
+      llvm::errs() << "Failed to convert scf.If result types, see\n";
+      op.dump();
+      return mlir::failure();
+    }
+    auto newIf = rewriter.create<scf::IfOp>(op.getLoc(), 
+      resultTypes,
+      adaptor.getCondition(), true
+    );
+    rewriter.eraseBlock(&newIf.getThenRegion().front());
+    rewriter.inlineRegionBefore(op.getThenRegion(), newIf.getThenRegion(), newIf.getThenRegion().end());
+
+    rewriter.eraseBlock(&newIf.getElseRegion().front());
+    rewriter.inlineRegionBefore(op.getElseRegion(), newIf.getElseRegion(), newIf.getElseRegion().end());
+
+    rewriter.replaceOp(op, newIf.getResults());
+    return mlir::success();
+  }
+};
+
 class RemoteSCFForLowering : public RemoteMemOpLoweringPattern<scf::ForOp>{
   using RemoteMemOpLoweringPattern<scf::ForOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(scf::ForOp op, scf::ForOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -130,7 +155,8 @@ void populateLowerSCFRMemPatterns (rmem::RemoteMemTypeLowerer &converter, Rewrit
   RemoteSCFYieldLowering,
   RemoteSCFWhileLowering,
   RemoteSCFCondLowering,
-  RemoteSCFForLowering
+  RemoteSCFForLowering,
+  RemoteSCFIfLowering
   >(converter, &converter.getContext());
 }
 std::unique_ptr<Pass> createConvertSCFRemotePass() {

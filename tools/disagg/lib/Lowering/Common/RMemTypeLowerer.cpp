@@ -62,7 +62,6 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx, const LowerToLLVMOp
     return convertFunctionType(type);
   });
 
-
   addArgumentMaterialization(
     [&](OpBuilder &builder, Type type, ValueRange inputs, Location loc) -> llvm::Optional<Value> {
       auto convOp = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
@@ -104,7 +103,8 @@ unsigned RemoteMemTypeLowerer::getPointerBitwidth(unsigned addressSpace) {
 }
 
 Type RemoteMemTypeLowerer::convertIndexType(IndexType type) {
-  return getIndexType();
+  // return getIndexType();
+  return type;
 }
 
 Type RemoteMemTypeLowerer::convertIntegerType(IntegerType type) {

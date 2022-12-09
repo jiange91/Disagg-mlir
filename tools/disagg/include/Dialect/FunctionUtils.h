@@ -33,6 +33,9 @@ LLVM::GlobalOp getOrCreateOffloadRetBuf(ModuleOp moduleOp);
 // not considering 
 Value calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize);
 
+LLVM::LLVMFuncOp lookupOrCreateRawMallocFn(ModuleOp moduleOp);
+LLVM::LLVMFuncOp lookupOrCreateRawCallocFn(ModuleOp moduleOp);
+
 // virt_ptr = _disagg_alloc(cid = 2, size);
 LLVM::LLVMFuncOp lookupOrCreateAllocFn(ModuleOp moduleOp);
 // ptr = _disagg_stack_alloc(size);
@@ -43,9 +46,9 @@ LLVM::LLVMFuncOp lookupOrCreateFreeFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateCacheRequestFn(ModuleOp moduleOp);
 // cache_token_t = cahe_prefetch(virt_prt);
 LLVM::LLVMFuncOp lookupOrCreateCachePrefetchFn(ModuleOp moduleOp);
-// void local_ptr = cache_access_mut(*cache_token_t); 
+// void local_ptr = cache_access_mut(cache_token_t); 
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp);
-// void local_ptr = cache_access(*cache_token_t);
+// void local_ptr = cache_access(cache_token_t);
 LLVM::LLVMFuncOp lookupOrCreateCacheAccessFn(ModuleOp moduleOp);
 // void cache_init(); /* config linebase to use sbuf */
 LLVM::LLVMFuncOp lookupOrCreateCacheInitFn(ModuleOp moduleOp);

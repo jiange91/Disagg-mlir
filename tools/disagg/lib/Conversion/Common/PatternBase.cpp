@@ -9,23 +9,50 @@
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/TypeSize.h"
+#include <set>
 
 using namespace mlir;
 using namespace mlir::rmem;
 
+const static std::set<StringRef> remoteAttrs{"remote_target", 
+"remote_check_use", 
+"rel_types", 
+"remote_global_type", 
+"operand_types", 
+"remote_callee", 
+"remote_offload"};
+
 void mlir::rmem::filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVectorImpl<NamedAttribute> &result, llvm::SmallSet<StringRef, 4> filter) {
   for (const auto &attr : attrs) {
-    if (attr.getName() == "remote_target" ||
-        attr.getName() == "rel_types" || 
-        attr.getName() == "remote_global_type" ||
-        attr.getName() == "operand_types" ||
-        attr.getName() == "remote_callee" ||
-        attr.getName() == "remote_offload" ||
+    if (remoteAttrs.find(attr.getName()) != remoteAttrs.end() ||
         filter.contains(attr.getName())) {
           continue;
         }
     result.push_back(attr);
   }
+}
+
+bool mlir::rmem::hasRemoteTarget(Operation *op) {
+  if (auto remoteAttr = op->getAttrOfType<IntegerAttr>("remote_target")) {
+    if (!remoteAttr.getValue().isZero()) return true;
+  }
+  return false;
+}
+
+bool mlir::rmem::hasRemoteCheckUse(Operation *op) {
+  if (auto checkAttr = op->getAttrOfType<IntegerAttr>("remote_check_use")) {
+    if (!checkAttr.getValue().isZero()) return true;
+  }
+  return false;
+}
+
+LogicalResult mlir::rmem::ifNotRemoteTarget(Operation *op) {
+  if (!hasRemoteTarget(op)) {
+    for (auto const &s : remoteAttrs) 
+      op->removeAttr(s);
+    return mlir::success();
+  }
+  return mlir::failure();
 }
 
 static bool isRemotableTypeImpl(Type type, SetVector<Type> &callStack) {
@@ -95,3 +122,36 @@ RemoteMemTypeConverter *ConvertToRemoteMemPattern::getTypeConverter() const {
   return ConversionPattern::getTypeConverter<RemoteMemTypeConverter>();
 }
 
+LogicalResult disagg::detail::trivialRewrite (
+    Operation *op, StringRef targetOp, ValueRange operands,
+    ConversionPatternRewriter &rewriter) {
+  // make sure remote_target will trigger other handlers
+  if (hasRemoteTarget(op)) {
+    return mlir::failure();
+  }
+  for (auto const &[before, after] : llvm::zip(op->getOperands(), operands)) {
+    if (before.getType() != after.getType())
+      return mlir::failure();
+  }
+
+  SmallVector<Type, 2> resultTypes;
+  if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+    for (auto ta : rts) {
+      resultTypes.emplace_back(ta.cast<TypeAttr>().getValue());
+    }
+  } else {
+    for (auto rt : op->getResultTypes())
+      resultTypes.emplace_back(rt);
+  }
+
+  SmallVector<NamedAttribute, 4> attrs;
+  filterTargetAttributes(op->getAttrs(), attrs);
+
+  // Create the operation through state since we don't know its C++ type.
+  Operation *newOp =
+      rewriter.create(op->getLoc(), rewriter.getStringAttr(targetOp), operands,
+                      resultTypes, attrs);
+
+  rewriter.replaceOp(op, newOp->getResults());
+  return success();
+}

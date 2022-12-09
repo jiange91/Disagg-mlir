@@ -90,6 +90,33 @@ class SCFForOpDisagg : public OpConversionPattern<scf::ForOp> {
   }
 };
 
+class SCFIfOpDisagg : public OpConversionPattern<scf::IfOp> {
+  using OpConversionPattern<scf::IfOp>::OpConversionPattern;
+  LogicalResult matchAndRewrite(scf::IfOp op, scf::IfOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    SmallVector<Type, 4> relTypes;
+    if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+      for (Type en : rts.getAsValueRange<mlir::TypeAttr>())
+        relTypes.push_back(en);
+    } else {
+      for (Type en : op.getResultTypes())
+        relTypes.push_back(en);
+    }
+
+    auto newIf = rewriter.create<scf::IfOp>(op.getLoc(), 
+      relTypes,
+      adaptor.getCondition(), true
+    );
+    rewriter.eraseBlock(&newIf.getThenRegion().front());
+    rewriter.inlineRegionBefore(op.getThenRegion(), newIf.getThenRegion(), newIf.getThenRegion().end());
+
+    rewriter.eraseBlock(&newIf.getElseRegion().front());
+    rewriter.inlineRegionBefore(op.getElseRegion(), newIf.getElseRegion(), newIf.getElseRegion().end());
+
+    rewriter.replaceOp(op, newIf.getResults());
+    return mlir::success();
+  }
+};
+
 class SCFConditionOpDisagg : public OpConversionPattern<scf::ConditionOp> {
   using OpConversionPattern<scf::ConditionOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(scf::ConditionOp op, scf::ConditionOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -107,12 +134,14 @@ class SCFYieldOpDisagg : public OpConversionPattern<scf::YieldOp> {
   }
 };
 
+
 void mlir::disagg::populateSCFDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns) {
   patterns.add<
   /* SCF patterns */
   SCFWhileDisagg,
   SCFConditionOpDisagg,
   SCFYieldOpDisagg,
-  SCFForOpDisagg
+  SCFForOpDisagg,
+  SCFIfOpDisagg
   >(ctx);
 }

@@ -1,4 +1,5 @@
 add_subdirectory(Common)
+add_subdirectory(Trivial)
 add_subdirectory(RemoteMemToLLVM)
 add_subdirectory(FuncRemote)
 add_subdirectory(SCFRemote)

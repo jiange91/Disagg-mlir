@@ -8,6 +8,9 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
+static constexpr llvm::StringRef kRawMalloc = "malloc";
+static constexpr llvm::StringRef kRawCalloc = "calloc";
+
 static constexpr llvm::StringRef kAlloc = "_disagg_alloc";
 static constexpr llvm::StringRef kStackAlloca = "_disagg_stack_alloc";
 static constexpr llvm::StringRef kFree = "_disagg_free";
@@ -155,6 +158,26 @@ LLVM::GlobalOp mlir::rmem::getOrCreateOffloadRetBuf(ModuleOp moduleOp) {
 // Func creation
 //===----------------------------------------------------------------------===
 
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateRawMallocFn(ModuleOp moduleOp) {
+  MLIRContext *ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kRawMalloc,
+    getIntBitType(ctx, 64),
+    rmem::getVoidPtrType(ctx)
+  );
+}
+
+LLVM::LLVMFuncOp lookupOrCreateRawCallocFn(ModuleOp moduleOp) {
+  MLIRContext *ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp,
+    kRawCalloc,
+    {getIntBitType(ctx, 64), getIntBitType(ctx, 64)},
+    rmem::getVoidPtrType(ctx)
+  );
+}
+
 LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateAllocFn(ModuleOp moduleOp) {
   MLIRContext *ctx = moduleOp.getContext();
   return rmem::lookupOrCreateFn(
@@ -214,7 +237,7 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessMutFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheAccessMut,
-    LLVM::LLVMPointerType::get(getIntBitType(moduleOp->getContext(), 128)),
+    getIntBitType(moduleOp->getContext(), 128),
     getVoidPtrType(moduleOp->getContext())
   );
 }
@@ -223,7 +246,7 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCacheAccessFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp,
     kCacheAccess,
-    LLVM::LLVMPointerType::get(getIntBitType(moduleOp->getContext(), 128)),
+    getIntBitType(moduleOp->getContext(), 128),
     getVoidPtrType(moduleOp->getContext())
   );
 }

@@ -9,7 +9,7 @@ include "ROps/RAffineOps.td"
 include "ROps/RMemRefOps.td"
 include "ROps/RLLVMOps.td"
 
-
+// Deprecated
 def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   let summary = "Get the virtual pointer from a remote memref that can be used for `getelemptr` operations";
   let description = "This operation does not materialize a remote memref at the local side, the return pointer will be used for address calculation `getelementptr`. If the remote memref is dummy, i.e. created from stack/non-remote heap alloc, the returned address is the original pointer, else is the virtual cache address";
@@ -21,6 +21,7 @@ def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   }];
 }
 
+// Deprecated
 def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   let summary = "Create remote memref handler with the given address";
   let description = [{

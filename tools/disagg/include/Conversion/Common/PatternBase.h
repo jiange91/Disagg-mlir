@@ -14,8 +14,23 @@ bool hasRemotableSignature(Operation *op);
 // Strip target attr from the orignal dictionary
 // The result should be copied to disaggregated operations
 void filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVectorImpl<NamedAttribute> &result, llvm::SmallSet<StringRef, 4> filter = {});
+
+bool hasRemoteTarget(Operation *op);
+bool hasRemoteCheckUse(Operation *op);
+
+// if no remote_target = 1 present, filter attr
+LogicalResult ifNotRemoteTarget(Operation *op);
+}
+
+namespace disagg {
+namespace detail {
+LogicalResult trivialRewrite(Operation *op, StringRef targetOp,
+                             ValueRange operands,
+                             ConversionPatternRewriter &rewriter);
 }
 }
+}
+
 using namespace mlir;
 using namespace mlir::rmem;
 class ConvertToRemoteMemPattern : public ConversionPattern {
@@ -77,6 +92,25 @@ public:
 
 private:
   using ConvertToRemoteMemPattern::matchAndRewrite;
+};
+
+// Generic implementation of one-2-one conversion from
+// source to target (can be same)
+
+// return failure if operand types changed
+// the result type will not be changed unless provided with "rel_types"
+template <typename SourceOp, typename TargetOp>
+class TrivialMappingToRemotePattern : public OpConversionPattern<SourceOp> {
+public:
+  using OpAdaptor = typename SourceOp::Adaptor;
+  using OpConversionPattern<SourceOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(SourceOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    return disagg::detail::trivialRewrite(op, TargetOp::getOperationName(),
+                                         adaptor.getOperands(), rewriter);
+  }
 };
 
 #endif

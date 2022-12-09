@@ -19,6 +19,7 @@
 #include "Lowering/FuncRemote/FuncRemote.h"
 #include "Lowering/SCFRemote/SCFRemote.h"
 #include "Lowering/MemRefRemote/MemRefRemote.h"
+#include "Lowering/Trivial/Trivial.h"
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTREMOTEMEMTOLLVM
@@ -240,6 +241,26 @@ class RemoteMemStoreLowering : public RemoteMemOpLoweringPattern<rmem::StoreOp> 
   }
 };
 
+class RemoteMemMemsetLowering : public RemoteMemOpLoweringPattern<rmem::LLVMMemsetOp> {
+  using RemoteMemOpLoweringPattern<rmem::LLVMMemsetOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::LLVMMemsetOp op, rmem::LLVMMemsetOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (auto rtype = op.getDst().getType().dyn_cast<rmem::RemoteMemRefType>()) {
+      if (rtype.getCanRemote() != 0) {
+        llvm::errs() << "Lowering of Memset of remote memref not supported yet\n";
+        return mlir::failure();
+      }
+    }
+
+    rewriter.replaceOpWithNewOp<LLVM::MemsetOp>(op, 
+      adaptor.getDst(),
+      adaptor.getVal(),
+      adaptor.getLen(),
+      adaptor.getIsVolatile()
+    );
+    return mlir::success();
+  }
+};
+
 class RemoteMemChannelCreateLowering : public RemoteMemOpLoweringPattern<rmem::ChannelCreateOp> {
   using RemoteMemOpLoweringPattern<rmem::ChannelCreateOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::ChannelCreateOp op, rmem::ChannelCreateOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -362,8 +383,25 @@ class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
 class RemoteMemAllocaOpLowering : public RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp> {
   using RemoteMemOpLoweringPattern<rmem::LLVMAllocaOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::LLVMAllocaOp op, rmem::LLVMAllocaOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    auto stkAllocaOp = rmem::lookupOrCreateStackAllocaFn(op->getParentOfType<ModuleOp>());
+
     Type resultType = getTypeConverter()->convertType(op.getResult().getType());
+
+    // if result type is originally ptr<...>
+    // decay to llvm.alloca
+    if (op.getMem().getType().isa<LLVM::LLVMPointerType>()) {
+      unsigned align = 0;
+      if (adaptor.getAlignment().has_value())
+        align = *adaptor.getAlignment();
+      auto laddr = rewriter.create<LLVM::AllocaOp>(op.getLoc(), 
+        resultType, adaptor.getArraySize(),
+        align
+      ).getRes();
+      rewriter.replaceOp(op, laddr);
+      return mlir::success();
+    }
+    
+    // otherwise, it's a fake cache stack pointer
+    auto stkAllocaOp = rmem::lookupOrCreateStackAllocaFn(op->getParentOfType<ModuleOp>());
 
     // calculate alloca size using gepop
     Value sizeInBytes = rmem::calculateBufferSize(rewriter, op.getLoc(), *adaptor.getElemType(), adaptor.getArraySize());
@@ -383,6 +421,30 @@ class RemoteMemAllocaOpLowering : public RemoteMemOpLoweringPattern<rmem::LLVMAl
   }
 };
 
+class RemoteMemCallocOpLowering : public RemoteMemOpLoweringPattern<rmem::LLVMCallocOp> {
+  using RemoteMemOpLoweringPattern<rmem::LLVMCallocOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::LLVMCallocOp op, rmem::LLVMCallocOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+
+    auto rallocOp = rmem::lookupOrCreateAllocFn(op->getParentOfType<ModuleOp>());
+
+    // calculate calloc size using mult
+    Value sizeInBytes = rewriter.create<arith::MulIOp>(op.getLoc(), 
+      rewriter.getI64Type(), adaptor.getNum(), adaptor.getUnitSize()
+    );
+
+    auto newPtr = rmem::createLLVMCall(rewriter, op.getLoc(), rallocOp,
+     {
+      rmem::createIntConstant(rewriter, op.getLoc(), adaptor.getPoolId(), 
+        rmem::getIntBitType(op.getContext(), 32)), 
+      sizeInBytes
+     }
+    );
+
+    rewriter.replaceOp(op, newPtr);
+    return mlir::success();
+  }
+};
+
 class RemoteMemAddrCmpLowering : public RemoteMemOpLoweringPattern<rmem::AddrCmpOp> {
   using RemoteMemOpLoweringPattern<rmem::AddrCmpOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::AddrCmpOp op, rmem::AddrCmpOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -390,6 +452,29 @@ class RemoteMemAddrCmpLowering : public RemoteMemOpLoweringPattern<rmem::AddrCmp
     Value newCmp = rewriter.create<LLVM::ICmpOp>(op.getLoc(),
       pred, adaptor.getLhs(), adaptor.getRhs());
     rewriter.replaceOp(op, newCmp);
+    return mlir::success();
+  }
+};
+
+class RemoteMemPtrToIntLowering : public RemoteMemOpLoweringPattern<rmem::PtrToIntOp> {
+  using RemoteMemOpLoweringPattern<rmem::PtrToIntOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::PtrToIntOp op, rmem::PtrToIntOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<LLVM::PtrToIntOp>(op, 
+      op.getRes().getType(),
+      adaptor.getPtr()
+    );
+    return mlir::success();
+  }
+};
+
+class RemoteMemIntToPtrLowering : public RemoteMemOpLoweringPattern<rmem::IntToPtrOp> {
+  using RemoteMemOpLoweringPattern<rmem::IntToPtrOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::IntToPtrOp op, rmem::IntToPtrOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Type relType = getTypeConverter()->convertType(op.getPtr().getType());
+    rewriter.replaceOpWithNewOp<LLVM::IntToPtrOp>(op, 
+      relType,
+      adaptor.getArg()
+    );
     return mlir::success();
   }
 };
@@ -403,6 +488,10 @@ public:
   ConvertRemoteMemToLLVMPass() = default;
   void runOnOperation() override {
     ModuleOp m = getOperation();
+
+    // clear mapping rules
+    m->removeAttr("rmem.type_rule");
+
     RemoteMemTypeLowerer typeConverter(&getContext());
     RewritePatternSet patterns(&getContext());
     populateRemoteMemToLLVMPatterns(typeConverter, patterns);
@@ -442,6 +531,7 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   populateLowerFuncRMemPatterns(converter, patterns);
   populateLowerSCFRMemPatterns(converter, patterns);
   populateLowerMemRefRMemPatterns(converter, patterns);
+  populateLowerArithRMemPatterns(converter, patterns);
   patterns.add<
   RemoteMemUndefLowering,
   RemoteMemNullOpLowering,
@@ -455,11 +545,15 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemLoadLowering,
   RemoteMemGEPOpLowering,
   RemoteMemAllocaOpLowering,
+  RemoteMemCallocOpLowering,
   RemoteMemAddrCmpLowering,
   RemoteMemSizeOfOpLowering,
   RemoteMemChannelCreateLowering,
   RemoteMemChannelAccessLowering,
-  RemoteMemOffloadLowering
+  RemoteMemOffloadLowering,
+  RemoteMemMemsetLowering,
+  RemoteMemPtrToIntLowering,
+  RemoteMemIntToPtrLowering
   >(converter, &converter.getContext());
 }
 

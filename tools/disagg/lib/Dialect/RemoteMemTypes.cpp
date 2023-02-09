@@ -73,9 +73,13 @@ bool mlir::rmem::hasRemoteTarget(Type type) {
 //====--------------------------------------====
 // Recursively obtain the raw type
 //====--------------------------------------====
+
 Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
   if (!hasRemoteTarget(type))
     return type;
+  if (auto idx = type.dyn_cast<IndexType>()) {
+    return IntegerType::get(idx.getContext(), 64);
+  }
   // If is given remote memref, extract nesting llvm.ptr or memref and convert to raw type
   if (auto rmref = type.dyn_cast<RemoteMemRefType>()) {
     Type rawRef = rmref.getElementType();
@@ -89,6 +93,8 @@ Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
   }
 
   if (auto llvmPtr = type.dyn_cast<LLVM::LLVMPointerType>()) {
+    if (llvmPtr.isOpaque())
+      return llvmPtr;
     Type rawPointeeType = getRawTypeFromRemotedType(llvmPtr.getElementType());
     return LLVM::LLVMPointerType::get(rawPointeeType, llvmPtr.getAddressSpace());
   }
@@ -183,6 +189,20 @@ Type mlir::rmem::getAggrIndexType(Type base, ArrayRef<int32_t> constIndices) {
       })
       .Default([](Type) { return nullptr; });
   }
+  return eleType;
+}
+
+
+//====--------------------------------------====
+// Get first-level element type of a remote memref
+//====--------------------------------------====
+Type mlir::rmem::getEleTypeFromRemoteMemRef(RemoteMemRefType rmref) {
+  Type RT = rmref.getElementType();
+  Type eleType;// can still be remote memref
+  if (auto ptrType = RT.dyn_cast<LLVM::LLVMPointerType>()) 
+    eleType = ptrType.getElementType(); 
+  else if (auto memrefType = RT.dyn_cast<MemRefType>())
+    eleType = memrefType.cast<MemRefType>().getElementType();
   return eleType;
 }
 

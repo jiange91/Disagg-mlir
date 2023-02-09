@@ -82,6 +82,10 @@ LLVM::LLVMFuncOp lookupOrCreateChannelAccessFn(ModuleOp moduleOp);
 // void channel_destroy(unsigned channel);
 LLVM::LLVMFuncOp lookupOrCreateChannelDestroyFn(ModuleOp moduleOp);
 
+// void rdma(buf, size, raddr, id, code);
+LLVM::LLVMFuncOp lookupOrCreateRDMAFn(ModuleOp moduleOp);
+
+LLVM::LLVMFuncOp lookupOrCreateRRingSync(ModuleOp moduleOp);
 
 /* instrumentation intrinsics 
 1. void @llvm.instrprof.increment(ptr <name>, i64 <hash>,
@@ -94,6 +98,7 @@ LLVM::LLVMFuncOp lookupOrCreateChannelDestroyFn(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateInstrInc(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateInstrIncStep(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateCallOffloadService(ModuleOp moduleOp);
+
 
 
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);

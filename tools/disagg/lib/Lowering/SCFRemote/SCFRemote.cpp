@@ -91,6 +91,7 @@ class RemoteSCFIfLowering : public RemoteMemOpLoweringPattern<scf::IfOp> {
   }
 };
 
+// code gen to new ring-cache
 class RemoteSCFForLowering : public RemoteMemOpLoweringPattern<scf::ForOp>{
   using RemoteMemOpLoweringPattern<scf::ForOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(scf::ForOp op, scf::ForOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {

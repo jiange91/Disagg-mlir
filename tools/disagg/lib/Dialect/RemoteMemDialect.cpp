@@ -1,11 +1,10 @@
-#include "Dialect/RemoteMem.h"
-#include "Dialect/RemoteMemTypes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/FunctionImplementation.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
@@ -101,27 +100,13 @@ LogicalResult MaterializeOp::verify() {
 LLVMGlobalOp LLVMAddressOfOp::getGlobal() {
   return lookupSymbolInModule<LLVMGlobalOp>((*this)->getParentOp(), getGlobalName());
 }
-//==============================================================================
-// RemoteMem LLVMAllocaOp
-//==============================================================================
-// void LLVMAllocaOp::build(OpBuilder &b, OperationState &s, Type resultType, Value arraySize, unsigned alignment){
-//   LLVM::LLVMPointerType ptrTy = resultType.cast<RemoteMemRefType>().getElementType().cast<LLVM::LLVMPointerType>();
-
-//   assert(!ptrTy.isOpaque() && "If result is opaque, pass element type explicitly");
-//   if (alignment == 0)
-//     return build(b, s, resultType, arraySize, IntegerAttr(), TypeAttr::get(ptrTy.getElementType()));
-//   build(b, s, resultType, arraySize, b.getI64IntegerAttr(alignment), TypeAttr::get(ptrTy.getElementType()));
-// }
-
-// void LLVMAllocaOp::build(OpBuilder &b, OperationState &s, Type resultType, Type elementType, Value arraySize, unsigned alignment = 0) {
-//   LLVM::LLVMPointerType ptrTy = resultType.cast<RemoteMemRefType>().getElementType().cast<LLVM::LLVMPointerType>(); 
-//   TypeAttr eleTyAttr = ptrTy.isOpaque() ? TypeAttr::get(elementType) : TypeAttr::get(ptrTy.getElementType());
-//   build(b, s, resultType, arraySize, 
-//     alignment == 0 ? IntegerAttr() : b.getI64IntegerAttr(alignment), eleTyAttr);
-// }
 //================================================================
 // RemoteMem Dialect
 //================================================================
+
+RingCache::RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::Type T, size_t eleTypeSize): blockSize(blockSize), nBlocks(nBlocks), totalSize(totalSize), lbase(nullptr), rbase(nullptr), eleType(T) {
+  perBlock = blockSize / eleTypeSize;
+};
 
 void RemoteMemDialect::initialize() {
   registerTypes();

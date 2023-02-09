@@ -11,10 +11,12 @@
 
 namespace mlir {
 namespace rmem {
+class RemoteMemRefType;
 // find if the type contains remote memref type
 // this function is used to detect if need type conversion during the lowering process
 bool hasRemoteTarget(Type type);
 
+Type getEleTypeFromRemoteMemRef(RemoteMemRefType rmref);
 Type getRawTypeFromRemotedType(Type type);
 Type getAggrIndexType(Type base, ArrayRef<int32_t> constIndices);
 }

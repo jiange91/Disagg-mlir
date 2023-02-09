@@ -19,6 +19,7 @@
 #include "Dialect/Transforms/Passes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
+#include "mlir/InitAllPasses.h"
 
 using namespace mlir;
 
@@ -36,9 +37,19 @@ int main(int argc, char **argv) {
   registerAllDialects(registry); 
   registry.insert<mlir::rmem::RemoteMemDialect>();
 
+  // register remote mem related passes
   mlir::registerDisaggregationConversionPasses();
   mlir::registerRemoteMemLoweringPasses();
   mlir::registerRemoteMemPasses();
+
+  // register normal passes
+  // mlir::registerAllPasses();
+  mlir::registerCSEPass();
+  mlir::registerInlinerPass();
+  mlir::registerCanonicalizerPass();
+  mlir::registerSymbolDCEPass();
+  mlir::registerLoopInvariantCodeMotionPass();
+
   // interface perpare
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
     LLVM::LLVMPointerType::attachInterface<MemRefInsider>(*ctx);

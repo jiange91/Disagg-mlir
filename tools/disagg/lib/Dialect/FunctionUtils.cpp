@@ -30,6 +30,8 @@ static constexpr llvm::StringRef kDumpProfile = "__llvm_profile_write_file";
 static constexpr llvm::StringRef kChannelCreate = "channel_create";
 static constexpr llvm::StringRef kChannelAccess = "channel_access";
 static constexpr llvm::StringRef kChannelDestroy = "channel_destroy";
+static constexpr llvm::StringRef kRDMA = "rdma";
+static constexpr llvm::StringRef kRRSync = "rring_sync";
 static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
 static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
 static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
@@ -392,6 +394,31 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateChannelDestroyFn(ModuleOp moduleOp) {
   return rmem::lookupOrCreateFn(
     moduleOp, kChannelDestroy,
     ArrayRef<Type>(getIntBitType(ctx, 32)),
+    getVoidType(ctx)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateRDMAFn(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kRDMA,
+    ArrayRef<Type>({
+      getIntBitType(ctx, 64),
+      getIntBitType(ctx, 64),
+      getIntBitType(ctx, 64),
+      getIntBitType(ctx, 64),
+      getIntBitType(ctx, 32)}),
+    getVoidType(ctx)
+  );
+}
+
+LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateRRingSync(ModuleOp moduleOp) {
+  auto ctx = moduleOp.getContext();
+  return rmem::lookupOrCreateFn(
+    moduleOp, kRRSync,
+    ArrayRef<Type>({
+      LLVM::LLVMPointerType::get(ctx, getIntBitType(ctx, 64), 0),
+      getIntBitType(ctx, 64)}),
     getVoidType(ctx)
   );
 }

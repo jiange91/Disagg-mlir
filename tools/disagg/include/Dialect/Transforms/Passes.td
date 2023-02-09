@@ -34,4 +34,12 @@ def RMEMSearchRemote : Pass<"search-rmem", "ModuleOp"> {
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect"];
 }
 
+def RMEMLoopRingCache : Pass<"rmem-loop-ring-cache", "mlir::ModuleOp"> {
+  let summary = "Create ring cache access code for for-loops";
+  let constructor = "mlir::createRemoteMemLoopRingCachePass()";
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "scf::SCFDialect"];
+}
+
+def RMEMGlanceFuture : Pass<"rmem-">
+
 #endif

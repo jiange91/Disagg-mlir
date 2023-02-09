@@ -70,6 +70,14 @@ def RemoteMem_PIndexOp : RemoteMem_Op<"ptrindex", [Pure]> {
   }];
 } 
 
+def RemoteMem_ToIntOp : RemoteMem_Op<"rmemtoint", [Pure]> {
+  let arguments = (ins RemoteMemRef:$ptr);
+  let results = (outs AnyInteger:$res);
+  let assemblyFormat = [{
+    $ptr attr-dict `:` functional-type(operands, results)
+  }];
+}
+
 
 def RemoteMem_MaterializeOp: RemoteMem_Op<"materialize"> {
   let summary = "Convert a remote memory ref to raw pointer/memref at the local site";

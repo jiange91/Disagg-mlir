@@ -15,6 +15,23 @@ namespace rmem {
 class RemoteMemDialect;
 class RemoteMemRefType;
 
+class RingCache {
+public:
+  RingCache() = default;
+  RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::Type eleType, size_t eleTypeSize); 
+  size_t blockSize;
+  size_t nBlocks;
+  size_t totalSize;
+  size_t perBlock;
+
+  mlir::Value lbase;
+  mlir::Value rbase;
+  mlir::Value tags;
+  mlir::Type eleType;
+
+  mlir::Value readID;
+  mlir::Value writeID;
+};
 
 }
 }

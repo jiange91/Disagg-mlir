@@ -14,13 +14,15 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
-const static std::set<StringRef> remoteAttrs{"remote_target", 
-"remote_check_use", 
-"rel_types", 
-"remote_global_type", 
-"operand_types", 
-"remote_callee", 
-"remote_offload"};
+const static std::set<StringRef> remoteAttrs{
+  "remote_target", 
+  "remote_check_use", 
+  "rel_types", 
+  "remote_global_type", 
+  "operand_types", 
+  "remote_callee", 
+  "remote_offload"
+};
 
 void mlir::rmem::filterTargetAttributes(ArrayRef<NamedAttribute> attrs, SmallVectorImpl<NamedAttribute> &result, llvm::SmallSet<StringRef, 4> filter) {
   for (const auto &attr : attrs) {

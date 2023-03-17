@@ -7,12 +7,12 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
 include "ROps/RAffineOps.td"
 include "ROps/RMemRefOps.td"
+include "ROps/RVectorOps.td"
 include "ROps/RLLVMOps.td"
 
-// Deprecated
 def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   let summary = "Get the virtual pointer from a remote memref that can be used for `getelemptr` operations";
-  let description = "This operation does not materialize a remote memref at the local side, the return pointer will be used for address calculation `getelementptr`. If the remote memref is dummy, i.e. created from stack/non-remote heap alloc, the returned address is the original pointer, else is the virtual cache address";
+  let description = "This operation does not materialize a remote memref at the local side, the return pointer will be used for address calculation. If the remote memref is dummy, i.e. created from stack/non-remote heap alloc, the returned address is the original pointer, else is the virtual cache address";
   let arguments = (ins RemoteMemRef: $rmemref);
   let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $addr);
   // TODO: verify that the virtual address is at space 1
@@ -21,7 +21,6 @@ def RemoteMem_ToAddressOp: RemoteMem_Op<"to_addr"> {
   }];
 }
 
-// Deprecated
 def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   let summary = "Create remote memref handler with the given address";
   let description = [{
@@ -107,6 +106,44 @@ def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
     }];
 }
 
+def RemoteMem_AsyncRDMAOp : RemoteMem_Op<"rdma"> {
+  let summary = "Asynchronously request a memory region from remote";
+  let arguments = (ins 
+    RemoteMemRef: $rbase,
+    Variadic<Index>: $mapInput,
+    AffineMapAttr: $map,
+    Index: $sizeInEle,
+    Index: $reqID
+  );
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $localRef);
+  let assemblyFormat = [{
+    $rbase `[` $mapInput `]` $sizeInEle `->` $reqID attr-dict `:` functional-type(operands, results) 
+  }];
+}
 
+def RemoteMem_WaitReqOp : RemoteMem_Op<"sync"> {
+  let summary = "Polling given id to finish";
+  let arguments = (ins Index: $id);
+  let assemblyFormat = [{
+    $id attr-dict `:` type($id)
+  }];
+}
+
+def RemoteMem_ExtractOp : RemoteMem_Op<"extract"> {
+  let summary = "offset and extract from a memory region";
+  let description = [{
+    Similar to memref.subview, but allow the resulting memref to be of arbitrary 1D-size and always with identity map, i.e. the result region is not related to source base. 
+    Also accept pointer as input. If the input is memref, offset has rank size.
+  }];
+  let arguments = (ins
+    RemoteMemRef: $base,
+    Variadic<Index>: $offset,
+    AffineMapAttr: $map
+  );
+  let results = (outs RemoteMemRef: $subview);
+  let assemblyFormat = [{
+    $base `[` $offset `]` attr-dict `:` functional-type(operands, results)
+  }]; 
+}
 
 #endif

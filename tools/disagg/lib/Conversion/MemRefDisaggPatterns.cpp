@@ -103,22 +103,24 @@ class MemRefAllocOpDisagg : public OpConversionPattern<memref::AllocOp> {
   using OpConversionPattern<memref::AllocOp>::OpConversionPattern;
 
   LogicalResult matchAndRewrite(memref::AllocOp op, memref::AllocOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Type rType;
     if (auto tAttrs = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
       if (!tAttrs.empty() && tAttrs.size() == 1) {
-        Type rType = tAttrs[0].dyn_cast<mlir::TypeAttr>().getValue();
-        mlir::Value newRmemref = rewriter.create<rmem::MemRefAllocOp>(op.getLoc(), 
-          rType,
-          adaptor.getDynamicSizes(),
-          adaptor.getSymbolOperands(),
-          adaptor.getAlignmentAttr(),
-          rewriter.getI32IntegerAttr(2)
-        );
-        rewriter.replaceOp(op, newRmemref);
-        return mlir::success();
+        rType = tAttrs[0].dyn_cast<mlir::TypeAttr>().getValue();
       } 
+    } 
+    else {
+      rType = RemoteMemRefType::get(op.getMemref().getType());
     }
-    llvm::errs() << "rmem.alloc remote target expects exactly one `rel_types` attribute\n";
-    return mlir::failure();
+    mlir::Value newRmemref = rewriter.create<rmem::MemRefAllocOp>(op.getLoc(), 
+      rType,
+      adaptor.getDynamicSizes(),
+      adaptor.getSymbolOperands(),
+      adaptor.getAlignmentAttr(),
+      rewriter.getI32IntegerAttr(2) // default remote pool
+    );
+    rewriter.replaceOp(op, newRmemref);
+    return mlir::success();
   }
 };
 

@@ -35,7 +35,7 @@ class ArithSelectDisagg : public OpConversionPattern<arith::SelectOp> {
 };
  
 
-void mlir::disagg::populateArithDissaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns) {
+void mlir::disagg::populateArithDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns) {
   patterns.add<
     ArithSelectDisagg
   >(ctx);

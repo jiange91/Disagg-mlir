@@ -7,6 +7,7 @@ add_mlir_conversion_library(MLIRMemDisagg
   MemRefDisaggPatterns.cpp
   AffineDisaggPatterns.cpp
   ArithDisaggPatterns.cpp
+  VectorDisaggPatterns.cpp
   TrivialDisaggPatterns.cpp
   MemDisagg.cpp
 

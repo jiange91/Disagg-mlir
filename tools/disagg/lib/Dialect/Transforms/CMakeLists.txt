@@ -5,6 +5,8 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   LoopFusion.cpp
   SearchRemote.cpp
   LoopRingCache.cpp
+  AffineRingCache.cpp
+  PropRemote.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

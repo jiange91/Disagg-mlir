@@ -16,6 +16,9 @@ class RemoteMemRefType;
 // this function is used to detect if need type conversion during the lowering process
 bool hasRemoteTarget(Type type);
 
+// Determine if its a true remote memref, not considering any nested types
+bool isTrueRemoteRef(Type type);
+
 Type getEleTypeFromRemoteMemRef(RemoteMemRefType rmref);
 Type getRawTypeFromRemotedType(Type type);
 Type getAggrIndexType(Type base, ArrayRef<int32_t> constIndices);

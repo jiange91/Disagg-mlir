@@ -48,7 +48,8 @@ void populateMemDisaggPatterns (MLIRContext *ctx, RewritePatternSet &patterns) {
   populateFuncDisaggregationPatterns(ctx, patterns);
   populateMemRefDisaggregationPatterns(ctx, patterns);
   populateAffineDisaggregationPatterns(ctx, patterns);
-  populateArithDissaggregationPatterns(ctx, patterns);
+  populateArithDisaggregationPatterns(ctx, patterns);
+  populateVectorDisaggregationPatterns(ctx, patterns);
   populateTrivialDisaggPatterns(ctx, patterns);
 }
 

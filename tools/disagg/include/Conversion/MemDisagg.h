@@ -28,7 +28,8 @@ void populateLLVMDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &pat
 void populateSCFDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateFuncDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateAffineDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
-void populateArithDissaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateArithDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
+void populateVectorDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 void populateTrivialDisaggPatterns(MLIRContext *ctx, RewritePatternSet &patterns);
 
 std::unique_ptr<Pass> createMemDisaggregationPass();

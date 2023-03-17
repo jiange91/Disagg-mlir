@@ -70,6 +70,13 @@ bool mlir::rmem::hasRemoteTarget(Type type) {
   return hasRemoteTargetImpl(type, callStack);
 }
 
+bool mlir::rmem::isTrueRemoteRef(Type type) {
+  if (auto rt = dyn_cast<rmem::RemoteMemRefType>(type)) {
+    return rt.getCanRemote() != 0;
+  }
+  return false;
+}
+
 //====--------------------------------------====
 // Recursively obtain the raw type
 //====--------------------------------------====

@@ -121,6 +121,14 @@ def RemoteMem_AsyncRDMAOp : RemoteMem_Op<"rdma"> {
   }];
 }
 
+def RemoteMem_GetWRIDOp : RemoteMem_Op<"wrid"> {
+  let summary = "Get a unique work request id";
+  let results = (outs Index: $id);
+  let assemblyFormat = [{
+    attr-dict `:` type($id)
+  }];
+}
+
 def RemoteMem_WaitReqOp : RemoteMem_Op<"sync"> {
   let summary = "Polling given id to finish";
   let arguments = (ins Index: $id);

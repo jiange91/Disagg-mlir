@@ -34,6 +34,8 @@ static constexpr llvm::StringRef kRDMA = "rdma";
 static constexpr llvm::StringRef kRRSync = "rring_sync";
 static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
 static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
+static constexpr llvm::StringRef kRDMASbuf = "sbuf";
+static constexpr llvm::StringRef kRDMARbuf = "rbuf";
 static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
 
 //==============================================================================
@@ -126,6 +128,36 @@ bool mlir::rmem::isCacheAccessOp(const StringRef callee) {
           callee.equals(kCacheAccessNRTCMut));
 }
 
+LLVM::GlobalOp mlir::rmem::getOrCreateSbuf(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kRDMASbuf);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    getVoidPtrType(ctx), 
+    false, 
+    LLVM::Linkage::External, 
+    kRDMASbuf,
+    nullptr
+  ); 
+}
+
+LLVM::GlobalOp mlir::rmem::getOrCreateRbuf(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kRDMARbuf);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    getVoidPtrType(ctx), 
+    false, 
+    LLVM::Linkage::External, 
+    kRDMASbuf,
+    nullptr
+  ); 
+}
+
 LLVM::GlobalOp mlir::rmem::getOrCreateOffloadArgBuf(ModuleOp moduleOp) {
   auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kOffloadArgBuf);
   if (op)
@@ -136,7 +168,7 @@ LLVM::GlobalOp mlir::rmem::getOrCreateOffloadArgBuf(ModuleOp moduleOp) {
     getVoidPtrType(ctx), 
     false, 
     LLVM::Linkage::External, 
-    kOffloadArgBuf,
+    kRDMARbuf,
     nullptr
   );
 }

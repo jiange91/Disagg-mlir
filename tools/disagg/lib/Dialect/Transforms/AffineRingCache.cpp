@@ -57,23 +57,40 @@ namespace {
 struct MemoryRegion {
 public:
   MemoryRegion(): sizeInEle(0), only_oneD(false) {}
-  MemoryRegion(Value base, AffineMap map, uint64_t s, bool only_oneD):
-    baseAddr(base), map(map), sizeInEle(s), only_oneD(only_oneD), index_in_iterargs(0) {}
+  MemoryRegion(Value base, StringRef baseSym, AffineMap map, uint64_t s, bool only_oneD,
+    const std::vector<Value> dep_inductions, 
+    DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange
+  );
+
   void inspectRegion() {
     llvm::errs() << "-- region --\n";
     llvm::errs() << "base: ";
     baseAddr.dump();
-    llvm::errs() << "map: ";
-    map.dump();
     llvm::errs() << "sizeInEle: " << sizeInEle << "\n";
     llvm::errs() << "not depending on the last induction: " << only_oneD << "\n";
+    llvm::errs() << "map: ";
+    map.dump();
+    llvm::errs() << "ind ranges: \n";
+    for (size_t i = 0; i < low_indvars.size(); ++ i)
+      llvm::errs() << i << "[" << low_indvars[i] << ", " << high_indvars[i] << "]\n";
+    llvm::errs() << "use pool: " << fromPool << "\n";
   }
+
+  bool canUsePoolForThis(const LocalCache &cache, uint64_t batch);
+  void createNewCache(uint64_t batch, DenseMap<StringRef, LocalCache> &localPools, RemoteMemTypeLowerer &typeConverter);
+
   Value baseAddr;
   AffineMap map;
   uint64_t sizeInEle;
-
   bool only_oneD;
+
+  std::vector<Value> dep_inductions; 
+  SmallVector<Attribute> low_indvars;
+  SmallVector<Attribute> high_indvars;
+
   size_t index_in_iterargs;
+  StringRef baseSym;
+  std::string fromPool;
 };
 
 struct RmemAccess {
@@ -131,6 +148,7 @@ public:
     DenseMap<AffineForOp, std::vector<Value>> &indVars,
     DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange,
     DenseMap<StringRef, Value> &access_mem_base_pool, 
+    DenseMap<StringRef, LocalCache> &localPools,
     AffineForOp outmost);
   void inspectPrefetchDetails();
   void emitOperatorKernel();
@@ -149,9 +167,11 @@ public:
   DenseMap<AffineForOp, std::vector<Value>> &indVars;
   // all induction -> range
   DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange;
-
   // remote mem access ops
   DenseMap<Operation *, RmemAccess> raccess;
+
+  // All existing local cache templates
+  DenseMap<StringRef, LocalCache> localPools;
 
   AffineForOp outerLoop;
   AffineForOp innterLoop;
@@ -223,6 +243,31 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
     MLIRContext *ctx = op.getContext();
     RemoteMemTypeLowerer typeConverter(ctx);
 
+    // populate access_mem base address catcher
+    // now assume the baseaddress is the 
+    DenseMap<StringRef, Value> access_mem_base_pool;
+    op.walk([&](mlir::Operation *op) {
+      if (auto catchers = op->getAttrOfType<ArrayAttr>("access_mem_catcher")) {
+        for (auto attr : catchers) {
+          auto catcher = attr.cast<ArrayAttr>();
+          StringRef name = catcher[0].cast<StringAttr>().getValue();
+          uint64_t i = catcher[1].cast<IntegerAttr>().getValue().getZExtValue();
+          if (auto fop = dyn_cast<func::FuncOp>(op))
+            access_mem_base_pool[name] = fop.getArgument(i);
+          else
+            access_mem_base_pool[name] = op->getResult(i);
+        }
+      }
+    });
+
+    // populate existing local caches
+    DenseMap<StringRef, LocalCache> pools;
+    if (auto ts = op->getAttrOfType<DictionaryAttr>("rmem.templates")) {
+      for (auto p : ts) {
+        pools[p.getName().getValue()] = LocalCache(p.getValue().cast<ArrayAttr>(), access_mem_base_pool);
+      }
+    }
+
     // Populate target loops
     std::vector<AffineForOp> loops;
     // Encolsing relationship <v `is closest parent of` k>
@@ -255,23 +300,6 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
       ind_dfs(loop, indVars, nest);
     });
 
-    // populate access_mem base address catcher
-    // now assume the baseaddress is the 
-    DenseMap<StringRef, Value> access_mem_base_pool;
-    op.walk([&](mlir::Operation *op) {
-      if (auto catchers = op->getAttrOfType<ArrayAttr>("access_mem_catcher")) {
-        for (auto attr : catchers) {
-          auto catcher = attr.cast<ArrayAttr>();
-          StringRef name = catcher[0].cast<StringAttr>().getValue();
-          uint64_t i = catcher[1].cast<IntegerAttr>().getValue().getZExtValue();
-          if (auto fop = dyn_cast<func::FuncOp>(op))
-            access_mem_base_pool[name] = fop.getArgument(i);
-          else
-            access_mem_base_pool[name] = op->getResult(i);
-        }
-      }
-    });
-
     // Populate worklist
     DenseMap<AffineForOp, AffineForOp> outmosts;
     std::vector<AffineForPrefetchInternal> workList;
@@ -281,7 +309,9 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
       workList.emplace_back(
         loop, typeConverter, 
         indVars, indVarRange, 
-        access_mem_base_pool, outmost);
+        access_mem_base_pool, 
+        pools,
+        outmost);
     }
 
     for (auto w : workList) {
@@ -397,6 +427,94 @@ AffineExpr offset_dfs(Value v,
 
   v2Expr[v] = expr;
   return expr;
+}
+
+MemoryRegion::MemoryRegion(Value base, StringRef baseSym, AffineMap map, uint64_t s, bool only_oneD,
+    const std::vector<Value> dep_inductions, 
+    DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange):
+    baseAddr(base), map(map), sizeInEle(s), only_oneD(only_oneD), dep_inductions(dep_inductions), index_in_iterargs(0), baseSym(baseSym) {
+  OpBuilder b(base.getContext());
+  for (auto v : dep_inductions) {
+    int64_t l = -1, h = -1;
+    if (indVarRange.find(v) != indVarRange.end()) {
+      l = std::get<0>(indVarRange[v]);
+      h = std::get<1>(indVarRange[v]);
+    }
+    low_indvars.push_back(b.getIndexAttr(l));
+    high_indvars.push_back(b.getIndexAttr(h));
+  }
+}
+
+// not used now
+bool MemoryRegion::canUsePoolForThis(const LocalCache &cache, uint64_t batch) {
+  return false;
+  if (cache.rbase != baseAddr)
+    return false;
+  size_t blockSize = only_oneD ? sizeInEle : sizeInEle * batch;
+  if (cache.blockSize != blockSize)
+    return false;
+
+  // 0 <=
+  //   mem.offset(base) - cache.roffset(base)
+  // <= cache.rsize - mem.size
+  AffineExpr trace = map.getResult(0) - getAffineConstantExpr(cache.rOfst, baseAddr.getContext());
+  AffineMap m = AffineMap::get(map.getNumDims(), 0, trace);
+  AffineMap sm = simplifyAffineMap(m);
+
+  // compute lower bound
+  SmallVector<Attribute, 1> lowRel;
+  if (sm.constantFold(low_indvars, lowRel).failed()) 
+    return false;
+  auto lowc = lowRel[0].cast<IntegerAttr>().getValue();
+  // llvm::errs() << lowc.getSExtValue() << "\n";
+  if (lowc.slt(0))
+    return false;
+
+  // compute upper bound
+  // if cache represents the whole continuous memory start from base
+  // return usable
+  if (cache.rSize == -1)
+    return true;
+
+  SmallVector<Attribute, 1> highRel;
+  if (sm.constantFold(high_indvars, highRel).failed()) 
+    return false;
+  auto highc = highRel[0].cast<IntegerAttr>().getValue();
+  // llvm::errs() << highc.getSExtValue() << "\n";
+  if (highc.sgt(cache.rSize - sizeInEle))
+    return false;
+  return true;
+}
+
+void MemoryRegion::createNewCache(uint64_t batch, DenseMap<StringRef, LocalCache> &localPools, RemoteMemTypeLowerer &typeConverter) {
+  // get lower bound and upper bound
+  int64_t low = 0, high = -1;
+  SmallVector<Attribute, 1> lowRel;
+  if (map.constantFold(low_indvars, lowRel).succeeded()) 
+    low = std::max(lowRel[0].cast<IntegerAttr>().getValue().getSExtValue(), low);
+  SmallVector<Attribute, 1> highRel;
+  if (map.constantFold(high_indvars, highRel).succeeded()) 
+    high = std::max(highRel[0].cast<IntegerAttr>().getValue().getSExtValue(), high);
+
+  unsigned t = 0;
+  for (; t < INT_MAX; ++ t) {
+    std::string cacheRef("t" + std::to_string(t));
+    if (localPools.find(cacheRef) != localPools.end())
+      continue;
+
+    Type eleType = rmem::getEleTypeFromRemoteMemRef(baseAddr.getType().cast<RemoteMemRefType>());
+    Type rawEleType = typeConverter.convertType(eleType);
+    int64_t blockSize = sizeInEle;
+    if (!only_oneD)
+      blockSize *= batch;
+    int64_t rSize = high == -1 ? -1 : high - low + sizeInEle;
+    auto cache = LocalCache(CacheType::Ring_Direct, 0, baseAddr, baseSym, rawEleType, low, rSize, blockSize, 0);
+    fromPool = cacheRef;
+    localPools[fromPool] = cache;
+    break;
+  }
+  if (t == INT_MAX)
+    llvm_unreachable("Cannot name a new local cache anymore");
 }
 
 std::pair<int64_t, AffineMap> RmemAccess::getAccessRange(
@@ -590,9 +708,10 @@ AffineForPrefetchInternal::AffineForPrefetchInternal(
   DenseMap<AffineForOp, std::vector<Value>> &indVars,
   DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange,
   DenseMap<StringRef, Value> &access_mem_base_pool, 
+  DenseMap<StringRef, LocalCache> &localPools,
   AffineForOp outmost):
   loop(loop), b(loop), typeConverter(typeConverter), 
-  indVars(indVars), indVarRange(indVarRange) {
+  indVars(indVars), indVarRange(indVarRange), localPools(localPools) {
     // Extract batch for all remote mem access
     batch = loop->getAttrOfType<mlir::IntegerAttr>("batch").getValue().getZExtValue();
 
@@ -605,11 +724,43 @@ AffineForPrefetchInternal::AffineForPrefetchInternal(
       StringRef name = attrs[0].cast<mlir::StringAttr>().getValue();
       AffineMap map = attrs[1].cast<mlir::AffineMapAttr>().getValue();
       uint64_t msize = attrs[2].cast<mlir::IntegerAttr>().getValue().getZExtValue();
+      StringRef poolRef = attrs[3].cast<mlir::StringAttr>().getValue();
 
       assert(access_mem_base_pool.find(name) != access_mem_base_pool.end() && "Cannot find name in the pool created by the access_mem_catcher");
       Value base_addr = access_mem_base_pool[name];
-      access_mem.emplace_back(base_addr, map, msize, !map.isFunctionOfDim(indVars[loop].size()-1));
+
+      // search existing local pools, add one if cannot accomodate current access mem
+      access_mem.emplace_back(base_addr, name, map, msize, !map.isFunctionOfDim(indVars[loop].size()-1), indVars[loop], indVarRange);
+      access_mem.back().fromPool = poolRef;
     }
+
+    // TODO have a transform to assign local pools
+    // now manual assign
+#if 0
+    for (auto &mem : access_mem) {
+      bool ok = false;
+      for (auto &[name, cache] : localPools) {
+        if (mem.canUsePoolForThis(cache, batch)) {
+          mem.fromPool = name;
+          ok = true;
+          break;
+        }
+      }
+      if (!ok) {
+        mem.createNewCache(batch, localPools, typeConverter);
+      }
+    }
+
+    // set to module attribute 
+    {
+      ModuleOp mop = loop->getParentOfType<ModuleOp>();
+      SmallVector<NamedAttribute, 4> pools;
+      for (auto &[name, cache] : localPools ) {
+        pools.emplace_back(b.getStringAttr(name), cache.toAttr(b));
+      }
+      mop->setAttr("rmem.templates", b.getDictionaryAttr(pools));
+    }
+#endif
 
     // Populate remote accesses within current loop
     //
@@ -666,7 +817,7 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
       relType = MemRefType::get({(int64_t)batch, (int64_t)mem.sizeInEle}, rawEleType);
       fetchSize = b.create<arith::ConstantIndexOp>(loc, mem.sizeInEle * batch);
     }
-    Value pf = b.create<rmem::AsyncRDMAOp>(loc, 
+    auto pf = b.create<rmem::AsyncRDMAOp>(loc, 
       relType,
       mem.baseAddr,
       affineInputs,
@@ -674,8 +825,19 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
       fetchSize,
       wrid
     );
-    return pf;
+    pf->setAttr("from_pool", b.getStringAttr(mem.fromPool));
+    return pf.getResult();
   };
+
+  // Prepare wrid waiter
+  Value rPtr = b.create<LLVM::AllocaOp>(loc, 
+    LLVM::LLVMPointerType::get(b.getI64Type()),
+    b.create<arith::ConstantIntOp>(loc, 1, 64),
+    0
+  );
+  b.create<LLVM::StoreOp>(loc, 
+    b.create<arith::ConstantIntOp>(loc, 0, 64), rPtr
+  );
 
   /*
   make prologue prefetches
@@ -731,6 +893,7 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
   // sync static area
   if (num_static > 0) {
     b.create<rmem::WaitReqOp>(loc, 
+      rPtr,
       static_sync_id
     ); 
   }
@@ -772,6 +935,7 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
 
     // sync previous fetch
     b.create<rmem::WaitReqOp>(loc, 
+      rPtr,
       *(pfs.begin() + access_mem.size())
     );
   }

@@ -131,9 +131,11 @@ def RemoteMem_GetWRIDOp : RemoteMem_Op<"wrid"> {
 
 def RemoteMem_WaitReqOp : RemoteMem_Op<"sync"> {
   let summary = "Polling given id to finish";
-  let arguments = (ins Index: $id);
+  let arguments = (ins 
+    Arg<LLVM_PointerTo<I64>,"",[MemWrite]>:$R,
+    Index:$id);
   let assemblyFormat = [{
-    $id attr-dict `:` type($id)
+    $R `->` $id attr-dict `:` type($R)`,`type($id)
   }];
 }
 
@@ -153,5 +155,6 @@ def RemoteMem_ExtractOp : RemoteMem_Op<"extract"> {
     $base `[` $offset `]` attr-dict `:` functional-type(operands, results)
   }]; 
 }
+
 
 #endif

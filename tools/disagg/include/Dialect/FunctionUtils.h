@@ -25,6 +25,10 @@ LLVM::LLVMVoidType getVoidType(MLIRContext *ctx);
 LLVM::LLVMPointerType getVoidPtrType(MLIRContext *ctx);
 bool isCacheAccessOp(const StringRef calless);
 
+// get rdma send/recv buf
+LLVM::GlobalOp getOrCreateSbuf(ModuleOp moduleOp);
+LLVM::GlobalOp getOrCreateRbuf(ModuleOp moduleOp);
+
 // get offload return buf
 LLVM::GlobalOp getOrCreateOffloadArgBuf(ModuleOp moduleOp);
 LLVM::GlobalOp getOrCreateOffloadRetBuf(ModuleOp moduleOp);

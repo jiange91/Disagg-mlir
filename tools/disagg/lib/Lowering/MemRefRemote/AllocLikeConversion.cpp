@@ -26,7 +26,7 @@ std::tuple<Value, Value> RMemAllocationOpLLVMLowering::allocateBufferManuallyAli
     sizeBytes = rewriter.create<LLVM::AddOp>(loc, sizeBytes, alignment);
   }
 
-  MemRefType memRefType = getMemRefResultType(op);
+  MemRefType memRefType = typeConverter->convertType(op->getResult(0).getType()).cast<MemRefType>();
   // Allocate the underlying buffer.
   Type elementPtrType = this->getElementPtrType(memRefType);
   LLVM::LLVMFuncOp allocFuncOp = rmem::lookupOrCreateAllocFn(
@@ -52,7 +52,7 @@ std::tuple<Value, Value> RMemAllocationOpLLVMLowering::allocateBufferManuallyAli
 LogicalResult RMemAllocLikeOpLLVMLowering::matchAndRewrite(
     Operation *op, ArrayRef<Value> operands,
     ConversionPatternRewriter &rewriter) const {
-  MemRefType memRefType = getMemRefResultType(op);
+  MemRefType memRefType = typeConverter->convertType(op->getResult(0).getType()).cast<MemRefType>();
   if (!isConvertibleAndHasIdentityMaps(memRefType))
     return rewriter.notifyMatchFailure(op, "incompatible memref type");
   auto loc = op->getLoc();

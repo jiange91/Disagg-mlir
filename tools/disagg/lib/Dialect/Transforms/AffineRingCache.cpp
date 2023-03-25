@@ -22,10 +22,15 @@
 #include <tuple>
 
 enum access_type {
-  READ_ONLY = 0,
+  NO_EFFECT = 0,
+  READ_ONLY,
   WRITE_ONLY,
   READ_AND_WRITE
 };
+
+inline access_type operator | (access_type a, access_type b) {
+  return access_type(static_cast<int>(a) | static_cast<int>(b));
+}
 
 enum ibv_wr_opcode {
 	IBV_WR_RDMA_WRITE,
@@ -56,7 +61,7 @@ namespace {
 
 struct MemoryRegion {
 public:
-  MemoryRegion(): sizeInEle(0), only_oneD(false) {}
+  MemoryRegion(): sizeInEle(0), only_oneD(false), t(access_type::NO_EFFECT) {}
   MemoryRegion(Value base, StringRef baseSym, AffineMap map, uint64_t s, bool only_oneD,
     const std::vector<Value> dep_inductions, 
     DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange
@@ -74,6 +79,7 @@ public:
     for (size_t i = 0; i < low_indvars.size(); ++ i)
       llvm::errs() << i << "[" << low_indvars[i] << ", " << high_indvars[i] << "]\n";
     llvm::errs() << "use pool: " << fromPool << "\n";
+    llvm::errs() << "type: " << t << "\n";
   }
 
   bool canUsePoolForThis(const LocalCache &cache, uint64_t batch);
@@ -91,6 +97,8 @@ public:
   size_t index_in_iterargs;
   StringRef baseSym;
   std::string fromPool;
+
+  access_type t;
 };
 
 struct RmemAccess {
@@ -151,6 +159,7 @@ public:
     DenseMap<StringRef, LocalCache> &localPools,
     AffineForOp outmost);
   void inspectPrefetchDetails();
+  Type getBatchedMemType(MemoryRegion mem);
   void emitOperatorKernel();
   void emitRuntimeKernel();
 
@@ -161,7 +170,8 @@ public:
   // access mem
   uint64_t batch;
   uint64_t nahead;
-  std::vector<MemoryRegion> access_mem;
+  std::vector<MemoryRegion> staticAccessMem;
+  std::vector<MemoryRegion> nonStaticAccessMem;
 
   // loop -> all enclosing loops' induction vars
   DenseMap<AffineForOp, std::vector<Value>> &indVars;
@@ -169,6 +179,8 @@ public:
   DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange;
   // remote mem access ops
   DenseMap<Operation *, RmemAccess> raccess;
+  // remote mem access -> available access mem
+  DenseMap<Operation *, std::tuple<bool, size_t, AffineMap>> raccess_2_mem;
 
   // All existing local cache templates
   DenseMap<StringRef, LocalCache> localPools;
@@ -443,6 +455,7 @@ MemoryRegion::MemoryRegion(Value base, StringRef baseSym, AffineMap map, uint64_
     low_indvars.push_back(b.getIndexAttr(l));
     high_indvars.push_back(b.getIndexAttr(h));
   }
+  t = access_type::NO_EFFECT;
 }
 
 // not used now
@@ -730,8 +743,27 @@ AffineForPrefetchInternal::AffineForPrefetchInternal(
       Value base_addr = access_mem_base_pool[name];
 
       // search existing local pools, add one if cannot accomodate current access mem
-      access_mem.emplace_back(base_addr, name, map, msize, !map.isFunctionOfDim(indVars[loop].size()-1), indVars[loop], indVarRange);
-      access_mem.back().fromPool = poolRef;
+      MemoryRegion mem(base_addr, name, map, msize, !map.isFunctionOfDim(indVars[loop].size()-1), indVars[loop], indVarRange);
+      mem.fromPool = poolRef;
+      if (mem.only_oneD)
+        staticAccessMem.push_back(mem);
+      else
+        nonStaticAccessMem.push_back(mem);
+    }
+
+    // set relative positon of access_mem in loop iter args
+    // Ord:
+    // [h, t, oneD1, oneDN, ..., non-oneD1, non-oneDN]
+    {
+      size_t ord = 2;
+      for (auto &mem : staticAccessMem) {
+        if (mem.only_oneD)
+          mem.index_in_iterargs = (ord ++);
+      }
+      for (auto &mem : nonStaticAccessMem) {
+        if (!mem.only_oneD)
+          mem.index_in_iterargs = (ord ++);
+      }
     }
 
     // TODO have a transform to assign local pools
@@ -770,6 +802,22 @@ AffineForPrefetchInternal::AffineForPrefetchInternal(
       if (isRemote) {
         AffineForOp l = op->getParentOfType<AffineForOp>();
         raccess[op] = RmemAccess(op, addr, indVars[l], indVarRange, v2Expr);
+        for (size_t mi = 0; mi < staticAccessMem.size(); ++ mi) {
+          auto [use, map] = raccess[op].canUseRegionForThis(staticAccessMem[mi]);
+          if (use) {
+            raccess_2_mem[op] = {true, mi, map};
+            staticAccessMem[mi].t = staticAccessMem[mi].t | raccess[op].t;
+            break;
+          }
+        }
+        for (size_t mi = 0; mi < nonStaticAccessMem.size(); ++ mi) {
+          auto [use, map] = raccess[op].canUseRegionForThis(nonStaticAccessMem[mi]);
+          if (use) {
+            raccess_2_mem[op] = {false, mi, map};
+            nonStaticAccessMem[mi].t = nonStaticAccessMem[mi].t | raccess[op].t;
+            break;
+          }
+        }
       }
     }); 
   }
@@ -780,21 +828,64 @@ void AffineForPrefetchInternal::inspectPrefetchDetails() {
   llvm::errs() << "batch: " << batch << "\n";
   llvm::errs() << "nahead: " << nahead << "\n";
   llvm::errs() << "num indvars: " << indVars[loop].size() << "\n";
-  for (auto m : access_mem)
+  llvm::errs() << "static access mems: \n";
+  for (auto m : staticAccessMem)
+    m.inspectRegion();
+  llvm::errs() << "non-static access mems: \n";
+  for (auto m : nonStaticAccessMem)
     m.inspectRegion();
   for (auto [op, detail] : raccess)
     detail.inspectAccess();
   llvm::errs() << "--- end ---\n";
 }
 
+Type AffineForPrefetchInternal::getBatchedMemType(MemoryRegion mem) {
+  Type eleType = rmem::getEleTypeFromRemoteMemRef(mem.baseAddr.getType().cast<RemoteMemRefType>());
+  Type rawEleType = typeConverter.convertType(eleType);
+  Type relType;
+  if (mem.only_oneD) {
+    relType = MemRefType::get({(int64_t)mem.sizeInEle}, rawEleType);
+  }
+  else {
+    relType = MemRefType::get({(int64_t)batch, (int64_t)mem.sizeInEle}, rawEleType);
+  }
+  return relType;
+}
+
 void AffineForPrefetchInternal::emitOperatorKernel() {
+  // generated loop in high level:
+  // alloca h, t
+// prologue:
+  // static_mem = current-loop-independent access mem prefetch
+  // for n_prefetch:
+    // non_stat_mem += current-loop-dependent access mem prefetch
+  // sync-static-mem
+  // iter_args = [h, t, static_mem, non_static_mem]
+// 
+// outerloop (iter_args):
+  // new-non-static-mem = prefetch
+  // innerloop:
+    // sync-non-static-prefetch
+    // original inner loops
+  // innerloop-end
+  // non-static-write-back
+  // sync-non-static-write-back
+  // new-iter-args = [h+1, t+1, static_mem, new-non-static-mem]
+  // outer-yield new-iter-args
+// outerloop-end
+// 
+  // sync-static-write-back
+
   Location loc = loop.getLoc();
   // Emit prologues
   int64_t low = loop.getConstantLowerBound();
   b.setInsertionPoint(loop);
+  Value cst0_64 = b.create<arith::ConstantIntOp>(loc, 0, 64);
+  Value cst0_index = b.create<arith::ConstantIndexOp>(loc, 0);
+  Value cst1_index = b.create<arith::ConstantIndexOp>(loc, 1);
 
   // helper to make rdma with indent curInd and base mem
-  auto prefetchWithCurInd = [&](MemoryRegion mem, Value curInd, Value wrid) -> Value {
+  auto rdmaWithCurInd = [&](MemoryRegion mem, Value localIndex, Value curInd, ibv_wr_opcode t, Value wrid) -> rmem::AsyncRDMAOp {
     // prepare prefetch operands
     AffineMap map = mem.map;
     const auto &inductions = indVars[loop];
@@ -804,101 +895,155 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
       inductions.begin(), inductions.begin() + inductions.size() - 1);
     affineInputs.push_back(curInd);
 
-    // issue prefetch
-    Type eleType = rmem::getEleTypeFromRemoteMemRef(mem.baseAddr.getType().cast<RemoteMemRefType>());
-    Type rawEleType = typeConverter.convertType(eleType);
-    Type relType;
+    Type relType = getBatchedMemType(mem);
     Value fetchSize;
     if (mem.only_oneD) {
-      relType = MemRefType::get({(int64_t)mem.sizeInEle}, rawEleType);
       fetchSize = b.create<arith::ConstantIndexOp>(loc, mem.sizeInEle);
     }
     else {
-      relType = MemRefType::get({(int64_t)batch, (int64_t)mem.sizeInEle}, rawEleType);
       fetchSize = b.create<arith::ConstantIndexOp>(loc, mem.sizeInEle * batch);
     }
+
+    // issue prefetch
     auto pf = b.create<rmem::AsyncRDMAOp>(loc, 
       relType,
+      b.getStringAttr(mem.fromPool),
+      localIndex,
       mem.baseAddr,
       affineInputs,
       AffineMapAttr::get(map),
       fetchSize,
+      b.getI32IntegerAttr(static_cast<int>(t)),
       wrid
     );
-    pf->setAttr("from_pool", b.getStringAttr(mem.fromPool));
-    return pf.getResult();
+    // pf->setAttr("from_pool", b.getStringAttr(mem.fromPool));
+    return pf;
   };
 
-  // Prepare wrid waiter
+  // helper to prefetch mem and return wrids
+  // use cst0_index for the rest wrid
+  // The returned wrids will be empty if
+  // all mem access is write only
+  auto prefetchMem = [&](
+    std::vector<MemoryRegion> &access_mem, 
+    Value localIndex, 
+    Value curInduction, 
+    std::vector<Value> &localMem) -> SmallVector<Value> {
+    SmallVector<Value> wrids;
+    for (size_t mi = 0; mi < access_mem.size(); ++mi) {
+      auto &mem = access_mem[mi];
+      if (mem.t == READ_ONLY || mem.t == READ_AND_WRITE) {
+        Value wrid;
+        if (mi == access_mem.size() - 1)
+          wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
+        else
+          wrid = cst0_index;
+        Value lm = rdmaWithCurInd(mem, cst0_index, curInduction, IBV_WR_RDMA_READ, wrid).getResult();
+        localMem.push_back(lm); 
+        wrids.push_back(wrid);
+      } else {
+        localMem.push_back(b.create<rmem::getSlotOp>(loc, getBatchedMemType(mem), b.getStringAttr(mem.fromPool), localIndex));
+      }
+    }
+    return wrids;
+  };
+
+  auto writeBack = [&](
+    std::vector<MemoryRegion> &access_mem, 
+    Value localIndex, 
+    Value curInduction, 
+    SmallVector<Value> &wrids) -> void {
+    for (size_t mi = 0; mi < access_mem.size(); ++mi) {
+      auto &mem = access_mem[mi];
+      if (mem.t == WRITE_ONLY || mem.t == READ_AND_WRITE) {
+        Value wrid;
+        if (mi == access_mem.size() - 1)
+          wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
+        else
+          wrid = cst0_index;
+        rdmaWithCurInd(mem, localIndex, curInduction, IBV_WR_RDMA_WRITE, wrid).getResult();
+        wrids.push_back(wrid);
+      }
+    }
+  };
+
+  // Prepare wrid waiter r
   Value rPtr = b.create<LLVM::AllocaOp>(loc, 
     LLVM::LLVMPointerType::get(b.getI64Type()),
     b.create<arith::ConstantIntOp>(loc, 1, 64),
     0
   );
   b.create<LLVM::StoreOp>(loc, 
-    b.create<arith::ConstantIntOp>(loc, 0, 64), rPtr
+    cst0_64, rPtr
+  );
+
+  // Prepare wrid waiter s
+  Value sPtr = b.create<LLVM::AllocaOp>(loc, 
+    LLVM::LLVMPointerType::get(b.getI64Type()),
+    b.create<arith::ConstantIntOp>(loc, 1, 64),
+    0
+  );
+  b.create<LLVM::StoreOp>(loc, 
+    cst0_64, sPtr
   );
 
   /*
   make prologue prefetches
   result values: [
+    h, t,
     static non-induction depending access memory
-    head 1: [access_mem1, access_mem2, ...,] + wrid1
+    head 1: [access_mem1, access_mem2, ...,] + Optional wrid1
     ...
-    head n: [access_mem1, access_mem2, ...,] + wridn
+    head n: [access_mem1, access_mem2, ...,] + Optional wridn
   ]
   the order will be organized so that memory access not depend on
   the target loop will come first
   */
+  Operation *afterPrologue;
   std::vector<Value> prologues; 
+  // insert ht
+  prologues.push_back(b.create<arith::ConstantIndexOp>(loc, nahead));
+  prologues.push_back(cst0_index);
 
   // static
   Value ind_static = b.create<arith::ConstantIndexOp>(loc, low);
-  Value static_sync_id;
-  for (auto &mem : access_mem) {
-    if (mem.only_oneD) {
-      Value wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
-      prologues.push_back(prefetchWithCurInd(mem, ind_static, wrid)); 
-      mem.index_in_iterargs = prologues.size() - 1;
-      static_sync_id = wrid;
-    }
-  }
-  size_t num_static = prologues.size();
-
-  // set idx in iter args for non-static mem
-  {
-    size_t idx = 0;
-    for (auto &mem : access_mem) {
-      if (!mem.only_oneD) {
-        mem.index_in_iterargs = num_static + (idx++);
-      }
-    }
-  }
+  SmallVector<Value> staticSyncID = prefetchMem(staticAccessMem, cst0_index, ind_static, prologues);
+  afterPrologue = prologues.back().getDefiningOp();
 
   // non-static
-  if (access_mem.size() > num_static) {
+  bool nonStaticOnlyWrite = true;
+  if (!nonStaticAccessMem.empty()) {
     for (uint64_t h = 0; h < nahead; ++ h) {
       mlir::Value curInd = b.create<arith::ConstantIndexOp>(loc, low + h * batch * loop.getStep());
-      mlir::Value sync_id;
-      for (auto &mem : access_mem) {
-        if (!mem.only_oneD) {
-          Value wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
-          prologues.push_back(prefetchWithCurInd(mem, curInd, wrid));
-          sync_id = wrid;
-        }
+      Value prefIndex = b.create<arith::ConstantIndexOp>(loc, h);
+      SmallVector<Value> nStaticSyncID = prefetchMem(nonStaticAccessMem, prefIndex, curInd, prologues);
+      afterPrologue = prologues.back().getDefiningOp();
+      if (!nStaticSyncID.empty()) {
+        nonStaticOnlyWrite = false;
+        prologues.push_back(nStaticSyncID.back());
       }
-      prologues.push_back(sync_id);
     }
   }
-  // sync static area
-  if (num_static > 0) {
-    b.create<rmem::WaitReqOp>(loc, 
+
+  // sync static mem
+  if (!staticSyncID.empty()) {
+    auto statcSync = b.create<rmem::WaitReqOp>(loc, 
       rPtr,
-      static_sync_id
-    ); 
+      staticSyncID.back()
+    );
+    afterPrologue = statcSync;
+  }
+
+  {
+    // wb static mem if any
+    SmallVector<Value> staticWBIDs;
+    writeBack(staticAccessMem, cst0_index, ind_static, staticWBIDs);
+    if (!staticWBIDs.empty())
+      b.create<rmem::WaitReqOp>(loc, sPtr, staticWBIDs.back());
   }
 
   // Emit outer loop
+  b.setInsertionPointAfter(afterPrologue);
   outerLoop = b.create<AffineForOp>(loc, 
     loop.getLowerBoundOperands(),
     loop.getLowerBoundMap(),
@@ -907,44 +1052,68 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
     loop.getStep() * batch,
     prologues
   );
-
   b.setInsertionPointToStart(outerLoop.getBody());
   auto pfs = outerLoop.getRegionIterArgs();
+  size_t num_access_mem = staticAccessMem.size() + nonStaticAccessMem.size();
 
-  // prefetched access_mem to sync on and use in current iter
-  std::vector<Value> currentIter(pfs.begin(), pfs.begin() + access_mem.size());
-  // next iter prefetched access_mem
-  std::vector<Value> nextIter(pfs.begin(), pfs.begin() + num_static);
-  if (access_mem.size() > num_static) {
-    nextIter.insert(nextIter.end(), pfs.begin() + access_mem.size() + 1, pfs.end());
+  // get h, t, static local mem and non static local mem
+  // for the current iter
+  std::vector<Value> currentIter(pfs.begin(), pfs.begin() + 2 + num_access_mem);
+  // next iter prefetched ht
+  std::vector<Value> nextIter;
+  Value nexth = b.create<arith::AddIOp>(loc, cst1_index, currentIter[0]);
+  Value nextt = b.create<arith::AddIOp>(loc, cst1_index, currentIter[1]);
+  nextIter.push_back(nexth);
+  nextIter.push_back(nextt);
+
+  // next iter [h, t, static mems]
+  Operation *afterPrefetch = nullptr;
+  nextIter.insert(nextIter.end(), pfs.begin() + 2, pfs.begin() + 2 + staticAccessMem.size());
+  if (nonStaticAccessMem.size()) {
+    // next iter [h, t, static mems, non-static mems prefethed]
+    if (nonStaticOnlyWrite)
+      nextIter.insert(nextIter.end(), pfs.begin() + 2 + num_access_mem, pfs.end());
+    else
+      nextIter.insert(nextIter.end(), pfs.begin() + 2 + num_access_mem + 1, pfs.end());
 
     // prefetch in loop body
+    // next iter [h, t, static mems, non-static mems prefethed, newly prefethed]
     int64_t step = outerLoop.getStep();
     mlir::Value prefInd = b.create<arith::AddIOp>(loc, 
       b.create<arith::ConstantIndexOp>(loc, nahead * step),
       outerLoop.getInductionVar()
     );
-    Value pref_sync_id;
-    for (auto &mem : access_mem) {
-      if (!mem.only_oneD) {
-        pref_sync_id = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
-        nextIter.push_back(prefetchWithCurInd(mem, prefInd, pref_sync_id));
-      }
+    SmallVector<Value> prefSyncId = prefetchMem(nonStaticAccessMem, currentIter[0], prefInd, nextIter);
+    afterPrefetch = nextIter.back().getDefiningOp();
+    if (!prefSyncId.empty()) {
+      nextIter.push_back(prefSyncId.back());
+      // also indicate that prologues also has prefetches
+      // sync previous fetch
+      auto inLoopSync = b.create<rmem::WaitReqOp>(loc, 
+        rPtr,
+        *(pfs.begin() + 2 + num_access_mem)
+      );
+      afterPrefetch = inLoopSync;
     }
-    nextIter.push_back(pref_sync_id);
-
-    // sync previous fetch
-    b.create<rmem::WaitReqOp>(loc, 
-      rPtr,
-      *(pfs.begin() + access_mem.size())
-    );
   }
 
-  // yield next iter
-  auto yield = b.create<AffineYieldOp>(loc, nextIter);
+  // writeback non-static if any
+  {
+    SmallVector<Value> nStaticWBIDs;
+    writeBack(nonStaticAccessMem, currentIter[1], outerLoop.getInductionVar(), nStaticWBIDs);
+    if (!nStaticWBIDs.empty())
+      b.create<rmem::WaitReqOp>(loc, sPtr, nStaticWBIDs.back());
+
+    // yield next iter
+    b.create<AffineYieldOp>(loc, nextIter);
+    // insertion point will be set before 
+    // 1. Yield op 
+    // 2. the first write back op
+  }
 
   // Emit inner loop
-  b.setInsertionPoint(yield);
+  if (afterPrefetch)
+    b.setInsertionPointAfter(afterPrefetch);
   innterLoop = b.create<AffineForOp>(loc, 
     0, batch, 1
   );
@@ -968,13 +1137,16 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
 
   // regenerate access operations
   for (auto [op, access] : raccess) {
-    for (auto &mem : access_mem) {
+    if (raccess_2_mem.find(op) != raccess_2_mem.end()) {
       // check if within any access_mem
-      auto [use, new_map] = access.canUseRegionForThis(mem);
-      if (use) {
-        access.replaceWithNewMem(currentIter[mem.index_in_iterargs], innterLoop.getInductionVar(), oldInd, new_map, mem.only_oneD);
-        break;
-      }
+      auto [s, mi, new_map] = raccess_2_mem[op];
+      MemoryRegion &mem = s ? staticAccessMem[mi] : nonStaticAccessMem[mi];
+      access.replaceWithNewMem(
+        currentIter[mem.index_in_iterargs], 
+        innterLoop.getInductionVar(), 
+        oldInd, 
+        new_map, 
+        mem.only_oneD);
     }
   }
 
@@ -982,7 +1154,8 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
 }
 
 void AffineForPrefetchInternal::emitRuntimeKernel() {
-  
+  // convert rmem template to runtime function calls
+
 }
 
 }

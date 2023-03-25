@@ -7,6 +7,7 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   LoopRingCache.cpp
   AffineRingCache.cpp
   PropRemote.cpp
+  MemPooling.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

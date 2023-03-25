@@ -111,14 +111,13 @@ RingCache::RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::T
 LocalCache::LocalCache(ArrayAttr attrs, DenseMap<StringRef, Value> &access_mem_base_pool) {
   baseSym = attrs[0].cast<StringAttr>().getValue();
   rbase = access_mem_base_pool[baseSym];
-  rOfst = attrs[1].cast<IntegerAttr>().getValue().getZExtValue();
-  rSize = attrs[2].cast<IntegerAttr>().getValue().getSExtValue();
-  eleType = attrs[3].cast<TypeAttr>().getValue();
-  blockSize = attrs[4].cast<IntegerAttr>().getValue().getZExtValue();
-  nBlocks = attrs[5].cast<IntegerAttr>().getValue().getZExtValue();
-  type = static_cast<CacheType>(attrs[6].cast<IntegerAttr>().getValue().getZExtValue());
-
-  lbase = 0;
+  lOfst = attrs[1].cast<IntegerAttr>().getValue().getZExtValue();
+  rOfst = attrs[2].cast<IntegerAttr>().getValue().getZExtValue();
+  rSize = attrs[3].cast<IntegerAttr>().getValue().getSExtValue();
+  eleType = attrs[4].cast<TypeAttr>().getValue();
+  blockSize = attrs[5].cast<IntegerAttr>().getValue().getZExtValue();
+  nBlocks = attrs[6].cast<IntegerAttr>().getValue().getZExtValue();
+  type = static_cast<CacheType>(attrs[7].cast<IntegerAttr>().getValue().getZExtValue());
 }
 
 ArrayAttr LocalCache::toAttr(OpBuilder &builder) {

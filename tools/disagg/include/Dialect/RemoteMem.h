@@ -45,15 +45,15 @@ enum class CacheType {
 class LocalCache {
 public:
   LocalCache() = default;
-  LocalCache(CacheType type, int64_t lbase, Value rbase, StringRef baseSym, Type eleType, size_t rOfst, int64_t rSize, size_t blockSize, size_t nBlocks): 
-    type(type), lbase(lbase), rbase(rbase), baseSym(baseSym), eleType(eleType), rOfst(rOfst), rSize(rSize), blockSize(blockSize), nBlocks(nBlocks) {}
+  LocalCache(CacheType type, size_t lOfst, Value rbase, StringRef baseSym, Type eleType, size_t rOfst, int64_t rSize, size_t blockSize, size_t nBlocks): 
+    type(type), lOfst(lOfst), rbase(rbase), baseSym(baseSym), eleType(eleType), rOfst(rOfst), rSize(rSize), blockSize(blockSize), nBlocks(nBlocks) {}
 
   LocalCache(ArrayAttr attr, 
     DenseMap<StringRef, Value> &access_mem_base_pool);
   ArrayAttr toAttr(OpBuilder &builder);
 
   CacheType type;
-  int64_t lbase;
+  size_t lOfst;
   mlir::Value rbase;
   StringRef baseSym;
   mlir::Type eleType;

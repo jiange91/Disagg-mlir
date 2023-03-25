@@ -10,7 +10,7 @@ set(LIBS
   # MLIRRemoteMem
 )
 
-add_llvm_executable(standalone-pg driver.cpp)
+add_llvm_executable(pldisagg driver.cpp)
 
-llvm_update_compile_flags(standalone-pg)
-target_link_libraries(standalone-pg PRIVATE ${LIBS})
+llvm_update_compile_flags(pldisagg)
+target_link_libraries(pldisagg PRIVATE ${LIBS})

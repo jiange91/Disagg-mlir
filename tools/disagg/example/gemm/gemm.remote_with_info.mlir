@@ -8,10 +8,10 @@
 #amap2 = affine_map<(d0) -> (d0 * 1024)>
 
 module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu", rmem.templates = {
-  // "t" = [sym_name, rbase_ofst, rSizeInEle, eleType, bSize, nBlock, type],
-  "t0" = ["ref0", 0, 33030144, f32, 4096,   8064,  1],
-  "t1" = ["ref1", 0, 524288,   f32, 524288, 1,     1],
-  "t2" = ["ref2", 0, 66060288, f32, 8192,   8064,  1]}
+// "t" = [rbase,  l_ofst,    r_ofst, SizeInEle, eleType, bSize,  nBlock, type],
+  "t0" = ["ref0", 8192,      0,      33030144,  f32,     4096,   8064,   1],
+  "t1" = ["ref1", 268443648, 0,      524288,    f32,     524288, 1,      1],
+  "t2" = ["ref2", 269492224, 0,      66060288,  f32,     8192,   8064,   1]}
 } {
   func.func @main_graph(%arg0: !rmem.rmref<1, memref<64512x512xf32>>, %arg1: !rmem.rmref<1, memref<512x1024xf32>>) -> !rmem.rmref<1, memref<64512x1024xf32>> attributes {input_names = ["X1", "X2"], llvm.emit_c_interface, output_names = ["Y"], 
   access_mem_catcher = [["ref0", 0], ["ref1", 1]]} {
@@ -27,7 +27,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         rmem.affine.store %cst -> %0[%arg2, %arg3] {map = #map} : f32, !rmem.rmref<1, memref<64512x1024xf32>>, index, index
       }
     } {"pf_target" = 1, "nahead" = 2, "access_mem" = [
-      ["ref2", #amap2, 1024, "t2"]
+      ["ref2", #amap2, 1024, "t2", 1]
     ], "batch" = 8}
 
     affine.for %arg2 = 0 to 64512 step 4 {
@@ -153,6 +153,14 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
             %98 = vector.fma %95, %96, %97 : vector<8xf32>
             affine.store %98, %alloca[3] : memref<4xvector<8xf32>>
           }
+          // %8 = affine.load %alloca[0] : memref<4xvector<8xf32>>
+          // rmem.vec.store %8, %0[%arg2, %arg3] : !rmem.rmref<1, memref<64512x1024xf32>>, vector<8xf32>
+          // %9 = affine.load %alloca[1] : memref<4xvector<8xf32>>
+          // rmem.vec.store %9, %0[%2, %arg3] : !rmem.rmref<1, memref<64512x1024xf32>>, vector<8xf32>
+          // %10 = affine.load %alloca[2] : memref<4xvector<8xf32>>
+          // rmem.vec.store %10, %0[%4, %arg3] : !rmem.rmref<1, memref<64512x1024xf32>>, vector<8xf32>
+          // %11 = affine.load %alloca[3] : memref<4xvector<8xf32>>
+          // rmem.vec.store %11, %0[%6, %arg3] : !rmem.rmref<1, memref<64512x1024xf32>>, vector<8xf32>
           %8 = affine.load %alloca[0] : memref<4xvector<8xf32>>
           vector.store %8, %out0[%arg2, %arg3] : memref<64512x1024xf32>, vector<8xf32>
           %9 = affine.load %alloca[1] : memref<4xvector<8xf32>>

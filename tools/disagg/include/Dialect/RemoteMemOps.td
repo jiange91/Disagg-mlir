@@ -107,17 +107,32 @@ def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
 }
 
 def RemoteMem_AsyncRDMAOp : RemoteMem_Op<"rdma"> {
-  let summary = "Asynchronously request a memory region from remote";
+  let summary = "Asynchronously perform a rdna request";
   let arguments = (ins 
+    StrAttr: $mem,
+    Index: $index, //local mem index
     RemoteMemRef: $rbase,
     Variadic<Index>: $mapInput,
     AffineMapAttr: $map,
     Index: $sizeInEle,
+    I32Attr: $wr_type,
     Index: $reqID
   );
   let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $localRef);
   let assemblyFormat = [{
-    $rbase `[` $mapInput `]` $sizeInEle `->` $reqID attr-dict `:` functional-type(operands, results) 
+    $index `,` $rbase `[` $mapInput `]` $sizeInEle $wr_type $reqID attr-dict `:` functional-type(operands, results) 
+  }];
+}
+
+def RemoteMem_getSlotOp : RemoteMem_Op<"slot"> {
+  let summary = "Get the local base address correspond to remote addr";
+  let arguments = (ins
+    StrAttr: $mem,
+    Index: $index
+  );
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $slot);
+  let assemblyFormat = [{
+    $index attr-dict `:` functional-type(operands, results)  
   }];
 }
 
@@ -155,6 +170,5 @@ def RemoteMem_ExtractOp : RemoteMem_Op<"extract"> {
     $base `[` $offset `]` attr-dict `:` functional-type(operands, results)
   }]; 
 }
-
 
 #endif

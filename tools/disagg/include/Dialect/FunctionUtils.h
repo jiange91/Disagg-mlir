@@ -120,7 +120,7 @@ Operation::result_range createLLVMCall(OpBuilder &builder,
                                        Location loc,
                                        LLVM::LLVMFuncOp fn,
                                        ValueRange inputs = {});
-                                       
+
 }
 }
 

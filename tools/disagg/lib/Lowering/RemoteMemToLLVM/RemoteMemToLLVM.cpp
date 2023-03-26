@@ -320,6 +320,49 @@ class RemoteMemPrefetchLowering : public RemoteMemOpLoweringPattern<rmem::Prefet
   }
 };
 
+class RemoteMemWaitReqLowering : public RemoteMemOpLoweringPattern<rmem::WaitReqOp> {
+  using RemoteMemOpLoweringPattern<rmem::WaitReqOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::WaitReqOp op, rmem::WaitReqOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    ModuleOp mop = op->getParentOfType<ModuleOp>();
+    auto loc = op.getLoc();
+    auto rrSync = rmem::lookupOrCreateRRingSync(mop);
+    rmem::createLLVMCall(rewriter, loc, rrSync,
+      {
+        adaptor.getR(),  // current polled counter
+        rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), adaptor.getId())
+      }
+    );
+    rewriter.eraseOp(op);
+    return mlir::success();
+  }
+};
+
+class RemoteMemGetWRIDLowering : public RemoteMemOpLoweringPattern<rmem::GetWRIDOp> {
+  using RemoteMemOpLoweringPattern<rmem::GetWRIDOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::GetWRIDOp op, rmem::GetWRIDOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    ModuleOp mop = op->getParentOfType<ModuleOp>();
+    auto wridGlob = rmem::getOrCreateWRID(mop);
+    auto loc = op.getLoc();
+    auto wridAddr = rewriter.create<LLVM::AddressOfOp>(loc, wridGlob);
+    Value curWRID = rewriter.create<LLVM::LoadOp>(loc, wridAddr);
+    Value id = rewriter.create<arith::IndexCastOp>(loc, 
+      rewriter.getIndexType(), 
+      curWRID
+    );
+
+    // self-inc
+    curWRID = rewriter.create<arith::AddIOp>(loc, 
+      rewriter.create<arith::ConstantIntOp>(loc, 1, 64),
+      curWRID
+    );
+    rewriter.create<LLVM::StoreOp>(loc, 
+      curWRID, wridAddr
+    );
+    rewriter.replaceOp(op, id);
+    return mlir::success();
+  }
+};
+
 class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
   using RemoteMemOpLoweringPattern<rmem::LoadOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::LoadOp op, rmem::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -491,15 +534,25 @@ public:
 
     // clear mapping rules
     m->removeAttr("rmem.type_rule");
+    
+    // get local caches
+    DenseMap<StringRef, LocalCache> pools;
+    if (auto ts = m->getAttrOfType<DictionaryAttr>("rmem.templates")) {
+      for (auto p : ts) {
+        pools[p.getName().getValue()] = LocalCache(p.getValue().cast<ArrayAttr>());
+      }
+    }
 
     RemoteMemTypeLowerer typeConverter(&getContext());
     RewritePatternSet patterns(&getContext());
-    populateRemoteMemToLLVMPatterns(typeConverter, patterns);
+    populateRemoteMemToLLVMPatterns(typeConverter, patterns, pools);
     
     ConversionTarget target(getContext());
     target.addIllegalDialect<rmem::RemoteMemDialect>();
     // Generic target that fileter out most of operations
     target.markUnknownOpDynamicallyLegal([](Operation *op) {
+      if (isa<UnrealizedConversionCastOp>(op))
+        return true;
       return !(llvm::any_of(op->getOperandTypes(), rmem::hasRemoteTarget) || llvm::any_of(op->getResultTypes(), rmem::hasRemoteTarget));
     });
     target.addDynamicallyLegalOp<func::FuncOp>([](func::FuncOp op) {
@@ -514,24 +567,20 @@ public:
     if (mainFunc) {
       /* call inits and shutdown */
       auto initClientOp = rmem::lookupOrCreateInitClientFn(m);
-      auto initCacheOp = rmem::lookupOrCreateCacheInitFn(m);
-      auto initChannelOp = rmem::lookupOrCreateChannelInitFn(m);
+      // auto initCacheOp = rmem::lookupOrCreateCacheInitFn(m);
+      // auto initChannelOp = rmem::lookupOrCreateChannelInitFn(m);
 
       OpBuilder b(mainFunc.getBody());
       rmem::createLLVMCall(b, mainFunc.getLoc(), initClientOp);
-      rmem::createLLVMCall(b, mainFunc.getLoc(), initCacheOp);
-      rmem::createLLVMCall(b, mainFunc.getLoc(), initChannelOp);
+      // rmem::createLLVMCall(b, mainFunc.getLoc(), initCacheOp);
+      // rmem::createLLVMCall(b, mainFunc.getLoc(), initChannelOp);
     }
   }
 };
 
 } // namespace
 
-void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
-  populateLowerFuncRMemPatterns(converter, patterns);
-  populateLowerSCFRMemPatterns(converter, patterns);
-  populateLowerMemRefRMemPatterns(converter, patterns);
-  populateLowerArithRMemPatterns(converter, patterns);
+void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools) {
   patterns.add<
   RemoteMemUndefLowering,
   RemoteMemNullOpLowering,
@@ -550,6 +599,8 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemSizeOfOpLowering,
   RemoteMemChannelCreateLowering,
   RemoteMemChannelAccessLowering,
+  RemoteMemWaitReqLowering,
+  RemoteMemGetWRIDLowering,
   RemoteMemOffloadLowering,
   RemoteMemMemsetLowering,
   RemoteMemPtrToIntLowering,

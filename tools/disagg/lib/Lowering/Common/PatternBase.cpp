@@ -256,3 +256,31 @@ MemRefDescriptor RemoteMemLoweringPattern::createMemRefDescriptor(
 
   return memRefDescriptor;
 }
+
+// block_base = lbase + (index % num_blocks) * block_size
+Value RemoteMemLoweringPattern::getBlockAddr(ModuleOp mop, Value curIndex, LocalCache &cache, Location loc, ConversionPatternRewriter &rewriter) const {
+  LLVM::GlobalOp rbuf = rmem::getOrCreateRbuf(mop);
+  Value addressOf = rewriter.create<LLVM::AddressOfOp>(
+    loc, rbuf);
+  Value lbase = rewriter.create<LLVM::LoadOp>(loc, addressOf);
+
+  Value blockSizeInBytes = rewriter.create<arith::MulIOp>(loc, 
+    rewriter.create<arith::ConstantIntOp>(loc, cache.blockSize, 64),
+    rewriter.create<rmem::SizeOfOp>(loc, rewriter.getI64Type(), cache.eleType)
+  );
+
+  Value curInd64 = rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), curIndex);
+
+  Value loffset = rewriter.create<arith::MulIOp>(loc,
+    blockSizeInBytes,
+    rewriter.create<arith::RemSIOp>(loc, 
+      curInd64,
+      rewriter.create<arith::ConstantIntOp>(loc, cache.nBlocks, 64)
+    )
+  );
+  // get local rdma address with offset 
+  auto gep = rewriter.create<LLVM::GEPOp>(
+    loc, this->getVoidPtrType(), lbase,
+    SmallVector<LLVM::GEPArg>({loffset}));
+  return gep;
+}

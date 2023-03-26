@@ -33,6 +33,9 @@ LLVM::GlobalOp getOrCreateRbuf(ModuleOp moduleOp);
 LLVM::GlobalOp getOrCreateOffloadArgBuf(ModuleOp moduleOp);
 LLVM::GlobalOp getOrCreateOffloadRetBuf(ModuleOp moduleOp);
 
+// get global wrid counter
+LLVM::GlobalOp getOrCreateWRID(ModuleOp moduleOp);
+
 // calcualte sizeof(elemType) * arraySize in bytes
 // not considering 
 Value calculateBufferSize(OpBuilder &builder, Location loc, Type elemType, Value arraySize);
@@ -86,9 +89,10 @@ LLVM::LLVMFuncOp lookupOrCreateChannelAccessFn(ModuleOp moduleOp);
 // void channel_destroy(unsigned channel);
 LLVM::LLVMFuncOp lookupOrCreateChannelDestroyFn(ModuleOp moduleOp);
 
-// void rdma(buf, size, raddr, id, code);
+// void rdma(i64 buf, i64 size, i64 raddr, i64 id, i32 code);
 LLVM::LLVMFuncOp lookupOrCreateRDMAFn(ModuleOp moduleOp);
 
+// void rring_sync(ptr<i64> s/r, i64 t)
 LLVM::LLVMFuncOp lookupOrCreateRRingSync(ModuleOp moduleOp);
 
 /* instrumentation intrinsics 

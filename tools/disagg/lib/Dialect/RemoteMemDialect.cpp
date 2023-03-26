@@ -12,6 +12,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "Dialect/RemoteMem.h"
 #include "Dialect/RemoteMemTypes.h"
+#include "Dialect/FunctionUtils.h"
 
 using namespace mlir;
 using namespace mlir::rmem;
@@ -108,9 +109,9 @@ RingCache::RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::T
   perBlock = blockSize / eleTypeSize;
 };
 
-LocalCache::LocalCache(ArrayAttr attrs, DenseMap<StringRef, Value> &access_mem_base_pool) {
+LocalCache::LocalCache(ArrayAttr attrs) {
   baseSym = attrs[0].cast<StringAttr>().getValue();
-  rbase = access_mem_base_pool[baseSym];
+  rbase = nullptr;
   lOfst = attrs[1].cast<IntegerAttr>().getValue().getZExtValue();
   rOfst = attrs[2].cast<IntegerAttr>().getValue().getZExtValue();
   rSize = attrs[3].cast<IntegerAttr>().getValue().getSExtValue();
@@ -118,6 +119,10 @@ LocalCache::LocalCache(ArrayAttr attrs, DenseMap<StringRef, Value> &access_mem_b
   blockSize = attrs[5].cast<IntegerAttr>().getValue().getZExtValue();
   nBlocks = attrs[6].cast<IntegerAttr>().getValue().getZExtValue();
   type = static_cast<CacheType>(attrs[7].cast<IntegerAttr>().getValue().getZExtValue());
+}
+
+LocalCache::LocalCache(ArrayAttr attrs, DenseMap<StringRef, Value> &access_mem_base_pool) : LocalCache(attrs) {
+  rbase = access_mem_base_pool[baseSym];
 }
 
 ArrayAttr LocalCache::toAttr(OpBuilder &builder) {
@@ -132,6 +137,7 @@ ArrayAttr LocalCache::toAttr(OpBuilder &builder) {
   auto rel = builder.getArrayAttr(attrs);
   return rel;
 }
+
 
 void RemoteMemDialect::initialize() {
   registerTypes();

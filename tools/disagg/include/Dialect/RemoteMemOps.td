@@ -124,7 +124,7 @@ def RemoteMem_AsyncRDMAOp : RemoteMem_Op<"rdma"> {
   }];
 }
 
-def RemoteMem_getSlotOp : RemoteMem_Op<"slot"> {
+def RemoteMem_GetSlotOp : RemoteMem_Op<"slot"> {
   let summary = "Get the local base address correspond to remote addr";
   let arguments = (ins
     StrAttr: $mem,

@@ -30,12 +30,13 @@ static constexpr llvm::StringRef kDumpProfile = "__llvm_profile_write_file";
 static constexpr llvm::StringRef kChannelCreate = "channel_create";
 static constexpr llvm::StringRef kChannelAccess = "channel_access";
 static constexpr llvm::StringRef kChannelDestroy = "channel_destroy";
-static constexpr llvm::StringRef kRDMA = "rdma";
-static constexpr llvm::StringRef kRRSync = "rring_sync";
+static constexpr llvm::StringRef kRDMA = "rdma_req";
+static constexpr llvm::StringRef kRRSync = "rsync";
 static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
 static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
 static constexpr llvm::StringRef kRDMASbuf = "sbuf";
 static constexpr llvm::StringRef kRDMARbuf = "rbuf";
+static constexpr llvm::StringRef kRDMAWRID = "rdma_wrid_cnt";
 static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
 
 //==============================================================================
@@ -153,7 +154,7 @@ LLVM::GlobalOp mlir::rmem::getOrCreateRbuf(ModuleOp moduleOp) {
     getVoidPtrType(ctx), 
     false, 
     LLVM::Linkage::External, 
-    kRDMASbuf,
+    kRDMARbuf,
     nullptr
   ); 
 }
@@ -184,6 +185,21 @@ LLVM::GlobalOp mlir::rmem::getOrCreateOffloadRetBuf(ModuleOp moduleOp) {
     false, 
     LLVM::Linkage::External, 
     kOffloadRetBuf,
+    nullptr
+  );
+}
+
+LLVM::GlobalOp mlir::rmem::getOrCreateWRID(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kRDMAWRID);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    getIntBitType(moduleOp->getContext(), 64),
+    false, 
+    LLVM::Linkage::External, 
+    kRDMAWRID,
     nullptr
   );
 }

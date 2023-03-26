@@ -10,9 +10,10 @@
   //   }
   // }
 
-  // %alloc = memref.alloc() {alignment = 16 : i64} : memref<1024xf32>
-  %alloc = memref.alloc() : memref<1024xf32>
+  %alloc = memref.alloc() {alignment = 16 : i64} : memref<1024xf32>
+  // %alloc = memref.alloc() : memref<1024xf32>
   %c0 = arith.constant 0.0 : f32
+  %c1 = arith.constant 1 : i64
 
   affine.for %arg3 = 0 to 1024 step 8 {
     affine.store %c0, %alloc[%arg3] : memref<1024xf32>

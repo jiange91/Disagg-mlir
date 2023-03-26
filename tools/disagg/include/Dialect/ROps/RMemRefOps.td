@@ -71,7 +71,7 @@ def RemoteMem_MemRefGetGlobalOp : RemoteMem_Op<"memref.get_global",
     [Pure, DeclareOpInterfaceMethods<SymbolUserOpInterface>]> {
   let summary = "get the rmemref pointing to a global variable";
   let arguments = (ins FlatSymbolRefAttr:$name);
-  let results = (outs AnyStaticShapeMemRef:$result);
+  let results = (outs RemoteMemRefOf<[AnyMemRef]>:$result);
   let assemblyFormat = "attr-dict `:` functional-type(operands, results)";
 }
 

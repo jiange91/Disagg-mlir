@@ -35,7 +35,7 @@ def LowerRMemInAffine : Pass<"lower-rmem-in-affine", "ModuleOp"> {
 def LowerRMemInMemRef : Pass<"lower-rmem-in-memref", "ModuleOp"> {
   let summary = "Convert memref-like ops with remote memref operands";
   let constructor = "mlir::createConvertMemRefRemotePass()";
-  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect"];
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect",     "memref::MemRefDialect"];
   let options = [
     Option<"useAlignedAlloc", "use-aligned-alloc", "bool", /*default=*/"false",
            "Use aligned_alloc in place of malloc for heap allocations">,
@@ -47,6 +47,20 @@ def LowerRMemInMemRef : Pass<"lower-rmem-in-memref", "ModuleOp"> {
            /*default=*/"false",
            "Use generic allocation and deallocation functions instead of the "
            "classic 'malloc', 'aligned_alloc' and 'free' functions">
+  ];
+}
+
+def EmitLLVM : Pass<"emit-llvm", "ModuleOp"> {
+  let summary = "Convert everything into llvm-mlir";
+  let constructor = "mlir::createEmitLLVMPass()";
+  let dependentDialects = [
+    "LLVM::LLVMDialect", 
+    "rmem::RemoteMemDialect", 
+    "func::FuncDialect", 
+    "arith::ArithDialect",
+    "scf::SCFDialect",
+    // "vector::VectorDialect",
+    "memref::MemRefDialect"
   ];
 }
 

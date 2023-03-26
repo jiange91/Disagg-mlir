@@ -36,6 +36,10 @@ protected:
   static Value createAligned(ConversionPatternRewriter &rewriter, Location loc,
                              Value input, Value alignment);
 
+  static MemRefType getMemRefResultType(Operation *op) {
+    return rmem::getRawTypeFromRemotedType(op->getResult(0).getType()).cast<MemRefType>();
+  }
+
   /// Computes the alignment for the given memory allocation op.
   template <typename OpType>
   Value getAlignment(ConversionPatternRewriter &rewriter, Location loc,

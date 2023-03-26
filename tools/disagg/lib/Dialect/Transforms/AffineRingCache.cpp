@@ -32,21 +32,6 @@ inline access_type operator | (access_type a, access_type b) {
   return access_type(static_cast<int>(a) | static_cast<int>(b));
 }
 
-enum ibv_wr_opcode {
-	IBV_WR_RDMA_WRITE,
-	IBV_WR_RDMA_WRITE_WITH_IMM,
-	IBV_WR_SEND,
-	IBV_WR_SEND_WITH_IMM,
-	IBV_WR_RDMA_READ,
-	IBV_WR_ATOMIC_CMP_AND_SWP,
-	IBV_WR_ATOMIC_FETCH_AND_ADD,
-	IBV_WR_LOCAL_INV,
-	IBV_WR_BIND_MW,
-	IBV_WR_SEND_WITH_INV,
-	IBV_WR_TSO,
-	IBV_WR_DRIVER1,
-};
-
 namespace mlir {
 #define GEN_PASS_DEF_RMEMAFFINERINGCACHE
 #include "Dialect/Transforms/Passes.h.inc"
@@ -942,7 +927,7 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
         localMem.push_back(lm); 
         wrids.push_back(wrid);
       } else {
-        localMem.push_back(b.create<rmem::getSlotOp>(loc, getBatchedMemType(mem), b.getStringAttr(mem.fromPool), localIndex));
+        localMem.push_back(b.create<rmem::GetSlotOp>(loc, getBatchedMemType(mem), b.getStringAttr(mem.fromPool), localIndex));
       }
     }
     return wrids;

@@ -49,7 +49,6 @@ class RMEMPoolingPass : public impl::RMEMPoolingBase<RMEMPoolingPass> {
     }
 
     // TODO: Optimization merge pools or separate pools
-
   }
 };
 }

@@ -5,6 +5,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/Conversion/LLVMCommon/MemRefBuilder.h"
+#include "Dialect/RemoteMem.h"
 
 namespace mlir {
 namespace rmem {
@@ -111,6 +112,8 @@ protected:
                          ArrayRef<Value> sizes, ArrayRef<Value> strides,
                          ConversionPatternRewriter &rewriter) const;
 
+  // block_base = lbase + (index % num_blocks) * block_size
+  Value getBlockAddr(ModuleOp mop, Value curIndex, rmem::LocalCache &cache, Location loc, ConversionPatternRewriter &rewriter) const;
 };
 
 template<typename SourceOp>

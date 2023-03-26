@@ -17,6 +17,21 @@ namespace rmem {
 class RemoteMemDialect;
 class RemoteMemRefType;
 
+enum ibv_wr_opcode {
+	IBV_WR_RDMA_WRITE,
+	IBV_WR_RDMA_WRITE_WITH_IMM,
+	IBV_WR_SEND,
+	IBV_WR_SEND_WITH_IMM,
+	IBV_WR_RDMA_READ,
+	IBV_WR_ATOMIC_CMP_AND_SWP,
+	IBV_WR_ATOMIC_FETCH_AND_ADD,
+	IBV_WR_LOCAL_INV,
+	IBV_WR_BIND_MW,
+	IBV_WR_SEND_WITH_INV,
+	IBV_WR_TSO,
+	IBV_WR_DRIVER1,
+};
+
 class RingCache {
 public:
   RingCache() = default;
@@ -48,8 +63,13 @@ public:
   LocalCache(CacheType type, size_t lOfst, Value rbase, StringRef baseSym, Type eleType, size_t rOfst, int64_t rSize, size_t blockSize, size_t nBlocks): 
     type(type), lOfst(lOfst), rbase(rbase), baseSym(baseSym), eleType(eleType), rOfst(rOfst), rSize(rSize), blockSize(blockSize), nBlocks(nBlocks) {}
 
+  // without initializing rbase
+  LocalCache(ArrayAttr attr);
+
+  // initialize rbase
   LocalCache(ArrayAttr attr, 
     DenseMap<StringRef, Value> &access_mem_base_pool);
+    
   ArrayAttr toAttr(OpBuilder &builder);
 
   CacheType type;
@@ -60,7 +80,7 @@ public:
 
   size_t rOfst;
   int64_t rSize; // memory represented by this cache
-  size_t blockSize; // or cache line size
+  size_t blockSize; // in number of eles 
   size_t nBlocks;
 };
 

@@ -8,6 +8,7 @@
 #include "Lowering/MemRefRemote/MemRefRemote.h"
 #include "Lowering/AffineRemote/AffineRemote.h"
 #include "Lowering/Trivial/Trivial.h"
+#include "Lowering/EmitLLVM.h"
 namespace mlir {
 
 #define GEN_PASS_REGISTRATION

@@ -9,12 +9,12 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
-#include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Analysis/DataLayoutAnalysis.h"
 #include "Lowering/Common/PatternBase.h"
 #include "Lowering/Common/RMemTypeLowerer.h"
 #include "Lowering/MemRefRemote/MemRefRemote.h"
 #include "Lowering/MemRefRemote/AllocLikeConversion.h"
+#include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
 #define GEN_PASS_DEF_LOWERRMEMINMEMREF
@@ -122,6 +122,8 @@ public:
   }
 };
 
+
+
 class RMemRefAllocOpLowering : public RMemAllocLikeOpLLVMLowering {
 public:
   RMemRefAllocOpLowering(RemoteMemTypeLowerer &typeConverter, MLIRContext *ctx) : RMemAllocLikeOpLLVMLowering(rmem::MemRefAllocOp::getOperationName(), typeConverter, ctx) {}
@@ -195,6 +197,138 @@ struct RMemRefStoreOpLowering : public LoadStoreOpLowering<rmem::MemRefStoreOp> 
   }
 };
 
+class RemoteMemAsyncRDMALowering : public RemoteMemOpLoweringPattern<rmem::AsyncRDMAOp> {
+public:
+  RemoteMemAsyncRDMALowering(
+    DenseMap<StringRef, LocalCache> &pools,
+    rmem::RemoteMemTypeLowerer &typeConverter, 
+    MLIRContext *ctx)
+    : RemoteMemOpLoweringPattern<rmem::AsyncRDMAOp>::RemoteMemOpLoweringPattern(typeConverter, ctx), pools(pools) {}
+
+  LogicalResult matchAndRewrite(rmem::AsyncRDMAOp op, rmem::AsyncRDMAOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    ModuleOp mop = op->getParentOfType<ModuleOp>();
+    Location loc = op.getLoc();
+    Type relType = op.getLocalRef().getType();
+    if (!relType.isa<MemRefType>())
+      return mlir::failure();
+
+    // memref = rmem.slot %index, %mem_from
+    Value localMemRef = rewriter.create<rmem::GetSlotOp>(loc, relType, op.getMemAttr(), op.getIndex());
+    Value lbaseAddr = rewriter.create<arith::IndexCastOp>(loc, 
+      rewriter.getI64Type(),
+      rewriter.create<memref::ExtractAlignedPointerAsIndexOp>(loc, 
+        rewriter.getIndexType(), localMemRef
+      )
+    );
+
+    /* make rdma request */
+    LLVM::LLVMFuncOp rdmaFn = lookupOrCreateRDMAFn(mop);
+    // prepare transfer size
+    Value transferInBytes;
+    MemRefType localMemRefType = relType.cast<MemRefType>();
+    SmallVector<Value, 2> sizes;
+    SmallVector<Value, 2> strides;
+    SmallVector<Value, 0> dynSizeOpds;
+    this->getMemRefDescriptorSizes(loc, localMemRefType, dynSizeOpds, rewriter, sizes,
+                                  strides, transferInBytes);
+
+    // get remote base addr
+    MemRefDescriptor rmemrefDesc(adaptor.getRbase());
+    Value rbase = rmemrefDesc.alignedPtr(rewriter, loc);
+    Value mapOffset = rewriter.create<arith::IndexCastOp>(loc, 
+      rewriter.getI64Type(),
+      rewriter.create<AffineApplyOp>(loc, op.getMap(), op.getMapInput())
+    );
+    Value totalOffset = rewriter.create<arith::AddIOp>(loc, 
+      rewriter.getI64Type(),
+      mapOffset, rmemrefDesc.offset(rewriter, loc)
+    );
+
+    Value rAddr = rewriter.create<LLVM::PtrToIntOp>(loc, 
+      rewriter.getI64Type(),
+      rewriter.create<LLVM::GEPOp>(loc,
+        rbase.getType(),
+        rbase,
+        SmallVector<LLVM::GEPArg>({totalOffset})
+      )
+    );
+
+    rmem::createLLVMCall(rewriter, loc, rdmaFn, {
+      lbaseAddr, // rdma rbuf local addr
+      transferInBytes, // i64
+      rAddr, // target remote address
+      rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), adaptor.getReqID()), // wrid
+      rewriter.create<arith::ConstantIntOp>(loc, op.getWrType(), 32) // wr code
+    });
+
+    rewriter.replaceOp(op, {localMemRef});
+    return mlir::success();
+  }
+
+  DenseMap<StringRef, LocalCache> &pools;
+};
+
+class RemoteMemGetSlotLowering : public RemoteMemOpLoweringPattern<rmem::GetSlotOp> {
+public:
+  RemoteMemGetSlotLowering(
+    DenseMap<StringRef, LocalCache> &pools,
+    rmem::RemoteMemTypeLowerer &typeConverter, 
+    MLIRContext *ctx)
+    : RemoteMemOpLoweringPattern<rmem::GetSlotOp>::RemoteMemOpLoweringPattern(typeConverter, ctx), pools(pools) {}
+
+  std::tuple<Value, Value>
+  pinBuffer(ConversionPatternRewriter &rewriter, Location loc, rmem::GetSlotOp op, rmem::GetSlotOpAdaptor adaptor, MemRefType memRefType) const {
+    unsigned memSpace = memRefType.getMemorySpaceAsInt(); 
+    Type elementType = typeConverter->convertType(memRefType.getElementType());
+    Type elementPtrType = LLVM::LLVMPointerType::get(elementType, memSpace);
+
+    // The allocated address is pinned by rdma, we do not expect it to be ever freed
+    // Set to known bad value to help debugging
+    auto intPtrType = getIntPtrType(memSpace);
+    Value deadBeefConst =
+      createIndexAttrConstant(rewriter, loc, intPtrType, 0xdeadbeef);
+    auto deadBeefPtr =
+      rewriter.create<LLVM::IntToPtrOp>(loc, elementPtrType, deadBeefConst); 
+
+    LocalCache &cache = pools[op.getMem()];
+    Value blockAddr = this->getBlockAddr(op->getParentOfType<ModuleOp>(), adaptor.getIndex(), cache, loc, rewriter);
+    blockAddr = rewriter.create<LLVM::BitcastOp>(loc, elementPtrType, blockAddr);
+    return std::make_tuple(deadBeefPtr, blockAddr);
+  }
+
+  LogicalResult matchAndRewrite(rmem::GetSlotOp op, rmem::GetSlotOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    rmem::GetSlotOp getSlot = cast<rmem::GetSlotOp>(op);
+
+    // if not memref type, hook on another conversion pass
+    Type relType = getSlot.getSlot().getType();
+    if (!relType.isa<MemRefType>())
+      return mlir::failure();
+
+    MemRefType memRefType = relType.cast<MemRefType>();
+
+    auto loc = op->getLoc();
+    SmallVector<Value, 2> sizes;
+    SmallVector<Value, 2> strides;
+    SmallVector<Value, 0> dynSizeOpds;
+    Value sizeBytes;
+    this->getMemRefDescriptorSizes(loc, memRefType, dynSizeOpds, rewriter, sizes,
+                                  strides, sizeBytes);
+
+    auto [allocatedPtr, alignedPtr] =
+        this->pinBuffer(rewriter, loc, getSlot, adaptor, memRefType);
+
+    // Create the MemRef descriptor.
+    auto memRefDescriptor = this->createMemRefDescriptor(
+        loc, memRefType, allocatedPtr, alignedPtr, sizes, strides, rewriter);
+
+    // Return the final value of the descriptor.
+    rewriter.replaceOp(op, {memRefDescriptor});
+    return mlir::success();
+  }
+
+  DenseMap<StringRef, LocalCache> &pools;
+};
+
 }
 
 class LowerRMemInMemRefPass : public impl::LowerRMemInMemRefBase<LowerRMemInMemRefPass> {
@@ -213,9 +347,17 @@ public:
     if (indexBitwidth != kDeriveIndexBitwidthFromDataLayout)
       options.overrideIndexBitwidth(indexBitwidth);
 
+    // get local caches
+    DenseMap<StringRef, LocalCache> pools;
+    if (auto ts = op->getAttrOfType<DictionaryAttr>("rmem.templates")) {
+      for (auto p : ts) {
+        pools[p.getName().getValue()] = LocalCache(p.getValue().cast<ArrayAttr>());
+      }
+    }
+
     RemoteMemTypeLowerer typeConverter(&getContext(), options, &dataLayoutAnalysis);
     RewritePatternSet patterns(&getContext());
-    populateLowerMemRefRMemPatterns(typeConverter, patterns);
+    populateLowerMemRefRMemPatterns(typeConverter, patterns, pools);
 
     ConversionTarget target(getContext());
     target.addLegalDialect<LLVM::LLVMDialect>();
@@ -225,7 +367,17 @@ public:
       rmem::MemRefGetGlobalOp,
       rmem::MemRefAllocOp
     >();
+    target.addDynamicallyLegalOp<rmem::GetSlotOp>([](rmem::GetSlotOp op) {
+      return !op.getSlot().getType().isa<MemRefType>();
+    });
+    target.addDynamicallyLegalOp<rmem::AsyncRDMAOp>([](rmem::AsyncRDMAOp op) {
+      return !op.getLocalRef().getType().isa<MemRefType>();
+    });
+
     target.addLegalOp<UnrealizedConversionCastOp>();
+    target.markUnknownOpDynamicallyLegal([](Operation *op) {
+      return true;
+    });
 
     if (failed(applyPartialConversion(op, target, std::move(patterns))))
       signalPassFailure();
@@ -233,7 +385,7 @@ public:
 };
 
 
-void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, RewritePatternSet &patterns) {
+void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools) {
   patterns.add<
     RMemRefGlobalOpLowering,
     RMemRefGetGlobalOpLowering,
@@ -241,6 +393,11 @@ void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, Rew
     RMemRefLoadOpLowering,
     RMemRefStoreOpLowering
   >(converter, &converter.getContext());
+
+  patterns.add<
+    RemoteMemGetSlotLowering,
+    RemoteMemAsyncRDMALowering
+  >(pools, converter, &converter.getContext());
 }
 
 std::unique_ptr<Pass> createConvertMemRefRemotePass() {

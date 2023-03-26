@@ -17,7 +17,7 @@ def RemoteMem_UndefOp: RemoteMem_Op<"undef", [Pure]> {
 def RemoteMem_SizeOfOp : RemoteMem_Op<"trivial.sizeof", [Pure]> {
   let summary = "Get size of a type, placeholder";
   let arguments = (ins TypeAttr: $src);
-  let results = (outs AnyType: $size);
+  let results = (outs AnyInteger: $size);
   let assemblyFormat = [{
     attr-dict `:` type($size)
   }];

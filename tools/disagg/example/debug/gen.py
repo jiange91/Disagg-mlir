@@ -1,12 +1,9 @@
-import numpy as np
 
-np.random.seed(2333)
-A = np.random.rand(3, 2).astype('f')
-print(A.dtype, A)
-with open('dummy_f32.dat', 'wb') as f:
-	A.tofile(f)
-
-B = np.random.randint(0, 4, 4, dtype=np.int64)
-print(B.dtype, B)
-with open('dummy_i64.dat', 'wb') as f:
-    B.tofile(f)
+for i in range(1, 33):
+	mem = '["ref0", #amap{}, 256, "t0"],'.format(i)
+	print(mem)
+ 
+for i in range(0, 32):
+    ofst = i * 512
+    amap = '#amap{} = affine_map<(d0,d1,d2) -> (d2*512+d1+{})>'.format(i+1, ofst)
+    print(amap)

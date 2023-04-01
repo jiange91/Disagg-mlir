@@ -1,20 +1,8 @@
-  // %alloc = memref.alloc() {alignment = 16 : i64} : memref<64512x1024xf32>
+func.func private @disagg_read_tensor_f32(!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>)
+llvm.mlir.global internal constant @constant_0("constant_0\00") {addr_space = 0 : i32}
 
-  // affine.for %arg2 = 0 to 64512 step 4 {
-  //   affine.for %arg3 = 0 to 1024 step 8 {
-  //     affine.for %arg4 = 0 to 512 step 8 {
-  //       %alloca = memref.alloca() {alignment = 64 : i64} : memref<4xvector<8xf32>>
-  //       %7 = affine.load %alloca[0] : memref<4xvector<8xf32>>
-  //       vector.store %7, %alloc[%arg2, %arg3] : memref<64512x1024xf32>, vector<8xf32>
-  //     }
-  //   }
-  // }
-
-  %alloc = memref.alloc() {alignment = 16 : i64} : memref<1024xf32>
-  // %alloc = memref.alloc() : memref<1024xf32>
-  %c0 = arith.constant 0.0 : f32
-  %c1 = arith.constant 1 : i64
-
-  affine.for %arg3 = 0 to 1024 step 8 {
-    affine.store %c0, %alloc[%arg3] : memref<1024xf32>
-  }
+%0 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<50264x768xf32>>
+%1 = rmem.memref.cast %0 : <1, memref<50264x768xf32>> to <1, memref<*xf32>>
+%2 = llvm.mlir.addressof @constant_0 : !llvm.ptr<array<11 x i8>>
+%3 = llvm.getelementptr %2[0, 0] : (!llvm.ptr<array<11 x i8>>) -> !llvm.ptr<i8>
+func.call @disagg_read_tensor_f32(%3, %1) : (!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>) -> ()

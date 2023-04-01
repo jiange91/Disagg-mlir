@@ -95,6 +95,9 @@ private:
 
   llvm::Optional<Type> convertRemoteMemRefToMemRefDesc(RemoteMemRefType type);
 
+  SmallVector<Type, 2> getUnrankedMemRefDescriptorFields();
+  llvm::Optional<Type> convertRemoteMemRefToUnrankedDesc(RemoteMemRefType type);
+
   /// Convert a memref type into a list of LLVM IR types that will form the
   /// memref descriptor. If `unpackAggregates` is true the `sizes` and `strides`
   /// arrays in the descriptors are unpacked to individual index-typed elements,

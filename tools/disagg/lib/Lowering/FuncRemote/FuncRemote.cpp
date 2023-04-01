@@ -38,11 +38,13 @@ class RemoteFuncFuncOpLowering : public RemoteMemOpLoweringPattern<func::FuncOp>
   using RemoteMemOpLoweringPattern<func::FuncOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(func::FuncOp op, func::FuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     TypeConverter::SignatureConversion result(op.getFunctionType().getNumInputs());
-    mlir::FunctionType newFuncType = getTypeConverter()->convertFunctionSignature(op.getFunctionType(), result).cast<FunctionType>();
-    if (!newFuncType) {
+    mlir::Type funcType = getTypeConverter()->convertFunctionSignature(op.getFunctionType(), result);
+    // funcType.dump();
+    if (!funcType) {
       llvm::errs() << "Failed to convert function signature\n";
       return mlir::failure();
     }
+    auto newFuncType = funcType.cast<FunctionType>();
 
     // propagate attributes
     SmallVector<NamedAttribute, 4> attrs;

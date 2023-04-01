@@ -26,9 +26,11 @@ int main(int argc, char *argv[]) {
   // for (int i = 0; i < n; i++) {
   //   printf("%d = %d * %d\n", as[i].y, as[i].x, as[i].x);
   // }
-  uint64_t a = 607719;
-  uint64_t b = 18446744073709551585ULL;
+  // uint64_t a = 607719;
+  // uint64_t b = 18446744073709551585ULL;
 
-  printf("%lu > %lu %d\n", b, a, b > a);
+  // printf("%lu > %lu %d\n", b, a, b > a);
+  int64_t a = 0;
+  printf("%ld\n", a);
   return 0;
 }

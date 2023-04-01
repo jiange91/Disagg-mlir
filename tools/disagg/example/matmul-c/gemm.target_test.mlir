@@ -5,13 +5,18 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
   func.func @main_graph(%arg0: memref<64512x512xf32>, %arg1: memref<512x512xf32>) -> memref<64512x512xf32> attributes {
     input_names = ["X1", "X2"], 
     llvm.emit_c_interface, 
-    output_names = ["Y"]
+    output_names = ["Y"],
+    "remote_target" = 1,
+    "operand_types" = [
+      !rmem.rmref<1, memref<64512x512xf32>>,
+      !rmem.rmref<1, memref<512x512xf32>>
+    ]
     } {
     %c1 = arith.constant 1 : index
     %c2 = arith.constant 2 : index
     %c3 = arith.constant 3 : index
     %cst = arith.constant 0.000000e+00 : f32
-    %alloc = memref.alloc() {alignment = 16 : i64, "remote_target" = 1} : memref<64512x512xf32>
+    %alloc = memref.alloc() {alignment = 16 : i64} : memref<64512x512xf32>
     affine.for %arg2 = 0 to 64512 {
       affine.for %arg3 = 0 to 512 {
         affine.store %cst, %alloc[%arg2, %arg3] {"remote_check_use" = 1} : memref<64512x512xf32>

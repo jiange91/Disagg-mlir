@@ -6,6 +6,7 @@
 #include "mlir/Interfaces/CastInterfaces.h"
 #include "mlir/Interfaces/DataLayoutInterfaces.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+#include "mlir/Interfaces/ViewLikeInterface.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "llvm/Support/PointerLikeTypeTraits.h"
 #include "llvm/ADT/StringRef.h"

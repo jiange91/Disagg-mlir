@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ml-to-llvm () {
+  # at mlir
+  pldisagg matmul/gemm.remote_with_info.mlir --rmem-affine-ring-cache -cse --canonicalize -o matmul/gemm.ring.mlir
+  pldisagg gemm.ring.mlir --buffer-loop-hoisting -emit-llvm  --reconcile-unrealized-casts -cse --canonicalize -o gemm.lower.mlir 
+  mlir-translate --mlir-to-llvmir gemm.lower.mlir -o gemm.ll
+  clang-b -O3 -c gemm.ll -o gemm.o
+
+  # at runtime
+  make gemm-mlir-ring
+}

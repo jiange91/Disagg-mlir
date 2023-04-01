@@ -51,7 +51,8 @@ def RMEMAffineRingCache : Pass<"rmem-affine-ring-cache", "mlir::ModuleOp"> {
   let constructor = "mlir::createRemoteMemAffineRingCachePass()";
   let options = [
     Option<"outputLevel", "out-level", "unsigned", 
-    /*default = operator level*/ "0", "output MLIR level, 0 for operator level, 1 for runtime function level">
+    /*default = operator level*/ "0", "output MLIR level, 0 for operator level, 1 for runtime function level">,
+    Option<"debug", "debug", "bool", "false", "print meta info">
   ];
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
 }

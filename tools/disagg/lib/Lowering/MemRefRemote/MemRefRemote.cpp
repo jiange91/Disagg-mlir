@@ -197,6 +197,51 @@ struct RMemRefStoreOpLowering : public LoadStoreOpLowering<rmem::MemRefStoreOp> 
   }
 };
 
+class RMemRefCastOpLowering : public RemoteMemOpLoweringPattern<rmem::MemRefCastOp> {
+public:
+  using RemoteMemOpLoweringPattern<rmem::MemRefCastOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::MemRefCastOp op, rmem::MemRefCastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    // use other pattern to lower memref
+    Value srcMemRef = rewriter.create<UnrealizedConversionCastOp>(loc, 
+      rmem::getRawTypeFromRemotedType(op.getSource().getType()),
+      adaptor.getSource()
+    ).getResult(0);
+    Value destMemRef = rewriter.create<memref::CastOp>(loc,
+      rmem::getRawTypeFromRemotedType(op.getDest().getType()),
+      srcMemRef
+    );
+    rewriter.replaceOp(op, destMemRef);
+    return mlir::success();
+  }
+};
+
+class RMemRefReinterpretCastOpLowering : public RemoteMemOpLoweringPattern<rmem::MemRefReinterpretCastOp> {
+public:
+  using RemoteMemOpLoweringPattern<rmem::MemRefReinterpretCastOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::MemRefReinterpretCastOp op, rmem::MemRefReinterpretCastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    // use other pattern to lower memref
+    Value srcMemRef = rewriter.create<UnrealizedConversionCastOp>(loc, 
+      rmem::getRawTypeFromRemotedType(op.getSource().getType()),
+      adaptor.getSource()
+    ).getResult(0);
+    Value destMemRef = rewriter.create<memref::ReinterpretCastOp>(loc,
+      rmem::getRawTypeFromRemotedType(op.getResult().getType()),
+      srcMemRef,
+      adaptor.getOffsets(),
+      adaptor.getSizes(),
+      adaptor.getStrides(),
+      adaptor.getStaticOffsetsAttr(),
+      adaptor.getStaticSizesAttr(),
+      adaptor.getStaticStridesAttr()
+    );
+    rewriter.replaceOp(op, destMemRef);
+    return mlir::success();
+  }
+};
+
+
 class RemoteMemAsyncRDMALowering : public RemoteMemOpLoweringPattern<rmem::AsyncRDMAOp> {
 public:
   RemoteMemAsyncRDMALowering(
@@ -391,7 +436,9 @@ void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, Rew
     RMemRefGetGlobalOpLowering,
     RMemRefAllocOpLowering,
     RMemRefLoadOpLowering,
-    RMemRefStoreOpLowering
+    RMemRefStoreOpLowering,
+    RMemRefCastOpLowering,
+    RMemRefReinterpretCastOpLowering
   >(converter, &converter.getContext());
 
   patterns.add<

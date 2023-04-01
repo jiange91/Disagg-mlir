@@ -5,6 +5,7 @@ include "RemoteMemBase.td"
 include "RemoteMemTypes.td"
 include "mlir/IR/SymbolInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/Interfaces/ViewLikeInterface.td"
 
 /// A TypeAttr for memref types.
 def MemRefTypeAttr
@@ -30,6 +31,53 @@ def RemoteMem_MemRefAllocOp: RemoteMem_Op<
   }];
 }
 
+def RemoteMem_MemRefCastOp : RemoteMem_Op<"memref.cast", [Pure]> {
+  let summary = "remote memref cast operation";
+  let arguments = (ins RemoteMemRefOf<[AnyRankedOrUnrankedMemRef]>:$source);
+  let results = (outs RemoteMemRefOf<[AnyRankedOrUnrankedMemRef]>:$dest);
+  let assemblyFormat = "$source attr-dict `:` type($source) `to` type($dest)";
+}
+
+def RemoteMem_MemRefReinterpretCastOp: RemoteMem_Op<"memref.ricast", [
+      Pure,
+      ViewLikeOpInterface,
+      AttrSizedOperandSegments, 
+  ]> {
+  let summary = "remote memref ReinterpretCastOp";
+  let arguments = (ins RemoteMemRefOf<[AnyRankedOrUnrankedMemRef]>:$source,
+                       Variadic<Index>:$offsets,
+                       Variadic<Index>:$sizes,
+                       Variadic<Index>:$strides,
+                       I64ArrayAttr:$static_offsets,
+                       I64ArrayAttr:$static_sizes,
+                       I64ArrayAttr:$static_strides);
+  let results = (outs RemoteMemRefOf<[AnyMemRef]>:$result);
+  let assemblyFormat = [{
+    $source `to` `offset` `` `:`
+    custom<DynamicIndexList>($offsets, $static_offsets,
+                               "ShapedType::kDynamicStrideOrOffset")
+    `` `,` `sizes` `` `:`
+    custom<DynamicIndexList>($sizes, $static_sizes,
+                               "ShapedType::kDynamicSize")
+    `` `,` `strides` `` `:`
+    custom<DynamicIndexList>($strides, $static_strides,
+                               "ShapedType::kDynamicStrideOrOffset")
+    attr-dict `:` type($source) `to` type($result)
+  }];
+
+  code extraBaseClassDeclaration = [{
+    /// Returns the dynamic sizes for this subview operation if specified.
+    ::mlir::Operation::operand_range getDynamicSizes() { return getSizes(); }
+  }];
+  let extraClassDeclaration = extraBaseClassDeclaration # [{
+    // The result of the op is always a ranked memref.
+    Value getViewSource() { return getSource(); }
+
+    /// Return the number of leading operands before the `offsets`, `sizes` and
+    /// and `strides` operands.
+    static unsigned getOffsetSizeAndStrideStartOperandIndex() { return 1; }
+  }];
+}
 
 def RemoteMem_MemRefLoadOp : RemoteMem_Op<"memref.load"> {
   let arguments = (ins 

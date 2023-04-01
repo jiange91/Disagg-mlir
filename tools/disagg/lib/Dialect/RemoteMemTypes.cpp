@@ -19,7 +19,7 @@ using namespace mlir::rmem;
 //====--------------------------------------====
 bool RemoteMemRefType::isValidElementType(Type elementType) {
   if (!elementType) return false;
-  if (!elementType.isa<mlir::MemRefType, mlir::LLVM::LLVMPointerType>()) return false;
+  if (!elementType.isa<mlir::MemRefType, mlir::LLVM::LLVMPointerType, mlir::UnrankedMemRefType>()) return false;
   return true;
 }
 
@@ -62,6 +62,9 @@ static inline bool hasRemoteTargetImpl(Type type, SetVector<Type> &callStack) {
   .Case<MemRefType>([&](MemRefType memrefType) {
     return hasRemoteTargetHandler(memrefType.getElementType());
   })
+  .Case<UnrankedMemRefType>([&](UnrankedMemRefType ukmem) {
+    return hasRemoteTargetHandler(ukmem.getElementType());
+  })
   .Default([](Type) { return false; });
 }
 
@@ -91,6 +94,11 @@ Type mlir::rmem::getRawTypeFromRemotedType(Type type) {
   if (auto rmref = type.dyn_cast<RemoteMemRefType>()) {
     Type rawRef = rmref.getElementType();
     return getRawTypeFromRemotedType(rawRef);
+  }
+
+  if (auto ukmem = type.dyn_cast<UnrankedMemRefType>()) {
+    Type rawElemType = getRawTypeFromRemotedType(ukmem.getElementType());
+    return UnrankedMemRefType::get(rawElemType, ukmem.getMemorySpace());
   }
 
   /* Routines below convert container types that may have rmemref type as the embedded type to raw type */
@@ -209,7 +217,9 @@ Type mlir::rmem::getEleTypeFromRemoteMemRef(RemoteMemRefType rmref) {
   if (auto ptrType = RT.dyn_cast<LLVM::LLVMPointerType>()) 
     eleType = ptrType.getElementType(); 
   else if (auto memrefType = RT.dyn_cast<MemRefType>())
-    eleType = memrefType.cast<MemRefType>().getElementType();
+    eleType = memrefType.getElementType();
+  else if (auto memrefType = RT.dyn_cast<UnrankedMemRefType>())
+    eleType = memrefType.getElementType();
   return eleType;
 }
 

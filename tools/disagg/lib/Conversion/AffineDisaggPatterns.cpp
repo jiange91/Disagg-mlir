@@ -25,6 +25,8 @@ using namespace mlir::rmem;
 class AffineStoreDisagg : public OpConversionPattern<AffineStoreOp> {
   using OpConversionPattern<AffineStoreOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(AffineStoreOp op, mlir::AffineStoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, AffineStoreOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     SmallVector<NamedAttribute, 4> attributes;
     rmem::filterTargetAttributes(op->getAttrs(), attributes);
     auto newStoreOp = rewriter.replaceOpWithNewOp<rmem::RAffineStoreOp>(op,
@@ -41,6 +43,8 @@ class AffineStoreDisagg : public OpConversionPattern<AffineStoreOp> {
 class AffineLoadDisagg : public OpConversionPattern<AffineLoadOp> {
   using OpConversionPattern<AffineLoadOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(AffineLoadOp op, AffineLoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, AffineLoadOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     Type relType = op.getResult().getType();
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
       if (!rts.empty() && rts.size() == 1) {

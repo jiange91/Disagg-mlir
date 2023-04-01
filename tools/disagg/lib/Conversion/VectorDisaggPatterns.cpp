@@ -29,6 +29,8 @@ using namespace mlir::rmem;
 class VectorLoadOpDisagg : public OpConversionPattern<vector::LoadOp> {
   using OpConversionPattern<vector::LoadOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(vector::LoadOp op, vector::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, vector::LoadOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     Type relType = op.getResult().getType();
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
       if (!rts.empty() && rts.size() == 1) {
@@ -47,6 +49,8 @@ class VectorLoadOpDisagg : public OpConversionPattern<vector::LoadOp> {
 class VectorStoreOpDisagg : public OpConversionPattern<vector::StoreOp> {
   using OpConversionPattern<vector::StoreOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(vector::StoreOp op, vector::StoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, vector::StoreOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     rewriter.replaceOpWithNewOp<rmem::VectorStoreOp>(op, 
       adaptor.getValueToStore(),
       adaptor.getBase(),

@@ -193,7 +193,6 @@ LLVM::GlobalOp mlir::rmem::getOrCreateWRID(ModuleOp moduleOp) {
   auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kRDMAWRID);
   if (op)
     return op;
-  MLIRContext *ctx = moduleOp.getContext();
   OpBuilder b(moduleOp.getBodyRegion());
   return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
     getIntBitType(moduleOp->getContext(), 64),

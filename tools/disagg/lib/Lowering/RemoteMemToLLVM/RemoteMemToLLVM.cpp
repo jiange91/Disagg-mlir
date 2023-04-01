@@ -522,6 +522,14 @@ class RemoteMemIntToPtrLowering : public RemoteMemOpLoweringPattern<rmem::IntToP
   }
 };
 
+class RemoteMemToAddressLowering : public RemoteMemOpLoweringPattern<rmem::ToAddressOp> {
+  using RemoteMemOpLoweringPattern<rmem::ToAddressOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::ToAddressOp op, rmem::ToAddressOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOp(op, adaptor.getRmemref());
+    return mlir::success();
+  }
+};
+
 // =================================================================
 }
 
@@ -532,9 +540,6 @@ public:
   void runOnOperation() override {
     ModuleOp m = getOperation();
 
-    // clear mapping rules
-    m->removeAttr("rmem.type_rule");
-    
     // get local caches
     DenseMap<StringRef, LocalCache> pools;
     if (auto ts = m->getAttrOfType<DictionaryAttr>("rmem.templates")) {
@@ -548,33 +553,35 @@ public:
     populateRemoteMemToLLVMPatterns(typeConverter, patterns, pools);
     
     ConversionTarget target(getContext());
-    target.addIllegalDialect<rmem::RemoteMemDialect>();
-    // Generic target that fileter out most of operations
-    target.markUnknownOpDynamicallyLegal([](Operation *op) {
-      if (isa<UnrealizedConversionCastOp>(op))
-        return true;
-      return !(llvm::any_of(op->getOperandTypes(), rmem::hasRemoteTarget) || llvm::any_of(op->getResultTypes(), rmem::hasRemoteTarget));
-    });
-    target.addDynamicallyLegalOp<func::FuncOp>([](func::FuncOp op) {
-      return (!llvm::any_of(op.getArgumentTypes(), rmem::hasRemoteTarget)) && (!llvm::any_of(op.getResultTypes(), rmem::hasRemoteTarget));
-    });
+    target.addLegalDialect<LLVM::LLVMDialect>();
+    target.addIllegalOp<
+      rmem::UndefOp,
+      rmem::NullRefOp,
+      rmem::LLVMGlobalOp,
+      rmem::ReturnOp,
+      rmem::LLVMAddressOfOp,
+      rmem::LLVMMallocOp,
+      rmem::BitCastOp,
+      rmem::StoreOp,
+      rmem::PrefetchOp,
+      rmem::LoadOp,
+      rmem::GEPOp,
+      rmem::LLVMAllocaOp,
+      rmem::LLVMCallocOp,
+      rmem::AddrCmpOp,
+      rmem::SizeOfOp,
+      rmem::ChannelAccessOp,
+      rmem::WaitReqOp,
+      rmem::GetWRIDOp,
+      rmem::OffloadOp,
+      rmem::LLVMMemsetOp,
+      rmem::PtrToIntOp,
+      rmem::IntToPtrOp,
+      rmem::ToAddressOp
+    >();
 
     if (failed(applyPartialConversion(m, target, std::move(patterns))))
       signalPassFailure();
-
-    /* add disagg env init */
-    auto mainFunc = m.lookupSymbol<func::FuncOp>("main");
-    if (mainFunc) {
-      /* call inits and shutdown */
-      auto initClientOp = rmem::lookupOrCreateInitClientFn(m);
-      // auto initCacheOp = rmem::lookupOrCreateCacheInitFn(m);
-      // auto initChannelOp = rmem::lookupOrCreateChannelInitFn(m);
-
-      OpBuilder b(mainFunc.getBody());
-      rmem::createLLVMCall(b, mainFunc.getLoc(), initClientOp);
-      // rmem::createLLVMCall(b, mainFunc.getLoc(), initCacheOp);
-      // rmem::createLLVMCall(b, mainFunc.getLoc(), initChannelOp);
-    }
   }
 };
 
@@ -604,7 +611,8 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemOffloadLowering,
   RemoteMemMemsetLowering,
   RemoteMemPtrToIntLowering,
-  RemoteMemIntToPtrLowering
+  RemoteMemIntToPtrLowering,
+  RemoteMemToAddressLowering
   >(converter, &converter.getContext());
 }
 

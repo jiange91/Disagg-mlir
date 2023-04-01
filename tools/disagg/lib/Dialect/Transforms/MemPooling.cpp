@@ -22,7 +22,6 @@ namespace {
 class RMEMPoolingPass : public impl::RMEMPoolingBase<RMEMPoolingPass> {
   void runOnOperation() override {
     ModuleOp mop = getOperation();
-    MLIRContext *ctx = mop.getContext();
 
     // populate access_mem base address catcher
     DenseMap<StringRef, Value> access_mem_base_pool;

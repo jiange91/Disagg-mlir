@@ -33,12 +33,17 @@ RemoteMemTypeLowerer::RemoteMemTypeLowerer(MLIRContext *ctx, const LowerToLLVMOp
       return {};
     return LLVM::LLVMStructType::getLiteral(&getContext(), types);
   });
+  addConversion([&](UnrankedMemRefType type) -> llvm::Optional<Type> {
+    return LLVM::LLVMStructType::getLiteral(&getContext(),
+                                          getUnrankedMemRefDescriptorFields());
+  });
   addConversion([](Type type) {
     return LLVM::isCompatibleType(type) ? llvm::Optional<Type>(type)
                                         : llvm::None;
   });
   addConversion([&](RemoteMemRefType type) { return convertRemoteMemRefToPtr(type); });
   addConversion([&](RemoteMemRefType type) { return convertRemoteMemRefToMemRefDesc(type); });
+  addConversion([&](RemoteMemRefType type) { return convertRemoteMemRefToUnrankedDesc(type); });
   addConversion([&](LLVM::LLVMPointerType type) -> llvm::Optional<Type> {
     if (type.isOpaque())
       return type;
@@ -140,11 +145,12 @@ Type RemoteMemTypeLowerer::convertComplexType(ComplexType type) {
 }
 
 llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToPtr(RemoteMemRefType type) {
-  // if is memref remote, try other conversion
+  // if is not pointer type, try other conversion
   Type eleTy = type.getElementType();
-  if (eleTy.isa<MemRefType>()) {
+  if (!eleTy.isa<LLVM::LLVMPointerType>()) {
     return llvm::None;
   }
+
   auto ptrType = eleTy.cast<LLVM::LLVMPointerType>();
   if (ptrType.isOpaque()) {
     return LLVM::LLVMPointerType::get(ptrType.getContext(), 0);
@@ -156,12 +162,31 @@ llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToPtr(RemoteMemRef
 }
 
 llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToMemRefDesc(RemoteMemRefType type) {
-  if (type.getElementType().isa<LLVM::LLVMPointerType>()) 
+  if (!type.getElementType().isa<MemRefType>()) 
     return llvm::None;
   SmallVector<Type, 5> types =
       getMemRefDescriptorFields(type.getElementType().cast<MemRefType>(), /*unpackAggregates=*/false);
   if (types.empty()) return {};
   return LLVM::LLVMStructType::getLiteral(&getContext(), types);
+}
+
+/// Convert an unranked memref type into a list of non-aggregate LLVM IR types
+/// that will form the unranked memref descriptor. In particular, the fields
+/// for an unranked memref descriptor are:
+/// 1. index-typed rank, the dynamic rank of this MemRef
+/// 2. void* ptr, pointer to the static ranked MemRef descriptor. This will be
+///    stack allocated (alloca) copy of a MemRef descriptor that got casted to
+///    be unranked.
+SmallVector<Type, 2> RemoteMemTypeLowerer::getUnrankedMemRefDescriptorFields() {
+  return {getIndexType(),
+          LLVM::LLVMPointerType::get(IntegerType::get(&getContext(), 8))};
+}
+
+llvm::Optional<Type> RemoteMemTypeLowerer::convertRemoteMemRefToUnrankedDesc(RemoteMemRefType type) {
+  if (!type.getElementType().isa<UnrankedMemRefType>()) 
+    return llvm::None;
+  return LLVM::LLVMStructType::getLiteral(&getContext(),
+                                          getUnrankedMemRefDescriptorFields());
 }
 
 llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVMStructType type, SmallVectorImpl<Type> &results, ArrayRef<Type> callStack) {

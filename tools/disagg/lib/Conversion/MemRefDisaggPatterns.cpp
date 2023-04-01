@@ -26,6 +26,8 @@ using namespace mlir::rmem;
 class MemRefLoadOpDisagg : public OpConversionPattern<memref::LoadOp> {
   using OpConversionPattern<memref::LoadOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(memref::LoadOp op, memref::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, memref::LoadOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     Type relType = op.getResult().getType();
     if (auto rts = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
       if (!rts.empty() && rts.size() == 1) {
@@ -48,6 +50,8 @@ class MemRefLoadOpDisagg : public OpConversionPattern<memref::LoadOp> {
 class MemRefStoreOpDisagg : public OpConversionPattern<memref::StoreOp> {
   using OpConversionPattern<memref::StoreOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(memref::StoreOp op, memref::StoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (disagg::detail::trivialRewrite(op, memref::StoreOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
     rewriter.replaceOpWithNewOp<rmem::MemRefStoreOp>(op,
       adaptor.getValue(),
       adaptor.getMemref(),
@@ -108,7 +112,7 @@ class MemRefAllocOpDisagg : public OpConversionPattern<memref::AllocOp> {
       if (!tAttrs.empty() && tAttrs.size() == 1) {
         rType = tAttrs[0].dyn_cast<mlir::TypeAttr>().getValue();
       } 
-    } 
+    }
     else {
       rType = RemoteMemRefType::get(op.getMemref().getType());
     }
@@ -124,6 +128,85 @@ class MemRefAllocOpDisagg : public OpConversionPattern<memref::AllocOp> {
   }
 };
 
+class MemRefCastOpDisagg : public OpConversionPattern<memref::CastOp> {
+  using OpConversionPattern<memref::CastOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(memref::CastOp op, memref::CastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // since we do not cast a local memref to remote 
+    // if the operand type is not changing, use trivial conversion
+    if (disagg::detail::trivialRewrite(op, memref::CastOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
+
+    auto loc = op.getLoc();
+    Type relType;
+    if (auto tAttrs = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+      if (!tAttrs.empty() && tAttrs.size() == 1) {
+        relType = tAttrs[0].dyn_cast<mlir::TypeAttr>().getValue();
+      } 
+    }
+    else {
+#if 0
+      // if is unranked, create a fake unranked local-like remote unranked memref
+      // any usage of this memref should use it as a remote memref
+      if (op.getDest().getType().isa<UnrankedMemRefType>()) {
+        Value rAddr = rewriter.create<rmem::ToAddressOp>(loc,
+          op.getSource().getType(),
+          adaptor.getSource()
+        );
+        Value cAddr = rewriter.create<memref::CastOp>(loc, 
+          op.getDest().getType(),
+          rAddr
+        );
+        rewriter.replaceOp(op, cAddr);
+        return mlir::success();
+      }
+#endif
+      relType = RemoteMemRefType::get(op.getDest().getType());
+    } 
+    Value v = rewriter.create<rmem::MemRefCastOp>(loc, 
+      relType,
+      adaptor.getSource()
+    );
+    rewriter.replaceOp(op, v);
+    return mlir::success();
+  }
+};
+
+class MemRefReinterpretCastOpDisagg : public OpConversionPattern<memref::ReinterpretCastOp> {
+  using OpConversionPattern<memref::ReinterpretCastOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(memref::ReinterpretCastOp op, memref::ReinterpretCastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // since we do not cast a local memref to remote 
+    // if the operand type is not changing, use trivial conversion
+    if (disagg::detail::trivialRewrite(op, memref::ReinterpretCastOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
+      return mlir::success();
+
+    auto loc = op.getLoc();
+    Type relType;
+    assert(adaptor.getSource().getType().isa<RemoteMemRefType>() && "reinterpret cast expect");
+    if (auto tAttrs = op->getAttrOfType<mlir::ArrayAttr>("rel_types")) {
+      if (!tAttrs.empty() && tAttrs.size() == 1) {
+        relType = tAttrs[0].dyn_cast<mlir::TypeAttr>().getValue();
+      }
+    }
+    else {
+      relType = RemoteMemRefType::get(op.getType()); 
+    } 
+    Value v = rewriter.create<rmem::MemRefReinterpretCastOp>(loc, 
+      relType,
+      adaptor.getSource(),
+      adaptor.getOffsets(),
+      adaptor.getSizes(),
+      adaptor.getStrides(),
+      adaptor.getStaticOffsetsAttr(),
+      adaptor.getStaticSizesAttr(),
+      adaptor.getStaticStridesAttr()
+    );
+    rewriter.replaceOp(op, v);
+    return mlir::success();
+  }
+};
+
 
 void mlir::disagg::populateMemRefDisaggregationPatterns(MLIRContext *ctx, RewritePatternSet &patterns) {
   patterns.add<
@@ -131,6 +214,8 @@ void mlir::disagg::populateMemRefDisaggregationPatterns(MLIRContext *ctx, Rewrit
     MemRefGlobalOpDisagg,
     MemRefAllocOpDisagg,
     MemRefLoadOpDisagg,
-    MemRefStoreOpDisagg 
+    MemRefStoreOpDisagg,
+    MemRefCastOpDisagg,
+    MemRefReinterpretCastOpDisagg
   >(ctx);
 }

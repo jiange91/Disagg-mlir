@@ -43,12 +43,12 @@ int main(int argc, char **argv) {
   mlir::registerRemoteMemPasses();
 
   // register normal passes
-  // mlir::registerAllPasses();
-  mlir::registerCSEPass();
-  mlir::registerInlinerPass();
-  mlir::registerCanonicalizerPass();
-  mlir::registerSymbolDCEPass();
-  mlir::registerLoopInvariantCodeMotionPass();
+  mlir::registerAllPasses();
+  // mlir::registerCSEPass();
+  // mlir::registerInlinerPass();
+  // mlir::registerCanonicalizerPass();
+  // mlir::registerSymbolDCEPass();
+  // mlir::registerLoopInvariantCodeMotionPass();
 
   // interface perpare
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {

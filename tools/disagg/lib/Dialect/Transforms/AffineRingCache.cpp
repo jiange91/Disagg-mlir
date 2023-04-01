@@ -145,6 +145,7 @@ public:
     AffineForOp outmost);
   void inspectPrefetchDetails();
   Type getBatchedMemType(MemoryRegion mem);
+  AffineApplyOp getRecoverMap();
   void emitOperatorKernel();
   void emitRuntimeKernel();
 
@@ -239,6 +240,7 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
     ModuleOp op = getOperation();
     MLIRContext *ctx = op.getContext();
     RemoteMemTypeLowerer typeConverter(ctx);
+    OpBuilder builder(op);
 
     // populate access_mem base address catcher
     // now assume the baseaddress is the 
@@ -271,7 +273,7 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
     DenseMap<AffineForOp, AffineForOp> nest;
     DenseMap<Value, std::tuple<int64_t, int64_t>> indVarRange;
 
-    // Populate relationship graph
+    // Populate relationship graph and constant induction range
     op.walk([&](mlir::AffineForOp loop) {
       if (auto ploop = loop->getParentOfType<AffineForOp>())
         nest[loop] = ploop;
@@ -283,12 +285,60 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
         if (num_targets != 0)
           loops.push_back(loop);
       }
-      // upper bound
-      ino64_t lower = loop.getConstantLowerBound();
-      int64_t upper = loop.getConstantUpperBound();
+      if (loop.hasConstantBounds()) {
+        int64_t lower = loop.getConstantLowerBound();
+        int64_t upper = loop.getConstantUpperBound();
+        int64_t s = loop.getStep();
+        upper = (((upper - lower + s - 1) / s) - 1) * s + lower;
+        indVarRange[loop.getInductionVar()] = {lower, upper};
+      }
+    });
+
+    // Populate affine induction range
+    op.walk([&](mlir::AffineForOp loop) {
+      if (loop.hasConstantBounds())
+        return WalkResult::advance();
+
+      int64_t lower = -1, upper = -1;
+
+      // get lower bound
+      if (loop.hasConstantLowerBound())
+        lower = loop.getConstantLowerBound();
+      else {
+        AffineMap minMap = loop.getLowerBoundMap();
+        SmallVector<Attribute, 1> lowInput;
+        for (auto opd : loop.getLowerBoundOperands()) {
+          if (indVarRange.find(opd) != indVarRange.end())
+            lowInput.push_back(builder.getIndexAttr(std::get<0>(indVarRange[opd])));
+        }
+        if (lowInput.size() == minMap.getNumInputs()) {
+          SmallVector<Attribute, 1> lowRel;
+          if (minMap.constantFold(lowInput, lowRel).succeeded())
+            lower = lowRel[0].cast<IntegerAttr>().getValue().getSExtValue();
+        }
+      }
+
+      // get upper bound
+      if (loop.hasConstantUpperBound())
+        upper = loop.getConstantUpperBound();
+      else {
+        AffineMap maxMap = loop.getUpperBoundMap();
+        SmallVector<Attribute, 1> highInput;
+        for (auto opd : loop.getUpperBoundOperands()) {
+          if (indVarRange.find(opd) != indVarRange.end())
+            highInput.push_back(builder.getIndexAttr(std::get<1>(indVarRange[opd])));
+        }
+        if (highInput.size() == maxMap.getNumInputs()) {
+          SmallVector<Attribute, 1> highRel;
+          if (maxMap.constantFold(highInput, highRel).succeeded())
+            upper = highRel[0].cast<IntegerAttr>().getValue().getSExtValue();
+        }
+      }
+
       int64_t s = loop.getStep();
       upper = (((upper - lower + s - 1) / s) - 1) * s + lower;
-      indVarRange[loop.getInductionVar()] = {lower, upper};
+      indVarRange[loop.getInductionVar()] = {lower, upper}; 
+      return WalkResult::advance();
     });
 
     // Populate enclosing induction var map
@@ -312,7 +362,8 @@ class RMEMAffineRingCache : public impl::RMEMAffineRingCacheBase <RMEMAffineRing
     }
 
     for (auto w : workList) {
-      // w.inspectPrefetchDetails();
+      if (debug)
+        w.inspectPrefetchDetails();
       w.emitOperatorKernel();
     }
 
@@ -332,7 +383,8 @@ namespace {
 
 // helper
 // get indices variables
-void getIndices(Operation *op, SmallVector<Value> &opds) {
+// if operation applies affine map, return map as well
+AffineMap getIndices(Operation *op, SmallVector<Value> &opds) {
   if (auto affineLoad = dyn_cast<RAffineLoadOp>(op))
     opds.append(affineLoad.getIndices().begin(), affineLoad.getIndices().end());
   else if (auto affineStore = dyn_cast<RAffineStoreOp>(op)) 
@@ -350,6 +402,10 @@ void getIndices(Operation *op, SmallVector<Value> &opds) {
     op->dump();
     llvm_unreachable("update getIndices function");
   }
+  if (auto mapAttr = op->getAttrOfType<AffineMapAttr>("map")) {
+    return mapAttr.getValue();
+  }
+  return AffineMap::getMultiDimIdentityMap(opds.size(), op->getContext());
 }
 
 
@@ -557,15 +613,14 @@ std::pair<int64_t, AffineMap> RmemAccess::getAccessRange(
 
   // get num indices
   SmallVector<Value> indices;
-  getIndices(access, indices);
+  AffineMap mapForInds = getIndices(access, indices);
   SmallVector<AffineExpr> exprs;
   for (auto indc : indices) {
     exprs.push_back(offset_dfs(indc, inductions, v2Expr));
   }
 
   AffineMap input = AffineMap::get(inductions.size(), 0, exprs, access->getContext());
-  AffineMap output = baseMap.compose(input);
-
+  AffineMap output = baseMap.compose(mapForInds.compose(input));
   return {size, output};
 }
 
@@ -632,7 +687,7 @@ std::pair<bool, AffineMap> RmemAccess::canUseRegionForThis(
   // llvm::errs() << highc.getSExtValue() << "\n";
   if (highc.sgt(mem.sizeInEle - size))
     return {false, m};
-
+  
   // Checked, generate new affine map to indent access_mem
   // the generated affinemap will not contain batch-indent
   // meaning an explict induction variable need to be inserted to
@@ -837,6 +892,19 @@ Type AffineForPrefetchInternal::getBatchedMemType(MemoryRegion mem) {
   return relType;
 }
 
+AffineApplyOp AffineForPrefetchInternal::getRecoverMap() {
+  MLIRContext *ctx = b.getContext();
+  Location loc = innterLoop.getLoc();
+  // outer 0, inner 1
+  AffineExpr expr = getAffineDimExpr(1, ctx) * getAffineConstantExpr(loop.getStep(), ctx) + getAffineDimExpr(0, ctx);
+  AffineMap map = AffineMap::get(2, 0, expr);
+  SmallVector<Value> input = {outerLoop.getInductionVar(), innterLoop.getInductionVar()};
+  auto recover = b.create<AffineApplyOp>(loc, 
+    map, input
+  );
+  return recover;
+}
+
 void AffineForPrefetchInternal::emitOperatorKernel() {
   // generated loop in high level:
   // alloca h, t
@@ -923,7 +991,7 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
           wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
         else
           wrid = cst0_index;
-        Value lm = rdmaWithCurInd(mem, cst0_index, curInduction, IBV_WR_RDMA_READ, wrid).getResult();
+        Value lm = rdmaWithCurInd(mem, localIndex, curInduction, IBV_WR_RDMA_READ, wrid).getResult();
         localMem.push_back(lm); 
         wrids.push_back(wrid);
       } else {
@@ -1088,17 +1156,19 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
     writeBack(nonStaticAccessMem, currentIter[1], outerLoop.getInductionVar(), nStaticWBIDs);
     if (!nStaticWBIDs.empty())
       b.create<rmem::WaitReqOp>(loc, sPtr, nStaticWBIDs.back());
-
-    // yield next iter
-    b.create<AffineYieldOp>(loc, nextIter);
-    // insertion point will be set before 
-    // 1. Yield op 
-    // 2. the first write back op
   }
+
+  // yield next iter
+  auto outerYield = b.create<AffineYieldOp>(loc, nextIter);
+  // insertion point will be set before 
+  // 1. Yield op 
+  // 2. the first write back op
+  b.setInsertionPoint(outerYield);
 
   // Emit inner loop
   if (afterPrefetch)
     b.setInsertionPointAfter(afterPrefetch);
+
   innterLoop = b.create<AffineForOp>(loc, 
     0, batch, 1
   );
@@ -1110,15 +1180,10 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
 
   // transform all old inuction (now new inner loop induction) to reconstructed induction 
   b.setInsertionPointToStart(innterLoop.getBody());
-  auto excp = b.create<arith::MulIOp>(loc, 
-    innterLoop.getInductionVar(), 
-    b.create<arith::ConstantIndexOp>(loc, loop.getStep())
-  );
-  Value recInd = b.create<arith::AddIOp>(loc, 
-    outerLoop.getInductionVar(), 
-    excp.getResult()
-  );
-  innterLoop.getInductionVar().replaceAllUsesExcept(recInd, excp);
+  // construct affine map that recover the original induction var
+
+  AffineApplyOp recover = this->getRecoverMap();
+  innterLoop.getInductionVar().replaceAllUsesExcept(recover.getResult(), recover);
 
   // regenerate access operations
   for (auto [op, access] : raccess) {
@@ -1134,7 +1199,6 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
         mem.only_oneD);
     }
   }
-
   loop.erase();
 }
 

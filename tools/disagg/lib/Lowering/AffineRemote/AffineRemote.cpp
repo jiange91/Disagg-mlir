@@ -34,15 +34,21 @@ class RemoteAffineStoreLowering : public OpRewritePattern<rmem::RAffineStoreOp> 
 public:
   using OpRewritePattern<rmem::RAffineStoreOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(rmem::RAffineStoreOp op, PatternRewriter &rewriter) const override {
-    SmallVector<Value, 8> indices(op.getMapOperands());
-    auto maybeExpandedMap =
-        expandAffineMap(rewriter, op.getLoc(), op.getAffineMap(), indices);
-    if (!maybeExpandedMap)
-      return failure();
+    Value localRef = op.getMemRef();
+    auto loc = op.getLoc();
+    if (auto rmemRef = op.getMemRef().getType().dyn_cast<rmem::RemoteMemRefType>()) {
+      localRef = rewriter.create<rmem::MaterializeOp>(loc, rmem::getRawTypeFromRemotedType(rmemRef), op.getMemRef());
+    }
+    rewriter.replaceOpWithNewOp<AffineStoreOp>(op, op.getValueToStore(), localRef, op.getIndices());
+    // SmallVector<Value, 8> indices(op.getMapOperands());
+    // auto maybeExpandedMap =
+    //     expandAffineMap(rewriter, op.getLoc(), op.getAffineMap(), indices);
+    // if (!maybeExpandedMap)
+    //   return failure();
 
     // Build memref.store valueToStore, memref[expandedMap.results].
-    rewriter.replaceOpWithNewOp<rmem::MemRefStoreOp>(
-        op, op.getValueToStore(), op.getMemRef(), *maybeExpandedMap);
+    // rewriter.replaceOpWithNewOp<rmem::MemRefStoreOp>(
+    //     op, op.getValueToStore(), op.getMemRef(), *maybeExpandedMap);
     return success();
   }
 };

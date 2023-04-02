@@ -1,8 +1,9 @@
-func.func private @disagg_read_tensor_f32(!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>)
-llvm.mlir.global internal constant @constant_0("constant_0\00") {addr_space = 0 : i32}
+  func.func @main_graph(%arg0: !rmem.rmref<1, memref<64512x512xf32>>, %arg1: !rmem.rmref<1, memref<512x512xf32>>) -> !rmem.rmref<1, memref<64512x512xf32>> attributes {access_mem_catcher = [["ref0", 0], ["ref1", 1]], input_names = ["X1", "X2"], llvm.emit_c_interface, output_names = ["Y"]} {
+    %0 = rmem.alloc_memref(2, ) {access_mem_catcher = [["ref2", 0]], alignment = 16 : i64} : <1, memref<64512x512xf32>>
+    func.return %0 : !rmem.rmref<1, memref<64512x512xf32>>
+  }
 
-%0 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<50264x768xf32>>
-%1 = rmem.memref.cast %0 : <1, memref<50264x768xf32>> to <1, memref<*xf32>>
-%2 = llvm.mlir.addressof @constant_0 : !llvm.ptr<array<11 x i8>>
-%3 = llvm.getelementptr %2[0, 0] : (!llvm.ptr<array<11 x i8>>) -> !llvm.ptr<i8>
-func.call @disagg_read_tensor_f32(%3, %1) : (!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>) -> ()
+  // func.func @main_graph(%arg0: !rmem.rmref<1, memref<64512x512xf32>>, %arg1: !rmem.rmref<1, memref<512x512xf32>>) -> memref<64512x512xf32> attributes {access_mem_catcher = [["ref0", 0], ["ref1", 1]], input_names = ["X1", "X2"], llvm.emit_c_interface, output_names = ["Y"]} {
+  //   %alloc = memref.alloc() {alignment = 16 : i64} : memref<64512x512xf32>
+  //   func.return %alloc : memref<64512x512xf32>
+  // }

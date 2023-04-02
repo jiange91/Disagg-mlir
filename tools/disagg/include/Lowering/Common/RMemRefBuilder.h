@@ -18,32 +18,6 @@ class RemoteMemDialect;
 class RemoteMemRefType;
 class RemoteMemTypeLowerer;
 
-// Replace llvm insert/extract with rmem ops
-class RemoteMemStructBuilder {
-public:
-  /// Construct a helper for the given value.
-  explicit RemoteMemStructBuilder(Value v): value(v), structType(v.getType()) {
-    assert(value != nullptr && "value cannot be null");
-  }
-  /// Builds IR creating an `undef` value of the descriptor type.
-  static RemoteMemStructBuilder undef(OpBuilder &builder, Location loc,
-                             Type descriptorType);
-
-  /*implicit*/ operator Value() { return value; }
-
-protected:
-  // LLVM value
-  Value value;
-  // Cached struct type.
-  Type structType;
-
-protected:
-  /// Builds IR to extract a value from the struct at position pos
-  Value extractPtr(OpBuilder &builder, Location loc, unsigned pos);
-  /// Builds IR to set a value in the struct at position pos
-  void setPtr(OpBuilder &builder, Location loc, unsigned pos, Value ptr);
-};
-
 // NO NEED TO worry about unranked memref / tensor
 // C/C++/Polygeist does not allow that 
 

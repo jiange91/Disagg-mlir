@@ -92,7 +92,7 @@ class FuncReturnOpDisagg : public OpConversionPattern<func::ReturnOp> {
   LogicalResult matchAndRewrite(func::ReturnOp op, func::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     if (disagg::detail::trivialRewrite(op, func::ReturnOp::getOperationName(), adaptor.getOperands(), rewriter).succeeded())
       return mlir::success();
-    rewriter.replaceOpWithNewOp<rmem::ReturnOp>(op, adaptor.getOperands());
+    rewriter.replaceOpWithNewOp<func::ReturnOp>(op, adaptor.getOperands());
     return mlir::success(); 
   }
 };

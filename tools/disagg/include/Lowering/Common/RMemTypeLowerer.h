@@ -66,6 +66,8 @@ public:
 
   Type convertFunctionSignature(FunctionType funcTy, SignatureConversion &result);
   Type convertCallingConventionType(Type type);
+  LogicalResult structFuncArgTypeConverter(Type type, SmallVector<Type> &result);
+  Type packFunctionResults(TypeRange types);
 protected:
   RemoteMemDialect *rmemDialect;
 private:

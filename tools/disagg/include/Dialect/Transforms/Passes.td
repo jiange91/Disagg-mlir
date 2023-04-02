@@ -57,6 +57,13 @@ def RMEMAffineRingCache : Pass<"rmem-affine-ring-cache", "mlir::ModuleOp"> {
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
 }
 
+def RMEMAffineAccessMem : Pass<"rmem-affine-access-mem", "mlir::ModuleOp"> {
+  let summary = "Analyse affine loop accessed continuous remote memory";
+  let constructor = "mlir::createRemoteMemAffineAccessMemPass()";
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
+}
+
+// not used
 def RMEMPooling : Pass<"rmem-pooling", "mlir::ModuleOp"> {
   let summary = "Optimize local cache org given attributes, also register rbase";
   let constructor = "mlir::createRemoteMemPoolingPass()";

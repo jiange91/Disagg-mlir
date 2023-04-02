@@ -22,14 +22,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
   llvm.mlir.global internal constant @constant_19("constant_19\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_18("constant_18\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_16("constant_16\00") {addr_space = 0 : i32}
-  func.func private @read_tensor_i1(!llvm.ptr<i8>, memref<*xi1>) 
-  // func.func private @disagg_read_tensor_i1(!llvm.ptr<i8>, memref<*xi1>) attributes {
-  //   "remote_target" = 1,
-  //   "operand_types" = [
-  //     !llvm.ptr<i8>,
-  //     !rmem.rmref<1, memref<*xi1>>
-  //   ]
-  // }
+  func.func private @read_tensor_i1(!llvm.ptr<i8>, memref<*xi1>) attributes {llvm.emit_c_interface}
   llvm.mlir.global internal constant @constant_15("constant_15\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_14("constant_14\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_13("constant_13\00") {addr_space = 0 : i32}
@@ -45,25 +38,22 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
   llvm.mlir.global internal constant @constant_3("constant_3\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_2("constant_2\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_1("constant_1\00") {addr_space = 0 : i32}
-  func.func private @read_tensor_f32(!llvm.ptr<i8>, memref<*xf32>)
-  // func.func private @disagg_read_tensor_f32(!llvm.ptr<i8>, memref<*xf32>) attributes {
-  //   "remote_target" = 1,
-  //   "operand_types" = [
-  //     !llvm.ptr<i8>,
-  //     !rmem.rmref<1, memref<*xf32>>
-  //   ]
-  // }
-
+  func.func private @read_tensor_f32(!llvm.ptr<i8>, memref<*xf32>) attributes {llvm.emit_c_interface}
+  func.func private @disagg_read_tensor_f32(!llvm.ptr<i8>, memref<*xf32>) attributes {
+    llvm.emit_c_interface,
+    "remote_target" = 1,
+    "operand_types" = [!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>]
+  }
+  llvm.func @printf(!llvm.ptr<i8>, ...) -> i32
+  llvm.mlir.global internal constant @str0("%ld\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_0("constant_0\00") {addr_space = 0 : i32}
   func.func @main_graph(%arg0: memref<64x1xi64>, %arg1: memref<64x12x255x64xf32>, %arg2: memref<64x12x255x64xf32>) -> memref<64x1x50264xf32> attributes {input_names = ["input_ids", "past.0.key", "past.0.value"], llvm.emit_c_interface, output_names = ["logits"],
     "remote_target" = 1,
     "operand_types" = [
-      memref<64x1xi64>,
-      !rmem.rmref<1, memref<64x12x255x64xf32>>,
-      !rmem.rmref<1, memref<64x12x255x64xf32>>
-    ]
+      memref<64x1xi64>, !rmem.rmref<1, memref<64x12x255x64xf32>>, !rmem.rmref<1, memref<64x12x255x64xf32>>
+    ],
+    "rel_types" = [!rmem.rmref<1, memref<64x1x50264xf32>>]
   } {
-    %out_fake = memref.alloc() {alignment = 16 : i64} : memref<64x1x50264xf32>
     %c1 = arith.constant 1 : index
     %c2 = arith.constant 2 : index
     %c3 = arith.constant 3 : index
@@ -91,7 +81,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     %4 = llvm.mlir.addressof @constant_2 : !llvm.ptr<array<11 x i8>>
     %5 = llvm.getelementptr %4[0, 0] : (!llvm.ptr<array<11 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%5, %cast_5) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-    %alloc_6 = memref.alloc() : memref<768x2304xf32>
+    %alloc_6 = memref.alloc() {alignment = 16 : i64} : memref<768x2304xf32>
     %cast_7 = memref.cast %alloc_6 : memref<768x2304xf32> to memref<*xf32>
     %6 = llvm.mlir.addressof @constant_3 : !llvm.ptr<array<11 x i8>>
     %7 = llvm.getelementptr %6[0, 0] : (!llvm.ptr<array<11 x i8>>) -> !llvm.ptr<i8>
@@ -156,16 +146,15 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     %30 = llvm.mlir.addressof @constant_15 : !llvm.ptr<array<12 x i8>>
     %31 = llvm.getelementptr %30[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_i1(%31, %cast_31) : (!llvm.ptr<i8>, memref<*xi1>) -> ()
-    %alloc_32 = memref.alloc() {alignment = 16 : i64} : memref<768x50264xf32>
+    %alloc_32 = memref.alloc() {remote_target = 1, alignment = 16 : i64} : memref<768x50264xf32>
     %cast_33 = memref.cast %alloc_32 : memref<768x50264xf32> to memref<*xf32>
     %32 = llvm.mlir.addressof @constant_16 : !llvm.ptr<array<12 x i8>>
     %33 = llvm.getelementptr %32[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
-    call @read_tensor_f32(%33, %cast_33) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    // reshape
+    call @read_tensor_f32(%33, %cast_33) {
+      remote_target = 1,
+      remote_callee = "disagg_read_tensor_f32"
+    } : (!llvm.ptr<i8>, memref<*xf32>) -> ()
     %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [0], sizes: [64, 1], strides: [1, 1] : memref<64x1xi64> to memref<64x1xi64>
-
-    // Gather
     %alloc_34 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -180,14 +169,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    
     %alloc_35 = memref.alloc() {alignment = 16 : i64} : memref<1x1x768xf32>
     %cast_36 = memref.cast %alloc_35 : memref<1x1x768xf32> to memref<*xf32>
     %34 = llvm.mlir.addressof @constant_18 : !llvm.ptr<array<12 x i8>>
     %35 = llvm.getelementptr %34[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%35, %cast_36) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    // add
     %alloc_37 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -199,8 +185,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // reduce mean
     %alloc_38 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -228,8 +212,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Sub
     %alloc_39 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -241,14 +223,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    %alloc_40 = memref.alloc() {} : memref<f32>
+    %alloc_40 = memref.alloc() : memref<f32>
     %cast_41 = memref.cast %alloc_40 : memref<f32> to memref<*xf32>
     %36 = llvm.mlir.addressof @constant_19 : !llvm.ptr<array<12 x i8>>
     %37 = llvm.getelementptr %36[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%37, %cast_41) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    // pow
     %alloc_42 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -260,8 +239,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // reduce mean
     %alloc_43 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -289,14 +266,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    %alloc_44 = memref.alloc() {} : memref<f32>
+    %alloc_44 = memref.alloc() : memref<f32>
     %cast_45 = memref.cast %alloc_44 : memref<f32> to memref<*xf32>
     %38 = llvm.mlir.addressof @constant_20 : !llvm.ptr<array<12 x i8>>
     %39 = llvm.getelementptr %38[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%39, %cast_45) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    // Add
     %alloc_46 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -308,8 +282,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Sqrt
     %alloc_47 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -320,8 +292,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Div
     %alloc_48 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -333,8 +303,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Mul
     %alloc_49 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -346,8 +314,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Add
     %alloc_50 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -359,11 +325,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // reshape
     %reinterpret_cast_51 = memref.reinterpret_cast %alloc_50 to offset: [0], sizes: [64, 768], strides: [768, 1] : memref<64x1x768xf32> to memref<64x768xf32>
-
-    // Gemm
     %alloc_52 = memref.alloc() {alignment = 128 : i64} : memref<64x2304xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 2304 {
@@ -528,11 +490,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         affine.store %72, %alloc_52[%arg3, %arg4] : memref<64x2304xf32>
       }
     }
-
-    // Reshape
     %reinterpret_cast_55 = memref.reinterpret_cast %alloc_52 to offset: [0], sizes: [64, 1, 2304], strides: [2304, 2304, 1] : memref<64x2304xf32> to memref<64x1x2304xf32>
-
-    // Split
     %alloc_56 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     %alloc_57 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     %alloc_58 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
@@ -560,13 +518,9 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-    // Reshape
     %reinterpret_cast_59 = memref.reinterpret_cast %alloc_56 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
     %reinterpret_cast_60 = memref.reinterpret_cast %alloc_57 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
     %reinterpret_cast_61 = memref.reinterpret_cast %alloc_58 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
-
-    // Concat
     %alloc_62 = memref.alloc() {remote_target = 1, alignment = 16 : i64} : memref<64x12x256x64xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
@@ -588,8 +542,6 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-
-
     %alloc_63 = memref.alloc() {remote_target = 1, alignment = 16 : i64} : memref<64x12x256x64xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
@@ -705,18 +657,16 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_66 = memref.alloc() {} : memref<f32>
+    %alloc_66 = memref.alloc() : memref<f32>
     %cast_67 = memref.cast %alloc_66 : memref<f32> to memref<*xf32>
     %40 = llvm.mlir.addressof @constant_27 : !llvm.ptr<array<12 x i8>>
     %41 = llvm.getelementptr %40[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%41, %cast_67) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    %alloc_68 = memref.alloc() {} : memref<f32>
+    %alloc_68 = memref.alloc() : memref<f32>
     %cast_69 = memref.cast %alloc_68 : memref<f32> to memref<*xf32>
     %42 = llvm.mlir.addressof @constant_28 : !llvm.ptr<array<12 x i8>>
     %43 = llvm.getelementptr %42[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%43, %cast_69) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_70 = memref.alloc() : memref<f32>
     %44 = affine.load %alloc_66[] : memref<f32>
     %45 = affine.load %alloc_68[] : memref<f32>
@@ -742,12 +692,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_74 = memref.alloc() {} : memref<f32>
+    %alloc_74 = memref.alloc() : memref<f32>
     %cast_75 = memref.cast %alloc_74 : memref<f32> to memref<*xf32>
     %50 = llvm.mlir.addressof @constant_30 : !llvm.ptr<array<12 x i8>>
     %51 = llvm.getelementptr %50[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%51, %cast_75) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_76 = memref.alloc() {alignment = 16 : i64} : memref<64x12x1x256xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
@@ -1105,12 +1054,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_90 = memref.alloc() {} : memref<f32>
+    %alloc_90 = memref.alloc() : memref<f32>
     %cast_91 = memref.cast %alloc_90 : memref<f32> to memref<*xf32>
     %52 = llvm.mlir.addressof @constant_33 : !llvm.ptr<array<12 x i8>>
     %53 = llvm.getelementptr %52[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%53, %cast_91) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_92 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1149,12 +1097,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_94 = memref.alloc() {} : memref<f32>
+    %alloc_94 = memref.alloc() : memref<f32>
     %cast_95 = memref.cast %alloc_94 : memref<f32> to memref<*xf32>
     %54 = llvm.mlir.addressof @constant_34 : !llvm.ptr<array<12 x i8>>
     %55 = llvm.getelementptr %54[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%55, %cast_95) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_96 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1375,18 +1322,16 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
       }
     }
     %reinterpret_cast_105 = memref.reinterpret_cast %alloc_102 to offset: [0], sizes: [64, 1, 3072], strides: [3072, 3072, 1] : memref<64x3072xf32> to memref<64x1x3072xf32>
-    %alloc_106 = memref.alloc() {} : memref<f32>
+    %alloc_106 = memref.alloc() : memref<f32>
     %cast_107 = memref.cast %alloc_106 : memref<f32> to memref<*xf32>
     %56 = llvm.mlir.addressof @constant_37 : !llvm.ptr<array<12 x i8>>
     %57 = llvm.getelementptr %56[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%57, %cast_107) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
-    %alloc_108 = memref.alloc() {} : memref<f32>
+    %alloc_108 = memref.alloc() : memref<f32>
     %cast_109 = memref.cast %alloc_108 : memref<f32> to memref<*xf32>
     %58 = llvm.mlir.addressof @constant_38 : !llvm.ptr<array<12 x i8>>
     %59 = llvm.getelementptr %58[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%59, %cast_109) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_110 = memref.alloc() {alignment = 16 : i64} : memref<64x1x3072xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1398,12 +1343,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_111 = memref.alloc() {} : memref<f32>
+    %alloc_111 = memref.alloc() : memref<f32>
     %cast_112 = memref.cast %alloc_111 : memref<f32> to memref<*xf32>
     %60 = llvm.mlir.addressof @constant_39 : !llvm.ptr<array<12 x i8>>
     %61 = llvm.getelementptr %60[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%61, %cast_112) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_113 = memref.alloc() {alignment = 16 : i64} : memref<64x1x3072xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1426,12 +1370,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_115 = memref.alloc() {} : memref<f32>
+    %alloc_115 = memref.alloc() : memref<f32>
     %cast_116 = memref.cast %alloc_115 : memref<f32> to memref<*xf32>
     %62 = llvm.mlir.addressof @constant_40 : !llvm.ptr<array<12 x i8>>
     %63 = llvm.getelementptr %62[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%63, %cast_116) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_117 = memref.alloc() {alignment = 16 : i64} : memref<64x1x3072xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1453,12 +1396,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_119 = memref.alloc() {} : memref<f32>
+    %alloc_119 = memref.alloc() : memref<f32>
     %cast_120 = memref.cast %alloc_119 : memref<f32> to memref<*xf32>
     %64 = llvm.mlir.addressof @constant_41 : !llvm.ptr<array<12 x i8>>
     %65 = llvm.getelementptr %64[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%65, %cast_120) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_121 = memref.alloc() {alignment = 16 : i64} : memref<64x1x3072xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1718,12 +1660,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_133 = memref.alloc() {} : memref<f32>
+    %alloc_133 = memref.alloc() : memref<f32>
     %cast_134 = memref.cast %alloc_133 : memref<f32> to memref<*xf32>
     %66 = llvm.mlir.addressof @constant_44 : !llvm.ptr<array<12 x i8>>
     %67 = llvm.getelementptr %66[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%67, %cast_134) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_135 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1762,12 +1703,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %alloc_137 = memref.alloc() {} : memref<f32>
+    %alloc_137 = memref.alloc() : memref<f32>
     %cast_138 = memref.cast %alloc_137 : memref<f32> to memref<*xf32>
     %68 = llvm.mlir.addressof @constant_45 : !llvm.ptr<array<12 x i8>>
     %69 = llvm.getelementptr %68[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_f32(%69, %cast_138) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
-
     %alloc_139 = memref.alloc() {alignment = 16 : i64} : memref<64x1x1xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
@@ -1901,7 +1841,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    return %out_fake: memref<64x1x50264xf32>
+    return %alloc_144 : memref<64x1x50264xf32>
   }
 }
 

@@ -16,6 +16,7 @@ std::unique_ptr<Pass> createRemoteMemLoopRingCachePass();
 std::unique_ptr<Pass> createRemoteMemAffineRingCachePass();
 std::unique_ptr<Pass> createRemoteMemPropRemotePass();
 std::unique_ptr<Pass> createRemoteMemPoolingPass();
+std::unique_ptr<Pass> createRemoteMemAffineAccessMemPass();
 
 #define GEN_PASS_REGISTRATION
 #include "Dialect/Transforms/Passes.h.inc"

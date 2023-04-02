@@ -8,7 +8,24 @@
 #map7 = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
 #map8 = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2 + 255, d3)>
 #map9 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
-module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu"} {
+
+#amap0 = affine_map<(d0) -> (d0 * 195840)>
+#amap1 = affine_map<(d0) -> (d0 * 196608)>
+#amap2 = affine_map<(d0) -> (d0 * 50264)>
+#amap3 = affine_map<(d0,d1,d2,d3) -> (d3 * 50264)>
+
+module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu",
+  rmem.templates = {
+  // "t" = [rbase,     l_ofst,   r_ofst,   SizeInEle, eleType, bSize,  nBlock, type],
+    "t0" = ["ref0",         0,      0,      12533760,  f32,     195840,   64,   1],
+    "t1" = ["ref1",  67108864,      0,      12533760,  f32,     195840,   64,   1],
+    "t2" = ["ref2", 134217728,      0,      12582912,  f32,     196608,   64,   1],
+    "t3" = ["ref3", 201326592,      0,      12582912,  f32,     196608,   64,   1],
+    "t4" = ["ref4", 268435456,      0,      12582912,  f32,     196608,   64,   1],
+    "t5" = ["ref5", 335544320,      0,      3216896,   f32,      50264,   64,   1],
+    // "t6" = ["ref6", 352321536,      0,      38602752,  f32,     402112,   64,   1]
+  }
+} {
   llvm.mlir.global internal constant @constant_45("constant_45\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_44("constant_44\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_41("constant_41\00") {addr_space = 0 : i32}
@@ -46,7 +63,9 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
   llvm.func @printf(!llvm.ptr<i8>, ...) -> i32
   llvm.mlir.global internal constant @str0("%ld\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @constant_0("constant_0\00") {addr_space = 0 : i32}
-  func.func @main_graph(%arg0: memref<64x1xi64>, %arg1: !rmem.rmref<1, memref<64x12x255x64xf32>>, %arg2: !rmem.rmref<1, memref<64x12x255x64xf32>>) -> !rmem.rmref<1, memref<64x1x50264xf32>> attributes {input_names = ["input_ids", "past.0.key", "past.0.value"], llvm.emit_c_interface, output_names = ["logits"]} {
+  func.func @main_graph(%arg0: memref<64x1xi64>, %arg1: !rmem.rmref<1, memref<64x12x255x64xf32>>, %arg2: !rmem.rmref<1, memref<64x12x255x64xf32>>) -> !rmem.rmref<1, memref<64x1x50264xf32>> attributes {input_names = ["input_ids", "past.0.key", "past.0.value"], llvm.emit_c_interface, output_names = ["logits"],
+    access_mem_catcher = [["ref0", 1], ["ref1", 2]]
+  } {
     %c1 = arith.constant 1 : index
     %c2 = arith.constant 2 : index
     %c3 = arith.constant 3 : index
@@ -139,18 +158,15 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     %30 = llvm.mlir.addressof @constant_15 : !llvm.ptr<array<12 x i8>>
     %31 = llvm.getelementptr %30[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_i1(%31, %cast_31) : (!llvm.ptr<i8>, memref<*xi1>) -> ()
-    %32 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<768x50264xf32>>
-    %33 = rmem.memref.cast %32 : <1, memref<768x50264xf32>> to <1, memref<*xf32>>
+    %32 = memref.alloc {alignment = 16 : i64} : memref<768x50264xf32>
+    %33 = memref.cast %32 : memref<768x50264xf32> to memref<*xf32>
     %34 = llvm.mlir.addressof @constant_16 : !llvm.ptr<array<12 x i8>>
     %35 = llvm.getelementptr %34[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
-    call @disagg_read_tensor_f32(%35, %33) : (!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>) -> ()
+    call @read_tensor_f32(%35, %33) : (!llvm.ptr<i8>, memref<*xf32>) -> ()
+    // call @disagg_read_tensor_f32(%35, %33) : (!llvm.ptr<i8>, !rmem.rmref<1, memref<*xf32>>) -> ()
     %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [0], sizes: [64, 1], strides: [1, 1] : memref<64x1xi64> to memref<64x1xi64>
     %alloc_32 = memref.alloc() {alignment = 16 : i64} : memref<64x1x768xf32>
     affine.for %arg3 = 0 to 64 {
-      %76 = affine.load %reinterpret_cast[%arg3, 0] : memref<64x1xi64>
-      %77 = llvm.mlir.addressof @str0 : !llvm.ptr<array<5 x i8>>
-      %78 = llvm.getelementptr %77[0, 0] : (!llvm.ptr<array<5 x i8>>) -> !llvm.ptr<i8>
-      %79 = llvm.call @printf(%78, %76) : (!llvm.ptr<i8>, i64) -> i32
       affine.for %arg4 = 0 to 1 {
         affine.for %arg5 = 0 to 768 {
           %80 = affine.load %reinterpret_cast[%arg3, %arg4] : memref<64x1xi64>
@@ -515,7 +531,9 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     %reinterpret_cast_57 = memref.reinterpret_cast %alloc_54 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
     %reinterpret_cast_58 = memref.reinterpret_cast %alloc_55 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
     %reinterpret_cast_59 = memref.reinterpret_cast %alloc_56 to offset: [0], sizes: [64, 12, 1, 64], strides: [768, 64, 64, 1] : memref<64x1x768xf32> to memref<64x12x1x64xf32>
-    %42 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<64x12x256x64xf32>>
+    %42 = rmem.alloc_memref(2, ) {alignment = 16 : i64, 
+      access_mem_catcher = [["ref2", 0]]
+    } : <1, memref<64x12x256x64xf32>>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 255 {
@@ -525,7 +543,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref0", #amap0, 195840, "t0"],
+      ["ref2", #amap1, 196608, "t2"]
+    ]}
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 1 {
@@ -535,8 +557,13 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
-    %43 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<64x12x256x64xf32>>
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref2", #amap1, 196608, "t2"]
+    ]}
+    %43 = rmem.alloc_memref(2, ) {alignment = 16 : i64,
+      access_mem_catcher = [["ref3", 0]]
+    } : <1, memref<64x12x256x64xf32>>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 255 {
@@ -546,7 +573,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref1", #amap0, 195840, "t1"],
+      ["ref3", #amap1, 196608, "t3"]
+    ]}
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 1 {
@@ -556,8 +587,13 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
-    %44 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<64x12x64x256xf32>>
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref3", #amap1, 196608, "t3"]
+    ]}
+    %44 = rmem.alloc_memref(2, ) {alignment = 16 : i64,
+      access_mem_catcher = [["ref4", 0]]
+    } : <1, memref<64x12x64x256xf32>>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 256 {
@@ -567,7 +603,11 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref2", #amap1, 196608, "t2"],
+      ["ref4", #amap1, 196608, "t4"]
+    ]}
     %alloc_60 = memref.alloc() {alignment = 16 : i64} : memref<64x12x1x256xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
@@ -650,7 +690,10 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref4", #amap1, 196608, "t4"]
+    ]}
     %alloc_61 = memref.alloc() : memref<f32>
     %cast_62 = memref.cast %alloc_61 : memref<f32> to memref<*xf32>
     %45 = llvm.mlir.addressof @constant_27 : !llvm.ptr<array<12 x i8>>
@@ -821,7 +864,10 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref3", #amap1, 196608, "t3"]
+    ]}
     %reinterpret_cast_76 = memref.reinterpret_cast %alloc_75 to offset: [0], sizes: [64, 768], strides: [768, 1] : memref<64x12x1x64xf32> to memref<64x768xf32>
     %alloc_77 = memref.alloc() {alignment = 128 : i64} : memref<64x768xf32>
     affine.for %arg3 = 0 to 64 {
@@ -1756,18 +1802,24 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
         }
       }
     }
-    %75 = rmem.alloc_memref(2, ) {alignment = 16 : i64} : <1, memref<64x1x50264xf32>>
+    %75 = rmem.alloc_memref(2, ) {alignment = 16 : i64,
+      access_mem_catcher = [["ref5", 0]]
+    } : <1, memref<64x1x50264xf32>>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
         affine.for %arg5 = 0 to 50264 {
           rmem.affine.store %cst_1 -> %75[%arg3, %arg4, %arg5] {map = #map9} : f32, !rmem.rmref<1, memref<64x1x50264xf32>>, index, index, index
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref5", #amap2, 50264, "t5"]
+    ]}
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 1 {
         affine.for %arg5 = 0 to 50264 step 8 {
           affine.for %arg6 = 0 to 768 step 8 {
+            // %32 [%arg6->%arg6+8, 0->50264]
             %alloca = memref.alloca() {alignment = 64 : i64} : memref<1xvector<8xf32>>
             affine.for %arg7 = 0 to 1 {
               %76 = arith.addi %arg7, %arg4 : index
@@ -1775,56 +1827,56 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
               affine.store %77, %alloca[0] : memref<1xvector<8xf32>>
               %78 = memref.load %alloc_138[%arg3, %76, %arg6] : memref<64x1x768xf32>
               %79 = vector.broadcast %78 : f32 to vector<8xf32>
-              %80 = rmem.vec.load %32[%arg6, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %80 = vector.load %32[%arg6, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %81 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %82 = vector.fma %79, %80, %81 : vector<8xf32>
               affine.store %82, %alloca[0] : memref<1xvector<8xf32>>
               %83 = arith.addi %arg6, %c1 : index
               %84 = memref.load %alloc_138[%arg3, %76, %83] : memref<64x1x768xf32>
               %85 = vector.broadcast %84 : f32 to vector<8xf32>
-              %86 = rmem.vec.load %32[%83, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %86 = vector.load %32[%83, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %87 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %88 = vector.fma %85, %86, %87 : vector<8xf32>
               affine.store %88, %alloca[0] : memref<1xvector<8xf32>>
               %89 = arith.addi %arg6, %c2 : index
               %90 = memref.load %alloc_138[%arg3, %76, %89] : memref<64x1x768xf32>
               %91 = vector.broadcast %90 : f32 to vector<8xf32>
-              %92 = rmem.vec.load %32[%89, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %92 = vector.load %32[%89, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %93 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %94 = vector.fma %91, %92, %93 : vector<8xf32>
               affine.store %94, %alloca[0] : memref<1xvector<8xf32>>
               %95 = arith.addi %arg6, %c3 : index
               %96 = memref.load %alloc_138[%arg3, %76, %95] : memref<64x1x768xf32>
               %97 = vector.broadcast %96 : f32 to vector<8xf32>
-              %98 = rmem.vec.load %32[%95, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %98 = vector.load %32[%95, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %99 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %100 = vector.fma %97, %98, %99 : vector<8xf32>
               affine.store %100, %alloca[0] : memref<1xvector<8xf32>>
               %101 = arith.addi %arg6, %c4 : index
               %102 = memref.load %alloc_138[%arg3, %76, %101] : memref<64x1x768xf32>
               %103 = vector.broadcast %102 : f32 to vector<8xf32>
-              %104 = rmem.vec.load %32[%101, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %104 = vector.load %32[%101, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %105 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %106 = vector.fma %103, %104, %105 : vector<8xf32>
               affine.store %106, %alloca[0] : memref<1xvector<8xf32>>
               %107 = arith.addi %arg6, %c5 : index
               %108 = memref.load %alloc_138[%arg3, %76, %107] : memref<64x1x768xf32>
               %109 = vector.broadcast %108 : f32 to vector<8xf32>
-              %110 = rmem.vec.load %32[%107, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %110 = vector.load %32[%107, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %111 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %112 = vector.fma %109, %110, %111 : vector<8xf32>
               affine.store %112, %alloca[0] : memref<1xvector<8xf32>>
               %113 = arith.addi %arg6, %c6 : index
               %114 = memref.load %alloc_138[%arg3, %76, %113] : memref<64x1x768xf32>
               %115 = vector.broadcast %114 : f32 to vector<8xf32>
-              %116 = rmem.vec.load %32[%113, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %116 = vector.load %32[%113, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %117 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %118 = vector.fma %115, %116, %117 : vector<8xf32>
               affine.store %118, %alloca[0] : memref<1xvector<8xf32>>
               %119 = arith.addi %arg6, %c7 : index
               %120 = memref.load %alloc_138[%arg3, %76, %119] : memref<64x1x768xf32>
               %121 = vector.broadcast %120 : f32 to vector<8xf32>
-              %122 = rmem.vec.load %32[%119, %arg5] : !rmem.rmref<1, memref<768x50264xf32>>, vector<8xf32>
+              %122 = vector.load %32[%119, %arg5] : memref<768x50264xf32>, vector<8xf32>
               %123 = affine.load %alloca[0] : memref<1xvector<8xf32>>
               %124 = vector.fma %121, %122, %123 : vector<8xf32>
               affine.store %124, %alloca[0] : memref<1xvector<8xf32>>
@@ -1834,7 +1886,10 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    }
+    } {"pf_target" = 1, "nahead" = 4, "batch" = 1,
+    "access_mem" = [
+      ["ref5", #amap2, 50264, "t5"]
+    ]}
     return %75 : !rmem.rmref<1, memref<64x1x50264xf32>>
   }
 }

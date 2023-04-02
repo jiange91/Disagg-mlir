@@ -231,6 +231,54 @@ llvm::Optional<LogicalResult> RemoteMemTypeLowerer::convertStructType(LLVM::LLVM
   return llvm::None;
 }
 
+/// Callback to convert function argument types. It converts a MemRef function
+/// argument to a list of non-aggregate types containing descriptor
+/// information, and an UnrankedmemRef function argument to a list containing
+/// the rank and a pointer to a descriptor struct.
+LogicalResult RemoteMemTypeLowerer::structFuncArgTypeConverter( 
+      Type type,
+      SmallVector<Type> &result) {
+  if (auto memref = type.dyn_cast<MemRefType>()) {
+    // In signatures, Memref descriptors are expanded into lists of
+    // non-aggregate values.
+    auto converted = getMemRefDescriptorFields(memref, /*unpackAggregates=*/true);
+    if (converted.empty())
+      return failure();
+    result.append(converted.begin(), converted.end());
+    return success();
+  }
+  if (type.isa<UnrankedMemRefType>()) {
+    auto converted = getUnrankedMemRefDescriptorFields();
+    if (converted.empty())
+      return failure();
+    result.append(converted.begin(), converted.end());
+    return success();
+  }
+  auto converted = convertType(type);
+  if (!converted)
+    return failure();
+  result.push_back(converted);
+  return success();
+}
+
+Type RemoteMemTypeLowerer::packFunctionResults(TypeRange types) {
+  assert(!types.empty() && "expected non-empty list of type");
+
+  if (types.size() == 1)
+    return convertCallingConventionType(types.front());
+
+  SmallVector<Type, 8> resultTypes;
+  resultTypes.reserve(types.size());
+  for (auto t : types) {
+    auto converted = convertCallingConventionType(t);
+    if (!converted || !LLVM::isCompatibleType(converted))
+      return {};
+    resultTypes.push_back(converted);
+  }
+
+  return LLVM::LLVMStructType::getLiteral(&getContext(), resultTypes);
+}
+
 Type RemoteMemTypeLowerer::convertFunctionType(FunctionType functionType) {
   SignatureConversion conversion(functionType.getNumInputs());
   Type converted = convertFunctionSignature(functionType, conversion);
@@ -239,14 +287,9 @@ Type RemoteMemTypeLowerer::convertFunctionType(FunctionType functionType) {
 
 Type RemoteMemTypeLowerer::convertFunctionSignature(FunctionType funcTy, SignatureConversion &result) {
   for (auto &en : llvm::enumerate(funcTy.getInputs())) {
-    Type type = en.value();
-    SmallVector<Type, 4> converted;
-    if (Type tt = convertCallingConventionType(type)) {
-      converted.push_back(tt);
-      result.addInputs(en.index(), converted);
-    } else {
-      return {};
-    }
+    SmallVector<Type> converted;
+    converted.push_back(convertCallingConventionType(en.value()));
+    result.addInputs(en.index(), converted);
   }
 
   SmallVector<Type, 4> resultTypes;
@@ -260,6 +303,14 @@ Type RemoteMemTypeLowerer::convertFunctionSignature(FunctionType funcTy, Signatu
 }
 
 Type RemoteMemTypeLowerer::convertCallingConventionType(Type type) {
+  if (auto rmRef = type.dyn_cast<RemoteMemRefType>()) {
+    Type ET = rmRef.getElementType();
+    if (ET.isa<MemRefType, UnrankedMemRefType>())
+      return rmem::getRawTypeFromRemotedType(ET);
+  }
+  if (type.isa<MemRefType, UnrankedMemRefType>()) {
+    return rmem::getRawTypeFromRemotedType(type);
+  }
   return convertType(type);
 }
 

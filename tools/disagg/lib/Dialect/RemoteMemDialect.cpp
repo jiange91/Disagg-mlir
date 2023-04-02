@@ -143,6 +143,29 @@ ArrayAttr LocalCache::toAttr(OpBuilder &builder) {
   return rel;
 }
 
+// should use opInterface instead
+std::pair<bool, Value> mlir::rmem::isRemoteAccess(Operation *op) {
+  if (auto affineStore = dyn_cast<rmem::RAffineStoreOp>(op)) {
+    return {rmem::isTrueRemoteRef(affineStore.getMemref().getType()), affineStore.getMemref()};
+  }
+  if (auto affineLoad = dyn_cast<rmem::RAffineLoadOp>(op)) {
+    return {rmem::isTrueRemoteRef(affineLoad.getMemref().getType()), affineLoad.getMemref()};
+  }
+  if (auto vecLoad = dyn_cast<rmem::VectorLoadOp>(op)) {
+    return {rmem::isTrueRemoteRef(vecLoad.getBase().getType()), vecLoad.getBase()};
+  }
+  if (auto vecStore = dyn_cast<rmem::VectorStoreOp>(op)) {
+    return {rmem::isTrueRemoteRef(vecStore.getBase().getType()), vecStore.getBase()};
+  }
+  if (auto memrefLoad = dyn_cast<rmem::MemRefLoadOp>(op)) {
+    return {rmem::isTrueRemoteRef(memrefLoad.getMemref().getType()), memrefLoad.getMemRef()};
+  }
+  if (auto memrefStore = dyn_cast<rmem::MemRefStoreOp>(op)) {
+    return {rmem::isTrueRemoteRef(memrefStore.getMemref().getType()), memrefStore.getMemRef()};
+  }
+  return {false, Value()};
+}
+
 
 void RemoteMemDialect::initialize() {
   registerTypes();

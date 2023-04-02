@@ -1,6 +1,10 @@
 #map = affine_map<(d0) -> (d0 + 1)>
 #map1 = affine_map<(d0) -> (d0 + 2)>
 #map2 = affine_map<(d0) -> (d0 + 3)>
+
+#amap0 = affine_map<(d0) -> (d0 * 512)>
+#amap1 = affine_map<(d0) -> (0)>
+
 module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu",
   rmem.templates = {
   // "t" = [rbase,  l_ofst,    r_ofst, SizeInEle, eleType, bSize,  nBlock, type],

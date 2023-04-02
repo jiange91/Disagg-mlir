@@ -85,6 +85,11 @@ public:
   size_t nBlocks;
 };
 
+
+// TODO: finish this
+// return <if is accessing true remote, base address>
+std::pair<bool, Value> isRemoteAccess(Operation *op);
+
 }
 }
 

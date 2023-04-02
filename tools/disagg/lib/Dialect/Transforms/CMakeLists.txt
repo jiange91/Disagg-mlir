@@ -1,4 +1,5 @@
 add_mlir_dialect_library(MLIRRMEMTransforms
+  AffineCommon.cpp
   DeterminePoolSource.cpp
   InstrBandwidth.cpp
   PrefetchForloop.cpp
@@ -6,6 +7,7 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   SearchRemote.cpp
   LoopRingCache.cpp
   AffineRingCache.cpp
+  AffineAccessMem.cpp
   PropRemote.cpp
   MemPooling.cpp
 
@@ -20,6 +22,8 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   MLIRDataLayoutInterfaces
   MLIRMemRefDialect
   MLIRLLVMDialect
+  MLIRVectorDialect
+  MLIRAffineDialect
   MLIRSCFDialect
   MLIRRemoteMem
   MLIRTransforms 

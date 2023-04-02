@@ -39,7 +39,6 @@ class RemoteFuncFuncOpLowering : public RemoteMemOpLoweringPattern<func::FuncOp>
   LogicalResult matchAndRewrite(func::FuncOp op, func::FuncOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     TypeConverter::SignatureConversion result(op.getFunctionType().getNumInputs());
     mlir::Type funcType = getTypeConverter()->convertFunctionSignature(op.getFunctionType(), result);
-    // funcType.dump();
     if (!funcType) {
       llvm::errs() << "Failed to convert function signature\n";
       return mlir::failure();
@@ -69,13 +68,28 @@ class RemoteFuncCallOpLowering : public RemoteMemOpLoweringPattern<func::CallOp>
   LogicalResult matchAndRewrite(func::CallOp op, func::CallOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     SmallVector<Type, 1> resultTypes;
     resultTypes.reserve(op.getNumResults());
-    if (failed(getTypeConverter()->convertTypes(op.getResultTypes(), resultTypes))) {
-      llvm::errs() << "Failed to convert result types\n";
-      return mlir::failure();
+    for (auto t : op.getResultTypes())
+      resultTypes.push_back(getTypeConverter()->convertCallingConventionType(t));
+    // if (failed(getTypeConverter()->convertTypes(op.getResultTypes(), resultTypes))) {
+    //   llvm::errs() << "Failed to convert result types\n";
+    //   return mlir::failure();
+    // }
+    SmallVector<Value> inputs;
+    auto loc = op.getLoc();
+    for (auto [ov, nv] : llvm::zip(op.getOperands(), adaptor.getOperands())) {
+      Type needType = getTypeConverter()->convertCallingConventionType(ov.getType());
+      if (needType != nv.getType()) {
+        Value newInput = rewriter.create<UnrealizedConversionCastOp>(loc, 
+          needType, nv
+        ).getResult(0);
+        inputs.push_back(newInput);
+      } else {
+        inputs.push_back(nv);
+      }
     }
 
     auto newCallOp = rewriter.create<func::CallOp>(
-      op.getLoc(), adaptor.getCalleeAttr(), resultTypes, adaptor.getOperands()
+      op.getLoc(), adaptor.getCalleeAttr(), resultTypes, inputs
     );
     rewriter.replaceOp(op, newCallOp.getResults());
     return mlir::success();
@@ -85,7 +99,24 @@ class RemoteFuncCallOpLowering : public RemoteMemOpLoweringPattern<func::CallOp>
 class RemoteFuncReturnOpLowering : public RemoteMemOpLoweringPattern<func::ReturnOp> {
   using RemoteMemOpLoweringPattern<func::ReturnOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(func::ReturnOp op, func::ReturnOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    rewriter.replaceOpWithNewOp<func::ReturnOp>(op, adaptor.getOperands());
+    if (!llvm::any_of(op.getOperandTypes(), rmem::hasRemoteTarget))
+      return mlir::failure();
+
+    SmallVector<Value> outputs;
+    auto loc = op.getLoc();
+    for (auto [ov, nv] : llvm::zip(op.getOperands(), adaptor.getOperands())) {
+      Type needType = getTypeConverter()->convertCallingConventionType(ov.getType());
+      if (needType != nv.getType()) {
+        Value newInput = rewriter.create<UnrealizedConversionCastOp>(loc, 
+          needType, nv
+        ).getResult(0);
+        outputs.push_back(newInput);
+      } else {
+        outputs.push_back(nv);
+      }
+    }
+ 
+    rewriter.replaceOpWithNewOp<func::ReturnOp>(op, outputs);
     return mlir::success();
   }
 };
@@ -102,7 +133,6 @@ public:
     populateLowerFuncRMemPatterns(typeConverter, patterns);
 
     ConversionTarget target(getContext());
-    target.addLegalDialect<LLVM::LLVMDialect>();
     target.addDynamicallyLegalOp<func::FuncOp>([](func::FuncOp op) {
       return (!llvm::any_of(op.getArgumentTypes(), rmem::hasRemoteTarget)) && (!llvm::any_of(op.getResultTypes(), rmem::hasRemoteTarget));
     });

@@ -131,8 +131,9 @@ LocalCache::LocalCache(ArrayAttr attrs, DenseMap<StringRef, Value> &access_mem_b
 }
 
 ArrayAttr LocalCache::toAttr(OpBuilder &builder) {
-  SmallVector<Attribute, 7> attrs;
+  SmallVector<Attribute, 8> attrs;
   attrs.push_back(builder.getStringAttr(baseSym));
+  attrs.push_back(builder.getI64IntegerAttr(lOfst));
   attrs.push_back(builder.getI64IntegerAttr(rOfst));
   attrs.push_back(builder.getI64IntegerAttr(rSize));
   attrs.push_back(TypeAttr::get(eleType));

@@ -40,13 +40,17 @@ public:
     DenseMap<AffineForOp, std::vector<Value>> &indVars,
     DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange,
     DenseMap<StringRef, Value> &access_mem_base_pool, 
-    DenseMap<StringRef, LocalCache> &localPools
+    DenseMap<Value, StringRef> &mem_to_catcher, 
+    DenseMap<StringRef, LocalCache> &localPools,
+    DenseMap<StringRef, StringRef> &catch_to_temp
   );
 
   void inspectAccessMemDetails();
 
   // level = 1 means the immediate parent loop
-  std::pair<int64_t, AffineMap> getAccessRangeAtLevel(RmemAccess &access, int level);
+  void getAccessRangeAtLevel(RmemAccess &access, unsigned level, DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range);
+
+  void mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range);
 
   RemoteMemTypeLowerer &typeConverter;
   // Encolsing relationship <v `is closest parent of` k>
@@ -57,8 +61,10 @@ public:
   DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange;
   // remote mem access ops
   DenseMap<Operation *, RmemAccess> raccess;
+  DenseMap<Value, StringRef> &mem_to_catcher;
   // All existing local cache templates
-  DenseMap<StringRef, LocalCache> localPools;
+  DenseMap<StringRef, LocalCache> &localPools;
+  DenseMap<StringRef, StringRef> &catch_to_temp;
 };
 
 }
@@ -69,30 +75,86 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
     ModuleOp mop = getOperation();
     MLIRContext *ctx = mop.getContext();
     RemoteMemTypeLowerer typeConverter(ctx);
+    OpBuilder b(mop);
+    auto i32t = b.getIntegerType(32);
 
     // populate access_mem base address catcher
     DenseMap<StringRef, Value> access_mem_base_pool;
-    mop.walk([&](mlir::Operation *op) {
-      if (auto catchers = op->getAttrOfType<ArrayAttr>("access_mem_catcher")) {
-        for (auto attr : catchers) {
-          auto catcher = attr.cast<ArrayAttr>();
-          StringRef name = catcher[0].cast<StringAttr>().getValue();
-          uint64_t i = catcher[1].cast<IntegerAttr>().getValue().getZExtValue();
-          if (auto fop = dyn_cast<func::FuncOp>(op))
-            access_mem_base_pool[name] = fop.getArgument(i);
-          else
-            access_mem_base_pool[name] = op->getResult(i);
+    DenseMap<Value, StringRef> mem_to_catch;
+    std::set<std::string> catch_names;
+    // populate local caches
+    DenseMap<StringRef, LocalCache> pools;
+    DenseMap<StringRef, StringRef> catch_to_temp;
+    std::set<std::string> temp_names;
+
+    unsigned catch_id = 0;
+    unsigned temp_id = 0;
+    std::string catch_base_name = "ref";
+    std::string tmp_base_name = "t";
+
+    auto set_catch_attrs = [&](Operation *op, ArrayRef<std::pair<StringRef, unsigned>> name_id) {
+      SmallVector<Attribute> attrs;
+      for (auto [name, id] : name_id) {
+        SmallVector<Attribute> c = {b.getStringAttr(name), b.getIntegerAttr(i32t, id)};
+        attrs.push_back(b.getArrayAttr(c));
+      }
+      op->setAttr("access_mem_catcher", b.getArrayAttr(attrs));
+    };
+
+    auto gen_template = [&](unsigned tid, Value rmem, StringRef catcher) {
+      std::string name = tmp_base_name + std::to_string(tid);
+      auto [it, ok] = temp_names.insert(name);
+      auto rmemType = rmem.getType().cast<rmem::RemoteMemRefType>();
+      MemRefType memRefType = rmem::getRawTypeFromRemotedType(rmemType).cast<MemRefType>();
+      size_t size = 1;
+      for (auto s : memRefType.getShape()) {
+        size *= s;
+      }
+      DataLayout DLI(mop);
+      pools[*it] = LocalCache(
+        CacheType::Ring_Direct,
+        DLI.getTypeSize(memRefType.getElementType()), // type size, need to be updated later
+        rmem,
+        catcher,
+        memRefType.getElementType(),
+        0,
+        size,    // eles
+        1, // batch size in eles, update later
+        1
+      );
+      catch_to_temp[catcher] = *it;
+    };
+
+    mop.walk([&](rmem::MemRefAllocOp op) {
+      auto [it, ok] = catch_names.insert(catch_base_name + std::to_string(catch_id++));
+      access_mem_base_pool[*it] = op->getResult(0);
+      mem_to_catch[op->getResult(0)] = *it;
+      SmallVector<std::pair<StringRef, unsigned>> catch_array;
+      catch_array.push_back({*it, 0});
+      set_catch_attrs(op, catch_array);
+
+      gen_template(temp_id ++, op->getResult(0), *it);
+    });
+
+    mop.walk([&](func::FuncOp op) {
+      if (!op.empty()) {
+        SmallVector<std::pair<StringRef, unsigned>> catch_array;
+        for (size_t i = 0; i < op.getNumArguments(); ++i) {
+          auto arg = op.getArgument(i);
+          if (arg.getType().isa<rmem::RemoteMemRefType>()) {
+            auto [it, ok] = catch_names.insert(catch_base_name + std::to_string(catch_id++));
+            access_mem_base_pool[*it] = arg;
+            mem_to_catch[arg] = *it;
+            catch_array.push_back({*it, i});
+            gen_template(temp_id ++, arg, *it);
+          }
+        }
+        if (!catch_array.empty()) {
+          set_catch_attrs(op, catch_array);
         }
       }
     });
 
-    // populate existing local caches
-    DenseMap<StringRef, LocalCache> pools;
-    if (auto ts = mop->getAttrOfType<DictionaryAttr>("rmem.templates")) {
-      for (auto p : ts) {
-        pools[p.getName().getValue()] = LocalCache(p.getValue().cast<ArrayAttr>(), access_mem_base_pool);
-      }
-    }
 
     // Get loops that involves remote memory access
     DenseMap<Operation *, Value> rAccess;
@@ -125,7 +187,7 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
       }
     });
 
-    // Populate affine induction range
+    // Populate affine induction range that are not constant
     OpBuilder builder(mop);
     mop.walk([&](mlir::AffineForOp loop) {
       if (loop.hasConstantBounds())
@@ -185,9 +247,31 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
       nest,
       rAccess, indVars, indVarRange,
       access_mem_base_pool,
-      pools
+      mem_to_catch,
+      pools,
+      catch_to_temp
     );
-    accessInternal.inspectAccessMemDetails();
+    // accessInternal.inspectAccessMemDetails();
+
+    DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> range;
+    for (auto [op, ra] : accessInternal.raccess) {
+      accessInternal.getAccessRangeAtLevel(ra, 10, range);
+    }
+    accessInternal.mergeRange(range);
+
+    uint64_t lofst = 0;
+    for (auto &[tname, cache] : pools) {
+      size_t typeSize = cache.lOfst;
+      cache.lOfst = lofst;
+      lofst += typeSize * cache.nBlocks * cache.blockSize;
+    }
+    llvm::errs() << "total local cache size: " << lofst << " bytes\n";
+
+    std::vector<NamedAttribute> temp_attrs;
+    for (auto [tname, cache] : pools) {
+      temp_attrs.emplace_back(b.getStringAttr(tname), cache.toAttr(b));
+    }
+    mop->setAttr("rmem.templates", b.getDictionaryAttr(temp_attrs));
   }
 };
 }
@@ -196,19 +280,23 @@ namespace {
   AffineAccessMemInternal::AffineAccessMemInternal(
     RemoteMemTypeLowerer &typeConverter,
     DenseMap<AffineForOp, AffineForOp> &loopNest,
-    DenseMap<Operation *, Value> &rAccess,
+    DenseMap<Operation *, Value> &remoteOps,
     DenseMap<AffineForOp, std::vector<Value>> &indVars,
     DenseMap<Value, std::tuple<int64_t, int64_t>> &indVarRange,
     DenseMap<StringRef, Value> &access_mem_base_pool, 
-    DenseMap<StringRef, LocalCache> &localPools
+    DenseMap<Value, StringRef> &mem_to_catcher, 
+    DenseMap<StringRef, LocalCache> &localPools,
+    DenseMap<StringRef, StringRef> &catch_to_temp
   ): 
   typeConverter(typeConverter), 
   loopNest(loopNest),
   indVars(indVars), indVarRange(indVarRange), 
-  localPools(localPools)  {
+  mem_to_catcher(mem_to_catcher),
+  localPools(localPools),
+  catch_to_temp(catch_to_temp) {
     // Populate remote accesses within current loop
     DenseMap<Value, AffineExpr> v2Expr; // SSA value to affine expresion with induction inputs
-    for (auto [op, addr] : rAccess) {
+    for (auto [op, addr] : remoteOps) {
       AffineForOp l = op->getParentOfType<AffineForOp>();
       raccess[op] = RmemAccess(op, addr, indVars[l], indVarRange, v2Expr);
     }
@@ -219,6 +307,131 @@ namespace {
     for (auto [op, detail] : raccess)
       detail.inspectAccess();
     llvm::errs() << "--- end ---\n";
+  }
+
+  void AffineAccessMemInternal::getAccessRangeAtLevel(RmemAccess &access, unsigned level, DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range) {
+    MLIRContext *ctx = access.access->getContext();
+    unsigned depth = 0;
+    AffineForOp fop = access.access->getParentOfType<AffineForOp>();
+    while (level > 1 && loopNest[fop]) {
+      fop = this->loopNest[fop];
+      level --;
+      depth ++;
+    }
+
+    // prepare new map
+    SmallVector<AffineExpr> low, high;
+    for (uint64_t i = 0; i < access.dep_inductions.size(); ++ i) {
+      if (i == 0 || i < access.dep_inductions.size() - depth) {
+        low.push_back(getAffineDimExpr(i, ctx));
+        high.push_back(getAffineDimExpr(i, ctx));
+      }
+      else {
+        auto it = this->indVarRange.find(access.dep_inductions[i]);
+        assert(it != indVarRange.end() && "loop induction must be statically known");
+        low.push_back(getAffineConstantExpr(std::get<0>(it->second), ctx));
+        high.push_back(getAffineConstantExpr(std::get<1>(it->second), ctx));
+      }
+    }
+
+    AffineMap newLow = access.access_offset.replaceDimsAndSymbols(low, {}, access.access_offset.getNumDims()-depth, 0);
+    AffineMap newHigh = access.access_offset.replaceDimsAndSymbols(high, {}, access.access_offset.getNumDims()-depth, 0);
+    AffineMap sizeMap = simplifyAffineMap(AffineMap::get(
+      std::max(newLow.getNumDims(), newHigh.getNumDims()), 0, 
+      newHigh.getResult(0) - newLow.getResult(0)));
+    assert(sizeMap.isSingleConstant() && "loop induction must be known");
+    int64_t s = sizeMap.getSingleConstantResult() + access.size; 
+
+    if (range.find(fop) == range.end())
+      range[fop] = {};
+    range[fop].push_back(std::make_tuple(access.base, newLow, s));
+  }
+
+  void AffineAccessMemInternal::mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range) {
+    for (auto [fop, access_mems] : range) {
+      // by value low high
+      DenseMap<Value, std::pair<AffineMap, AffineMap>> by_base;
+      MLIRContext *ctx = fop->getContext();
+      for (auto [base, low, s] : access_mems) {
+        if (by_base.find(base) == by_base.end()) {
+          AffineExpr high = low.getResult(0) + getAffineConstantExpr(s,ctx);
+          by_base[base] = std::make_pair(low, simplifyAffineMap(AffineMap::get(low.getNumDims(), 0, high)));
+        }
+        else {
+          // merge two
+          // compare low 
+          auto [olow, ohigh] = by_base[base];
+          AffineMap cmpLow = simplifyAffineMap(AffineMap::get(
+            std::max(olow.getNumDims(), low.getNumDims()), 0, 
+            low.getResult(0) - olow.getResult(0)));
+          assert(cmpLow.isSingleConstant() && "must be a constant affine map to compare low");
+          int64_t icmpLow = cmpLow.getSingleConstantResult();
+          olow = icmpLow < 0 ? low : olow;
+
+          // compare high
+          AffineMap high = simplifyAffineMap(AffineMap::get(
+            low.getNumDims(), 0,
+            low.getResult(0) + getAffineConstantExpr(s, ctx)
+          ));
+          AffineMap cmphigh = simplifyAffineMap(AffineMap::get(
+            std::max(ohigh.getNumDims(), high.getNumDims()), 0, high.getResult(0) - ohigh.getResult(0)));
+          assert(cmphigh.isSingleConstant() && "must be a constant affine map to compare high");
+          int64_t icmpHigh = cmphigh.getSingleConstantResult();
+          ohigh = icmpHigh > 0 ? high : ohigh;
+
+          by_base[base] = std::make_pair(olow, ohigh);
+        }
+      }
+
+      // calculate size
+      // size = max(high - low, induction gap)
+      DenseMap<Value, int64_t> access_size; 
+      for (auto [base, lh] : by_base) {
+        auto [low, high] = lh;
+        AffineMap sizeMap = simplifyAffineMap(AffineMap::get(
+          std::max(low.getNumDims(), high.getNumDims()), 0, 
+          high.getResult(0) - low.getResult(0))); 
+        assert(sizeMap.isSingleConstant() && "must be a constant affine map to calculate size");
+        int64_t size = sizeMap.getSingleConstantResult();
+
+        AffineExpr low0 = low.getResult(0).replace(
+          getAffineDimExpr(low.getNumDims() - 1, ctx),
+          getAffineConstantExpr(0, ctx));
+        AffineExpr low1 = low.getResult(0).replace(
+          getAffineDimExpr(low.getNumDims() - 1, ctx),
+          getAffineConstantExpr(1, ctx)); 
+        AffineMap gap = simplifyAffineMap(AffineMap::get(low.getNumDims()-1, 0, low1 - low0, ctx));
+        if (gap.isSingleConstant()) 
+          size = std::max(size, gap.getSingleConstantResult());
+
+        access_size[base] = size;
+        // update local cache lofst and block size
+        StringRef tname = catch_to_temp[mem_to_catcher[base]];
+        localPools[tname].blockSize = size;
+      }
+      
+
+      // write to attributes
+      OpBuilder b(ctx);
+      SmallVector<Attribute> access_mem_attrs;
+      for (auto [base, lh] : by_base) {
+        StringRef catcher = this->mem_to_catcher[base];
+        AffineMap ofst = lh.first;
+        uint64_t size = access_size[base];
+        StringRef tname = this->catch_to_temp[catcher];
+        SmallVector<Attribute> mem_attr = {
+          b.getStringAttr(catcher),
+          AffineMapAttr::get(ofst),
+          b.getIntegerAttr(b.getI64Type(), size),
+          b.getStringAttr(tname)
+        };
+        access_mem_attrs.push_back(b.getArrayAttr(mem_attr));
+      }
+      fop->setAttr("pf_target", b.getI64IntegerAttr(1));
+      fop->setAttr("nahead", b.getI64IntegerAttr(1));
+      fop->setAttr("batch", b.getI64IntegerAttr(1));
+      fop->setAttr("access_mem", b.getArrayAttr(access_mem_attrs));
+    }
   }
 }
 

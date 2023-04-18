@@ -22,7 +22,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     "t2" = ["ref2", 134217728,      0,      12582912,  f32,     196608,   64,   1],
     "t3" = ["ref3", 201326592,      0,      12582912,  f32,     196608,   64,   1],
     "t4" = ["ref4", 268435456,      0,      12582912,  f32,     196608,   64,   1],
-    "t5" = ["ref5", 335544320,      0,      3216896,   f32,      50264,   64,   1],
+    "t5" = ["ref5", 335544320,      0,      3216896,   f32,      50264,   64,   1]
     // "t6" = ["ref6", 352321536,      0,      38602752,  f32,     402112,   64,   1]
   }
 } {
@@ -158,7 +158,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     %30 = llvm.mlir.addressof @constant_15 : !llvm.ptr<array<12 x i8>>
     %31 = llvm.getelementptr %30[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>
     call @read_tensor_i1(%31, %cast_31) : (!llvm.ptr<i8>, memref<*xi1>) -> ()
-    %32 = memref.alloc {alignment = 16 : i64} : memref<768x50264xf32>
+    %32 = memref.alloc() {alignment = 16 : i64} : memref<768x50264xf32>
     %33 = memref.cast %32 : memref<768x50264xf32> to memref<*xf32>
     %34 = llvm.mlir.addressof @constant_16 : !llvm.ptr<array<12 x i8>>
     %35 = llvm.getelementptr %34[0, 0] : (!llvm.ptr<array<12 x i8>>) -> !llvm.ptr<i8>

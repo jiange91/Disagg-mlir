@@ -6,8 +6,8 @@
 #map5 = affine_map<(d0) -> (d0 + 2)>
 #map6 = affine_map<(d0) -> (d0 + 3)>
 #map7 = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
-#map8 = affine_map<(d0) -> (d0 * 196608)>
-#map9 = affine_map<(d0) -> (d0 * 195840)>
+#map8 = affine_map<(d0) -> (d0 * 195840)>
+#map9 = affine_map<(d0) -> (d0 * 196608)>
 #map10 = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2 + 255, d3)>
 #map11 = affine_map<(d0) -> (d0 * 196608 + 16320)>
 #map12 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
@@ -525,7 +525,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    } {access_mem = [["ref0", #map8, 196608, "t0"], ["ref4", #map9, 195840, "t4"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
+    } {access_mem = [["ref4", #map8, 195840, "t4"], ["ref0", #map9, 196608, "t0"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 1 {
@@ -546,7 +546,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    } {access_mem = [["ref1", #map8, 196608, "t1"], ["ref5", #map9, 195840, "t5"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
+    } {access_mem = [["ref5", #map8, 195840, "t5"], ["ref1", #map9, 196608, "t1"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
         affine.for %arg5 = 0 to 1 {
@@ -567,7 +567,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    } {access_mem = [["ref0", #map8, 196608, "t0"], ["ref2", #map8, 196608, "t2"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
+    } {access_mem = [["ref2", #map9, 196608, "t2"], ["ref0", #map9, 196608, "t0"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
     %alloc_62 = memref.alloc() {alignment = 16 : i64} : memref<64x12x1x256xf32>
     affine.for %arg3 = 0 to 64 {
       affine.for %arg4 = 0 to 12 {
@@ -650,7 +650,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    } {access_mem = [["ref2", #map8, 196608, "t2"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
+    } {access_mem = [["ref2", #map9, 196608, "t2"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
     %alloc_63 = memref.alloc() : memref<f32>
     %cast_64 = memref.cast %alloc_63 : memref<f32> to memref<*xf32>
     %43 = llvm.mlir.addressof @constant_27 : !llvm.ptr<array<12 x i8>>
@@ -821,7 +821,7 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
           }
         }
       }
-    } {access_mem = [["ref1", #map8, 196608, "t1"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
+    } {access_mem = [["ref1", #map9, 196608, "t1"]], batch = 1 : i64, nahead = 1 : i64, pf_target = 1 : i64}
     %reinterpret_cast_78 = memref.reinterpret_cast %alloc_77 to offset: [0], sizes: [64, 768], strides: [768, 1] : memref<64x12x1x64xf32> to memref<64x768xf32>
     %alloc_79 = memref.alloc() {alignment = 128 : i64} : memref<64x768xf32>
     affine.for %arg3 = 0 to 64 {

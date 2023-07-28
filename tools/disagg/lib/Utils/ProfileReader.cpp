@@ -34,12 +34,12 @@ void AllocationAnnotationPass::runOnOperation() {
         OpBuilder builder(op);
         int curAllocation = allocationId++;
 
-        if (isAnnotation) {
-          op->setAttr("allocation_id",
-                      builder.getI32IntegerAttr(curAllocation));
-        } else if (allocationMap.find(curAllocation) != allocationMap.end()) {
-          op->setAttr("remote_target", builder.getBoolAttr(true));
-          // setattr on memory
+        op->setAttr("allocation_id",
+                    builder.getI32IntegerAttr(curAllocation));
+        // annotate if necessary
+        if (isAnnotation &&
+            allocationMap.find(curAllocation) != allocationMap.end()) {
+          op->setAttr("remote_target", builder.getI64IntegerAttr(1));
         }
 
       } else if (isa<func::FuncOp>(op)) {
@@ -59,7 +59,6 @@ bool AllocationAnnotationPass::parseProfilingResults() {
 
   {
     std::vector<ProfilingResult> docs;
-
     loadProfilingFromFile(memoryProfOption.getValue(), docs);
 
     for (auto &profilingResult : docs) {

@@ -8,26 +8,29 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 
 #include <set>
+#include <vector>
 
 using llvm::yaml::MappingTraits;
 using llvm::yaml::IO;
 
 struct ProfilingResult {
     std::string type;
-    int objectId;
+    float size;
     uint64_t value;
 };
 
 template <>
 struct MappingTraits<ProfilingResult> {
-  static void mapping(IO &io, ProfilingResult &info) {
-    io.mapRequired("type",         info.type);
-    io.mapRequired("objectId",     info.objectId);
-    io.mapOptional("value",        info.value);
-  }
+    static void mapping(IO &io, ProfilingResult &info) {
+    io.mapRequired("type", info.type);
+    io.mapRequired("size", info.size);
+    io.mapOptional("value", info.value, 0);
+    }
 };
+LLVM_YAML_IS_SEQUENCE_VECTOR(ProfilingResult);
 
 namespace mlir {
+
 
 // namespace disagg {
 
@@ -41,7 +44,7 @@ struct AllocationAnnotationPass
     // requires a input yaml list
     StringRef getArgument() const final { return "disagg-annotate-allocations"; }
     StringRef getDescription() const final { return "Allocate annotations"; }
-    Option<std::string> memoryPorfOption{
+    Option<std::string> memoryProfOption{
         *this, "memory-profiling",
         llvm::cl::desc("Heap Obejct Profiling Results")};
     Option<std::string> cpuProfOption{
@@ -50,9 +53,13 @@ struct AllocationAnnotationPass
     Option<std::string> runtimeProfOption{
         *this, "runtime-profiling",
         llvm::cl::desc("Heap Obejct Profiling Results")};
+    Option<float> memoryFactorOption{
+        *this, "memory-factor",
+        llvm::cl::desc("Memory factor comapred to full requirements")};
 
     std::vector<std::vector<ProfilingResult>> results{};
-    void parseProfilingResults();
+    std::map<uint64_t,ProfilingResult> allocationMap{};
+    bool parseProfilingResults();
 };
 
 std::unique_ptr<Pass> createAllocationAnnotationPass();

@@ -24,9 +24,11 @@ static void loadProfilingFromFile(std::string fileName, std::vector<ProfilingRes
 }
 
 void AllocationAnnotationPass::runOnOperation() {
+    parseProfilingResults();
+
     int allocationId = 0;
     auto moduleOp = getOperation();
-    bool isAnnotation = parseProfilingResults();
+    bool isAnnotation = annotateOption.hasValue();
 
     moduleOp->walk([isAnnotation, &allocationId,
                     &allocationMap = allocationMap](mlir::Operation *op) {
@@ -34,11 +36,13 @@ void AllocationAnnotationPass::runOnOperation() {
         OpBuilder builder(op);
         int curAllocation = allocationId++;
 
-        op->setAttr("allocation_id",
-                    builder.getI32IntegerAttr(curAllocation));
+
         // annotate if necessary
-        if (isAnnotation &&
-            allocationMap.find(curAllocation) != allocationMap.end()) {
+        if (isAnnotation)
+          op->setAttr("allocation_id",
+                      builder.getI32IntegerAttr(curAllocation));
+
+        if (allocationMap.find(curAllocation) != allocationMap.end()) {
           op->setAttr("remote_target", builder.getI64IntegerAttr(1));
         }
 
@@ -50,11 +54,11 @@ void AllocationAnnotationPass::runOnOperation() {
     });
 }
 
-bool AllocationAnnotationPass::parseProfilingResults() {
+void AllocationAnnotationPass::parseProfilingResults() {
   if (!memoryProfOption.hasValue() && !cpuProfOption.hasValue() &&
       !runtimeProfOption.hasValue()) {
     // there's no input file. maybe just annotating
-    return true;
+    return;
   }
 
   {
@@ -66,7 +70,7 @@ bool AllocationAnnotationPass::parseProfilingResults() {
     }
   }
 
-  return false;
+  return;
 }
 
 std::unique_ptr<Pass> mlir::createAllocationAnnotationPass() {

@@ -56,10 +56,13 @@ struct AllocationAnnotationPass
     Option<float> memoryFactorOption{
         *this, "memory-factor",
         llvm::cl::desc("Memory factor comapred to full requirements")};
+    Option<bool> annotateOption{
+        *this, "annotate",
+        llvm::cl::desc("Perform profiling annotation")};
 
     std::vector<std::vector<ProfilingResult>> results{};
     std::map<uint64_t,ProfilingResult> allocationMap{};
-    bool parseProfilingResults();
+    void parseProfilingResults();
 };
 
 std::unique_ptr<Pass> createAllocationAnnotationPass();

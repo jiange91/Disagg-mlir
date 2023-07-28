@@ -1,38 +1,57 @@
 #ifndef MLIR_DISAGG_UTIL_PROFILE_READER_H
 #define MLIR_DISAGG_UTIL_PROFILE_READER_H
 
+#include "llvm/ObjectYAML/YAML.h"
+
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+
+#include <set>
+
+using llvm::yaml::MappingTraits;
+using llvm::yaml::IO;
+
+struct ProfilingResult {
+    std::string type;
+    int objectId;
+    uint64_t value;
+};
+
+template <>
+struct MappingTraits<ProfilingResult> {
+  static void mapping(IO &io, ProfilingResult &info) {
+    io.mapRequired("type",         info.type);
+    io.mapRequired("objectId",     info.objectId);
+    io.mapOptional("value",        info.value);
+  }
+};
 
 namespace mlir {
 
 // namespace disagg {
 
-struct ProfilingResult {
-    std::string type;
-    std::string identifier;
-    uint64_t name;
-    uint64_t hotness;
-};
-
 struct AllocationAnnotationPass
     : public PassWrapper<AllocationAnnotationPass,
                          OperationPass<>> {
     AllocationAnnotationPass() = default;
-    AllocationAnnotationPass(const AllocationAnnotationPass &pass)
-        : profilingResults(pass.profilingResults) {}
+    AllocationAnnotationPass(const AllocationAnnotationPass &pass) {}
     void runOnOperation() override;
 
     // requires a input yaml list
     StringRef getArgument() const final { return "disagg-annotate-allocations"; }
     StringRef getDescription() const final { return "Allocate annotations"; }
-    Option<std::string> profilingResultsOption{
-        *this, "profiling-results",
-        llvm::cl::desc("The input filename of yaml profiling results")};
+    Option<std::string> memoryPorfOption{
+        *this, "memory-profiling",
+        llvm::cl::desc("Heap Obejct Profiling Results")};
+    Option<std::string> cpuProfOption{
+        *this, "cpu-profiling",
+        llvm::cl::desc("Heap Obejct Profiling Results")};
+    Option<std::string> runtimeProfOption{
+        *this, "runtime-profiling",
+        llvm::cl::desc("Heap Obejct Profiling Results")};
 
-  private:
-    std::map<std::string, ProfilingResult> profilingResults{};
+    std::vector<std::vector<ProfilingResult>> results{};
     void parseProfilingResults();
 };
 

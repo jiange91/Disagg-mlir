@@ -2,6 +2,7 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 
 #include "Utils/Passes.h"
 
@@ -12,29 +13,34 @@ using namespace mlir;
 
 void AllocationAnnotationPass::runOnOperation() {
     int allocationId = 0;
-    auto intType = IntegerType::get(getOperation()->getContext(), 32);
+    auto moduleOp = getOperation();
 
-    getOperation()->walk([&intType, &allocationId](mlir::Operation *op) {
-      // llvm::outs() << "[Op] ";
-      // op->print(llvm::outs());
-      // llvm::outs() << " [Loc] " <<  op->getLoc() << "\n";
-
+    moduleOp->walk([
+      &allocationId
+      ](mlir::Operation *op) {
       if (isa<memref::AllocOp>(op)) {
-        op->setAttr("remote_target", BoolAttr::get(op->getContext(), 1));
-        op->setAttr("allocation_id", IntegerAttr::get(intType, allocationId++));
-      } else if (isa<LLVM::CallOp>(op)) {
-        auto callOp = cast<LLVM::CallOp>(op);
-        callOp.getCallee();
+        OpBuilder builder(op);
+        int curAllocation = allocationId++;
+        op->setAttr("allocation_id", builder.getI32IntegerAttr(curAllocation));
+        // if (objects.contains(allocationId))
+        //   op->setAttr("remote", builder.getI32IntegerAttr(curAllocation));
+      } else if (isa<func::FuncOp>(op)) {
+        // modify parameter list
+      } else if (isa<func::CallOp>(op)) {
+
       }
     });
 }
 
 void AllocationAnnotationPass::parseProfilingResults() {
-    // profilingResultsOption.getArgStr();
-    // llvm::yaml::Input input;
+  std::vector<std::vector<ProfilingResult>> docs{};
 
-    // filter for non-alloc types
-    // construct dict
+  // llvm::yaml::Input yin();
+  // yin >> docs;
+
+  // if (yin.error())
+  //   return;
+
 }
 
 std::unique_ptr<Pass> mlir::createAllocationAnnotationPass() {

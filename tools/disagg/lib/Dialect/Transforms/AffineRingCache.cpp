@@ -473,11 +473,12 @@ void AffineForPrefetchInternal::emitOperatorKernel() {
     for (size_t mi = 0; mi < access_mem.size(); ++mi) {
       auto &mem = access_mem[mi];
       if (mem.t == READ_ONLY || mem.t == READ_AND_WRITE) {
-        Value wrid;
-        if (mi == access_mem.size() - 1)
-          wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
-        else
-          wrid = cst0_index;
+        // Value wrid;
+        // if (mi == access_mem.size() - 1)
+        //   wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
+        // else
+        //   wrid = cst0_index;
+        Value wrid = b.create<rmem::GetWRIDOp>(loc, b.getIndexType());
         Value lm = rdmaWithCurInd(mem, localIndex, curInduction, IBV_WR_RDMA_READ, wrid).getResult();
         localMem.push_back(lm); 
         wrids.push_back(wrid);

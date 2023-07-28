@@ -32,7 +32,6 @@ def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   }];
   let arguments = (ins AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $addr);
   let results = (outs RemoteMemRef: $rmemref);
-  // TODO: verify that the virtual address is at space 1
   let assemblyFormat = [{
     $addr attr-dict `:` functional-type(operands, results)
   }];
@@ -106,6 +105,7 @@ def RemoteMem_ReturnOp : RemoteMem_Op<"return", [
     }];
 }
 
+//------ very raw primitive for affine prefetch ----//
 def RemoteMem_AsyncRDMAOp : RemoteMem_Op<"rdma"> {
   let summary = "Asynchronously perform a rdna request";
   let arguments = (ins 
@@ -151,6 +151,44 @@ def RemoteMem_WaitReqOp : RemoteMem_Op<"sync"> {
     Index:$id);
   let assemblyFormat = [{
     $R `->` $id attr-dict `:` type($R)`,`type($id)
+  }];
+}
+
+//------ High level primitives for cache access -----//
+def RemoteMem_RequestOp : RemoteMem_Op<"request"> {
+  let summary = "request a token from cache";
+  let arguments = (ins
+    RemoteMemRef: $vaddr,
+    I32Attr: $cache_id
+  );
+  let results = (outs I64: $offset);
+  let assemblyFormat = [{
+    $cache_id`,`$vaddr attr-dict `:` functional-type(operands, results)  
+  }];
+}
+
+def RemoteMem_PollReqOp : RemoteMem_Op<"poll"> {
+  let summary = "poll a request token from cache";
+  let arguments = (ins
+    I64: $offset,
+    I32Attr: $cache_id,
+    I32Attr: $access_type // 0 -> read, 1 -> write
+  );
+  let assemblyFormat = [{
+    $cache_id`,`$offset`,`$access_type attr-dict `:` functional-type(operands, results)  
+  }];
+}
+
+def RemoteMem_PaddrOp : RemoteMem_Op<"paddr"> {
+  let summary = "get raw pointer given virtual address and slot id";
+  let arguments = (ins
+    I64: $offset,
+    AnyTypeOf<[LLVM_AnyPointer,RemoteMemRef]>: $vaddr,
+    I32Attr: $cache_id
+  );
+  let results = (outs LLVM_AnyPointer: $laddr);
+  let assemblyFormat = [{
+    $cache_id`,`$offset`,`$vaddr attr-dict `:` functional-type(operands, results)  
   }];
 }
 

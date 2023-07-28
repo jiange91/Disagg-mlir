@@ -13,6 +13,9 @@
 #include "Dialect/RemoteMem.h"
 #include "Dialect/RemoteMemTypes.h"
 #include "Dialect/FunctionUtils.h"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace mlir;
 using namespace mlir::rmem;
@@ -164,9 +167,109 @@ std::pair<bool, Value> mlir::rmem::isRemoteAccess(Operation *op) {
   if (auto memrefStore = dyn_cast<rmem::MemRefStoreOp>(op)) {
     return {rmem::isTrueRemoteRef(memrefStore.getMemref().getType()), memrefStore.getMemRef()};
   }
+  if (auto llvmLoad = dyn_cast<rmem::LoadOp>(op)) {
+    return {rmem::isTrueRemoteRef(llvmLoad.getAddr().getType()), llvmLoad.getAddr()};
+  }
+  if (auto llvmStore = dyn_cast<rmem::StoreOp>(op)) {
+    return {rmem::isTrueRemoteRef(llvmStore.getAddr().getType()), llvmStore.getAddr()};
+  }
   return {false, Value()};
 }
 
+void mlir::rmem::readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> &caches, std::string &path) {
+  std::ifstream cfg(path);
+  if (!cfg.is_open()) {
+    llvm::errs() << "cannot open cache config file: " << path << "\n";
+  }
+  // format: cache id, type, token offset, raddr offset, laddr offset, slots, line size bytes, qid 
+  int cache_id, type, slots, qid;
+  uint64_t token_off, raddr_off, laddr_off, line_size;
+  while (cfg >> cache_id >> type >> token_off >> raddr_off >> laddr_off >> slots >> line_size >> qid) {
+    if (type == 0) {
+      caches.insert(std::make_pair(cache_id, new DirectMappedCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
+    }
+  }
+}
+
+void Cache::request(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc) {
+  std::string fid = "_cache_" + std::to_string(cache_id) + "_request";
+  StringRef reqRef = getAPIRef(fid);
+  LLVM::LLVMFuncOp reqFn = rmem::lookupOrCreateFn(
+    mop, reqRef, {rewriter.getI64Type(), rewriter.getI64Type()}, nullptr
+  );
+  rmem::createLLVMCall(rewriter, loc, reqFn,
+    {offset, tag}
+  );
+}
+
+// static inline T * paddr(int off, uint64_t vaddr) {
+//     return (T*)(_rbuf + lbuf + off * linesize + vaddr % linesize);
+// }
+Value Cache::paddr(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value offset, Value vaddr, mlir::Location loc) {
+  Value indent = rewriter.create<arith::AddIOp>(loc, 
+    rewriter.create<arith::ConstantIntOp>(loc, laddr_off, 64),
+    rewriter.create<arith::AddIOp>(loc, 
+      rewriter.create<arith::MulIOp>(loc, 
+        offset, rewriter.create<arith::ConstantIntOp>(loc, line_size, 64)),
+      rewriter.create<arith::RemSIOp>(loc, 
+        vaddr, rewriter.create<arith::ConstantIntOp>(loc, line_size, 64))
+    )
+  ).getResult();
+
+  auto rbufGlob = rmem::getOrCreateRbuf(mop);
+  Value rbuf = rewriter.create<LLVM::LoadOp>(loc, 
+    rewriter.create<LLVM::AddressOfOp>(loc, rbufGlob)
+  );
+
+  SmallVector<LLVM::GEPArg, 1> inds{indent};
+  Value buf = rewriter.create<LLVM::GEPOp>(
+    loc, rmem::getVoidPtrType(mop.getContext()), rbuf, inds
+  );
+  Value tbuf = rewriter.create<LLVM::BitcastOp>(loc, outputType, buf);
+  return tbuf;
+}
+
+Value Cache::token(OpBuilder &rewriter, ModuleOp mop, Value offset, mlir::Location loc) {
+  Value tbase = rewriter.create<LLVM::LoadOp>(loc, 
+    rewriter.create<LLVM::AddressOfOp>(loc, rmem::getOrCreateTokens(mop))
+  );
+  SmallVector<LLVM::GEPArg, 1> inds{offset};
+  Value toff = rewriter.create<LLVM::GEPOp>(loc, 
+    LLVM::LLVMPointerType::get(rmem::getIntBitType(mop.getContext(), 128)),
+    tbase, inds
+  );
+  return toff;
+}
+
+Value Cache::get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc) {
+  // std::string fid = "_cache_" + std::to_string(cache_id) + "_get";
+  std::string getRef = "_cache_get";
+  // StringRef getRef = getAPIRef(fid);
+  Type voidPtr = rmem::getVoidPtrType(mop.getContext());
+  LLVM::LLVMFuncOp getFn = rmem::lookupOrCreateFn(
+    mop, getRef, {voidPtr}, outputType
+  );
+  Value input = vaddr;
+  if (vaddr.getType() != voidPtr)
+    input = rewriter.create<LLVM::BitcastOp>(loc, voidPtr, vaddr);
+  auto rels = rmem::createLLVMCall(rewriter, loc, getFn, {input});
+  return rels.front();
+}
+
+Value Cache::get_mut(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc) {
+  // std::string fid = "_cache_" + std::to_string(cache_id) + "_get_mut";
+  std::string getMutRef = "_cache_get_mut";
+  // StringRef getMutRef = getAPIRef(fid);
+  Type voidPtr = rmem::getVoidPtrType(mop.getContext());
+  LLVM::LLVMFuncOp getFn = rmem::lookupOrCreateFn(
+    mop, getMutRef, {voidPtr}, outputType
+  );
+  Value input = vaddr;
+  if (vaddr.getType() != voidPtr)
+    input = rewriter.create<LLVM::BitcastOp>(loc, voidPtr, vaddr);
+  auto rels = rmem::createLLVMCall(rewriter, loc, getFn, {input});
+  return rels.front();
+}
 
 void RemoteMemDialect::initialize() {
   registerTypes();

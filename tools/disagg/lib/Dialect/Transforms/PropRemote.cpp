@@ -34,7 +34,6 @@ class RMEMPropRemotePass: public impl::RMEMPropRemoteBase<RMEMPropRemotePass> {
     func::FuncOp funcOp = getOperation();
     if (funcOp.empty())
       return;
-
     OpBuilder b(funcOp);
     if (!rmem::hasRemoteTarget(funcOp))
       return;
@@ -74,7 +73,6 @@ class RMEMPropRemotePass: public impl::RMEMPropRemoteBase<RMEMPropRemotePass> {
         }
       }
     });
-
     // bfs mark check use
     while (!dq.empty()) {
       size_t es = dq.size();

@@ -15,7 +15,7 @@
 using namespace mlir;
 using namespace mlir::rmem;
 
-RemoteMemLoweringPattern::RemoteMemLoweringPattern(StringRef rootOpName, MLIRContext* context, RemoteMemTypeLowerer &typeConverter, PatternBenefit benefit): ConversionPattern(typeConverter, rootOpName, benefit, context)  {}
+RemoteMemLoweringPattern::RemoteMemLoweringPattern(StringRef rootOpName, MLIRContext* context, RemoteMemTypeLowerer &typeConverter, PatternBenefit benefit): ConversionPattern(typeConverter, rootOpName, benefit, context) {}
 
 RemoteMemDialect &RemoteMemLoweringPattern::getDialect() const {
   return *getTypeConverter()->getDialect();
@@ -61,6 +61,22 @@ Value RemoteMemLoweringPattern::materializeDisaggVirtualAddress (
     tk,
     relType
   );
+}
+
+Value RemoteMemLoweringPattern::newMatDisaggVirtualAddress (
+  PatternRewriter &rewriter, Operation *op, 
+  Value dvaddr, Type relType, rmem::Cache *cache, unsigned accessType) const {
+  Location loc = op->getLoc();
+  Value laddr;
+  ModuleOp mop = op->getParentOfType<ModuleOp>();
+  switch (accessType) {
+    case ACCESS:
+      laddr = cache->get(rewriter, mop, relType, dvaddr, loc);
+      break;
+    default:
+      laddr = cache->get_mut(rewriter, mop, relType, dvaddr, loc);
+  }
+  return laddr;
 }
 
 

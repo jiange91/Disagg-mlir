@@ -34,6 +34,10 @@ protected:
   // Materialize a disagg virtual address to local laddress
   Value materializeDisaggVirtualAddress(PatternRewriter &rewriter, Operation *op, Value dvaddr, Type relType, unsigned accessType = rmem::ACCESS) const;
 
+  // Materialize a disagg virtual address to local laddress
+  // use new_runtime
+  Value newMatDisaggVirtualAddress(PatternRewriter &rewriter, Operation *op, Value dvaddr, Type relType, rmem::Cache *cache, unsigned accessType = rmem::ACCESS) const;
+
   //===---------------------------------------------------===//
   // Original LLVM common rountines
   //===---------------------------------------------------===//

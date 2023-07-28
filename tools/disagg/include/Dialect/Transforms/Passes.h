@@ -13,6 +13,7 @@ std::unique_ptr<Pass> createRemoteMemPrefetchForloopPass();
 std::unique_ptr<Pass> createRemoteMemLoopFusionPass();
 std::unique_ptr<Pass> createRemoteMemSearchRemotePass();
 std::unique_ptr<Pass> createRemoteMemLoopRingCachePass();
+std::unique_ptr<Pass> createRemoteMemLoopNormalCachePass();
 std::unique_ptr<Pass> createRemoteMemAffineRingCachePass();
 std::unique_ptr<Pass> createRemoteMemPropRemotePass();
 std::unique_ptr<Pass> createRemoteMemPoolingPass();

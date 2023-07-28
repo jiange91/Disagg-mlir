@@ -62,13 +62,18 @@ public:
       }
     }
 
+    // initialize caches
+    std::string cfgPath = cacheCFG;
+    std::unordered_map<int, mlir::rmem::Cache*> caches;
+    mlir::rmem::readCachesFromFile(caches, cfgPath);
+
     const auto &dataLayoutAnalysis = getAnalysis<DataLayoutAnalysis>();
     LowerToLLVMOptions options(&getContext(), dataLayoutAnalysis.getAtOrAbove(m));
 
     RemoteMemTypeLowerer rmemTypeConverter(&getContext());
     LLVMTypeConverter llvmTypeConverter(&getContext(), options);
     RewritePatternSet patterns(&getContext());
-    mlir::populateEmitLLVMPatterns(rmemTypeConverter, llvmTypeConverter, patterns, pools);
+    mlir::populateEmitLLVMPatterns(rmemTypeConverter, llvmTypeConverter, patterns, pools, caches);
     
     ConversionTarget target(getContext());
     target.addLegalDialect<LLVM::LLVMDialect>();
@@ -104,12 +109,12 @@ public:
 
 } // namespace
 
-void populateEmitLLVMPatterns(RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools) {
+void populateEmitLLVMPatterns(RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools, std::unordered_map<int, mlir::rmem::Cache*> caches) {
   populateLowerFuncRMemPatterns(rmemTypeConverter, patterns);
   populateLowerSCFRMemPatterns(rmemTypeConverter, patterns);
   populateLowerMemRefRMemPatterns(rmemTypeConverter, patterns, pools);
   populateLowerArithRMemPatterns(rmemTypeConverter, patterns);
-  populateRemoteMemToLLVMPatterns(rmemTypeConverter, patterns, pools);
+  populateRemoteMemToLLVMPatterns(rmemTypeConverter, patterns, pools, caches);
 
   vector::populateVectorToVectorCanonicalizationPatterns(patterns);
   vector::populateVectorBroadcastLoweringPatterns(patterns);

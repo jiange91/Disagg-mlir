@@ -36,6 +36,7 @@ static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
 static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
 static constexpr llvm::StringRef kRDMASbuf = "sbuf";
 static constexpr llvm::StringRef kRDMARbuf = "rbuf";
+static constexpr llvm::StringRef kTokens = "tokens";
 static constexpr llvm::StringRef kRDMAWRID = "rdma_wrid_cnt";
 static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
 
@@ -79,6 +80,7 @@ Value mlir::rmem::createIntConstant(OpBuilder &builder, Location loc, int64_t va
   );
 }
 
+// llvm.mlir.global external @tokens() {addr_space = 0 : i32} : !llvm.array<33554432 x struct<"struct.Token", (i64, i8, i8, i16, i32)>>
 LLVM::LLVMStructType mlir::rmem::getCacheTokenType(MLIRContext *ctx) {
   llvm_unreachable("Should use int128_t for abi compatibility");
   /*
@@ -157,6 +159,21 @@ LLVM::GlobalOp mlir::rmem::getOrCreateRbuf(ModuleOp moduleOp) {
     kRDMARbuf,
     nullptr
   ); 
+}
+
+LLVM::GlobalOp mlir::rmem::getOrCreateTokens(ModuleOp moduleOp) {
+  auto op = moduleOp.lookupSymbol<LLVM::GlobalOp>(kTokens);
+  if (op)
+    return op;
+  MLIRContext *ctx = moduleOp.getContext();
+  OpBuilder b(moduleOp.getBodyRegion());
+  return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
+    LLVM::LLVMPointerType::get(getIntBitType(ctx, 128)),
+    false, 
+    LLVM::Linkage::External, 
+    kTokens,
+    nullptr
+  );
 }
 
 LLVM::GlobalOp mlir::rmem::getOrCreateOffloadArgBuf(ModuleOp moduleOp) {

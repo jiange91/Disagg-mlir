@@ -33,7 +33,14 @@ public:
   }
 
   static bool is_prefetch_target(const Operation& op) {
-    return isa<rmem::StoreOp, rmem::LoadOp>(op);
+    // add materializeOp
+    if (rmem::StoreOp sop = dyn_cast<rmem::StoreOp>(op)) {
+      return rmem::isTrueRemoteRef(sop.getAddr().getType());
+    }
+    if (rmem::LoadOp lop = dyn_cast<rmem::LoadOp>(op)) {
+      return rmem::isTrueRemoteRef(lop.getAddr().getType());
+    }
+    return false;
   }
 
   // TODO: filter with predicates
@@ -73,14 +80,14 @@ public:
           // TODO: if DC > Data movement, cancel prefetch
           // Not likely
           prefetches[&op] = std::pair(addr, dfs);
-          distances[&op] = ceilDiv(2000, DC + loopInterval);
+          // distances[&op] = ceilDiv(2000, DC + loopInterval);
+          distances[&op] = 1;
           maxDistance = std::max(maxDistance, distances[&op]);
         }
       }
     }
     if (prefetches.empty())
       return false;
-
     return true;
   }
 
@@ -247,7 +254,7 @@ public:
     if(!prefetcher.preparePrefetches())
       return mlir::failure();
 
-    // prefetcher.inspectPrefetches();
+    prefetcher.inspectPrefetches();
 
     prefetcher.emitKernel();
 

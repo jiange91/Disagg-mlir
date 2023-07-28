@@ -6,6 +6,7 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   LoopFusion.cpp
   SearchRemote.cpp
   LoopRingCache.cpp
+  LoopNormalCache.cpp
   AffineRingCache.cpp
   AffineAccessMem.cpp
   PropRemote.cpp

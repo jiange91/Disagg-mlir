@@ -1,0 +1,30 @@
+# At onnx-mlir
+onnx-mlir-opt --affine-simplify-structures --convert-krnl-glob-to-alloc="omit-entry-point=true" -cse --canonicalize gpt2.onnx.mlir -o gpt2.alloc.mlir 
+
+# At MLIR
+after annotating gpt2.alloc.mlir -> ae/target.mlir
+
+pldisagg --prop-rmem ae/target.mlir -o ae/prop.mlir
+pldisagg --convert-target-to-remote -cse -canonicalize ae/prop.mlir -o ae/remote.mlir
+pldisagg --rmem-affine-access-mem --canonicalize --cse ae/remote.mlir -o ae/pools.mlir
+pldisagg --rmem-affine-ring-cache -cse --canonicalize ae/pools.mlir -o ae/ring.mlir 
+pldisagg ae/ring.mlir --lower-rmem-in-func -emit-llvm --reconcile-unrealized-casts -cse --canonicalize -o ae/lower.mlir
+mlir-translate --mlir-to-llvmir ae/lower.mlir -o ae/lower.ll
+clang-16 -O3 -c ae/lower.ll -o ae/lower_remote.o
+
+# At runtime
+make gpt2-remote
+mv bin/gpt2-remote ../apps/bench-gpt2/model_onnx/
+
+
+# Full local
+# onnx-mlir-opt --affine-simplify-structures --convert-krnl-glob-to-alloc="omit-entry-point=true" -cse --canonicalize gpt2.onnx.mlir -o /users/Zijian/Disagg-mlir/tools/disagg/example/gpt2/medium/ae/gpt2.alloc.mlir 
+# at /users/Zijian/Disagg-mlir/tools/disagg/example/gpt2/medium/ae
+pldisagg gpt2.alloc.mlir -emit-llvm --reconcile-unrealized-casts -cse --canonicalize -o lower_local.mlir
+mlir-translate --mlir-to-llvmir lower_local.mlir -o lower_local.ll
+clang-16 -O3 -c lower_local.ll -o lower_local.o
+# path: /users/Zijian/raw_eth_pktgen/build
+make gpt2-local
+mv bin/gpt2-local ../apps/bench-gpt2/model_onnx/
+# at ../apps/bench-gpt2/model_onnx
+./gpt2-local

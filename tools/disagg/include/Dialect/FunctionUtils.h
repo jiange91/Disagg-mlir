@@ -28,6 +28,7 @@ bool isCacheAccessOp(const StringRef calless);
 // get rdma send/recv buf
 LLVM::GlobalOp getOrCreateSbuf(ModuleOp moduleOp);
 LLVM::GlobalOp getOrCreateRbuf(ModuleOp moduleOp);
+LLVM::GlobalOp getOrCreateTokens(ModuleOp moduleOp);
 
 // get offload return buf
 LLVM::GlobalOp getOrCreateOffloadArgBuf(ModuleOp moduleOp);

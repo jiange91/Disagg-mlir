@@ -216,16 +216,22 @@ class RemoteMemOffloadLowering : public RemoteMemOpLoweringPattern<rmem::Offload
 };
 
 class RemoteMemStoreLowering : public RemoteMemOpLoweringPattern<rmem::StoreOp> {
-  using RemoteMemOpLoweringPattern<rmem::StoreOp>::RemoteMemOpLoweringPattern;
+public:
+  std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  RemoteMemStoreLowering(std::unordered_map<int, mlir::rmem::Cache*> &caches,
+    rmem::RemoteMemTypeLowerer &typeLowerer, MLIRContext *ctx) :
+    RemoteMemOpLoweringPattern<rmem::StoreOp>::RemoteMemOpLoweringPattern(typeLowerer, ctx), caches(caches) {}
+
   LogicalResult matchAndRewrite(rmem::StoreOp op, rmem::StoreOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     // If the remote addr is remote memref
     //   - if true remote 
     //     need to first materialize to local addr before store
     // Else the addr is a local addr, just store
     Value newAddr = adaptor.getAddr();
-    if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
-      if (rmrefType.getCanRemote()) 
-        newAddr = materializeDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), ACCESS_MUT);
+    auto rv = rmem::isRemoteAccess(op);
+    if (rv.first) {
+      unsigned cache_id = rv.second.getType().cast<RemoteMemRefType>().getCanRemote(); 
+      newAddr = newMatDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), caches[cache_id], ACCESS_MUT);
     }
     rewriter.replaceOpWithNewOp<LLVM::StoreOp>(op, 
       adaptor.getValue(),
@@ -364,16 +370,22 @@ class RemoteMemGetWRIDLowering : public RemoteMemOpLoweringPattern<rmem::GetWRID
 };
 
 class RemoteMemLoadLowering : public RemoteMemOpLoweringPattern<rmem::LoadOp> {
-  using RemoteMemOpLoweringPattern<rmem::LoadOp>::RemoteMemOpLoweringPattern;
+public:
+  std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  RemoteMemLoadLowering(std::unordered_map<int, mlir::rmem::Cache*> &caches,
+    rmem::RemoteMemTypeLowerer &typeLowerer, MLIRContext *ctx) :
+    RemoteMemOpLoweringPattern<rmem::LoadOp>::RemoteMemOpLoweringPattern(typeLowerer, ctx), caches(caches) {}
+
   LogicalResult matchAndRewrite(rmem::LoadOp op, rmem::LoadOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     // If the remote addr is remote memref
     //   - if true remote 
     //     need to first materialize to local addr 
     // Else the addr is a local addr, just load
     Value newAddr = adaptor.getAddr();
-    if (auto rmrefType = op.getAddr().getType().dyn_cast<RemoteMemRefType>()) {
-      if (rmrefType.getCanRemote())
-        newAddr = materializeDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), ACCESS);
+    auto rv = rmem::isRemoteAccess(op);
+    if (rv.first) {
+      unsigned cache_id = rv.second.getType().cast<RemoteMemRefType>().getCanRemote();
+      newAddr = newMatDisaggVirtualAddress(rewriter, op, newAddr, newAddr.getType(), caches[cache_id], ACCESS);
     }
     Value newLoad = rewriter.create<LLVM::LoadOp>(
       op.getLoc(),
@@ -540,7 +552,7 @@ public:
   void runOnOperation() override {
     ModuleOp m = getOperation();
 
-    // get local caches
+    // get local templates
     DenseMap<StringRef, LocalCache> pools;
     if (auto ts = m->getAttrOfType<DictionaryAttr>("rmem.templates")) {
       for (auto p : ts) {
@@ -548,9 +560,14 @@ public:
       }
     }
 
+    // get local caches
+    std::string cfgPath = cacheCFG;
+    std::unordered_map<int, mlir::rmem::Cache*> caches;
+    mlir::rmem::readCachesFromFile(caches, cfgPath);
+
     RemoteMemTypeLowerer typeConverter(&getContext());
     RewritePatternSet patterns(&getContext());
-    populateRemoteMemToLLVMPatterns(typeConverter, patterns, pools);
+    populateRemoteMemToLLVMPatterns(typeConverter, patterns, pools, caches);
     
     ConversionTarget target(getContext());
     target.addLegalDialect<LLVM::LLVMDialect>();
@@ -587,7 +604,7 @@ public:
 
 } // namespace
 
-void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools) {
+void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools,     std::unordered_map<int, mlir::rmem::Cache*> &caches) {
   patterns.add<
   RemoteMemUndefLowering,
   RemoteMemNullOpLowering,
@@ -596,9 +613,7 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemLLVMAddressOfLowering,
   RemoteMemMallocPtrLowering,
   RemoteMemBitCastLowering,
-  RemoteMemStoreLowering,
   RemoteMemPrefetchLowering,
-  RemoteMemLoadLowering,
   RemoteMemGEPOpLowering,
   RemoteMemAllocaOpLowering,
   RemoteMemCallocOpLowering,
@@ -614,6 +629,11 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemIntToPtrLowering,
   RemoteMemToAddressLowering
   >(converter, &converter.getContext());
+
+  patterns.add<
+  RemoteMemStoreLowering,
+  RemoteMemLoadLowering
+  >(caches, converter, &converter.getContext());
 }
 
 std::unique_ptr<Pass> createRemoteMemToLLVMPass() {

@@ -243,7 +243,7 @@ def RemoteMem_IntToPtrOp : RemoteMem_Op<"llvm.int2ptr", [Pure]> {
 }
 
 def RemoteMem_LLVMGlobalOp : RemoteMem_Op<"llvm.global", [IsolatedFromAbove,
-SingleBlock,
+// SingleBlock,
 // SingleBlockImplicitTerminator<"ReturnOp">, 
 Symbol]> {
   let arguments = (ins

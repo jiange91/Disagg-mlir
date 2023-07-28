@@ -125,7 +125,19 @@ class FuncCallOpDisagg : public OpConversionPattern<func::CallOp> {
         }
       }
     } else {
+      // TODO: use attr to guide conversion
       inputs = oldInputs;
+      // for (auto &en : llvm::enumerate(oldInputs)) {
+      //   auto convertedType = en.value().getType();
+      //   auto originalType = callOp.getOperand(en.index()).getType();
+      //   if (convertedType != originalType && 
+      //   isTrueRemoteRef(en.value().getType())) {
+      //     Value mat = rewriter.create<rmem::MaterializeOp>(callOp.getLoc(), callOp.getOperand(en.index()).getType(), en.value());
+      //     inputs.push_back(mat);
+      //   } else {
+      //     inputs.push_back(en.value());
+      //   }
+      // }
     }
 
     if (auto needOffload = callOp->getAttrOfType<mlir::IntegerAttr>("remote_offload")) {

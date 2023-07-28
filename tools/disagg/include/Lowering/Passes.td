@@ -7,6 +7,9 @@ def ConvertRemoteMemToLLVM : Pass<"lower-rmem-to-llvm", "ModuleOp"> {
   let summary = "Convert Remote Mem dialect to llvm dialect";
   let constructor = "mlir::createRemoteMemToLLVMPass()";
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "func::FuncDialect", "arith::ArithDialect"];
+  let options = [
+    Option<"cacheCFG", "ccfg", "std::string", "", "cache configurations">
+  ];
 }
 
 def LowerRMemInFunc: Pass<"lower-rmem-in-func", "ModuleOp"> {
@@ -61,6 +64,9 @@ def EmitLLVM : Pass<"emit-llvm", "ModuleOp"> {
     "scf::SCFDialect",
     // "vector::VectorDialect",
     "memref::MemRefDialect"
+  ];
+  let options = [
+    Option<"cacheCFG", "ccfg", "std::string", "", "cache configurations">
   ];
 }
 

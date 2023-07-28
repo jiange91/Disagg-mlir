@@ -46,6 +46,16 @@ def RMEMLoopRingCache : Pass<"rmem-loop-ring-cache", "mlir::ModuleOp"> {
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "scf::SCFDialect"];
 }
 
+def RMEMLoopNormalCache : Pass<"rmem-loop-normal-cache", "mlir::ModuleOp"> {
+  let summary = "Create normal cache access code for for-loops";
+  let constructor = "mlir::createRemoteMemLoopNormalCachePass()";
+  let options = [
+    Option<"cacheCFG", "ccfg", "std::string", "", "cache configurations">
+  ];
+
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "scf::SCFDialect"];
+}
+
 def RMEMAffineRingCache : Pass<"rmem-affine-ring-cache", "mlir::ModuleOp"> {
   let summary = "Create ring cache access code for affine-loops";
   let constructor = "mlir::createRemoteMemAffineRingCachePass()";

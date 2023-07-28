@@ -257,21 +257,21 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
     for (auto [op, ra] : accessInternal.raccess) {
       accessInternal.getAccessRangeAtLevel(ra, 10, range);
     }
-    // accessInternal.mergeRange(range);
+    accessInternal.mergeRange(range);
 
-    // uint64_t lofst = 0;
-    // for (auto &[tname, cache] : pools) {
-    //   size_t typeSize = cache.lOfst;
-    //   cache.lOfst = lofst;
-    //   lofst += typeSize * cache.nBlocks * cache.blockSize;
-    // }
-    // llvm::errs() << "total local cache size: " << lofst << " bytes\n";
+    uint64_t lofst = 0;
+    for (auto &[tname, cache] : pools) {
+      size_t typeSize = cache.lOfst;
+      cache.lOfst = lofst;
+      lofst += typeSize * cache.nBlocks * cache.blockSize;
+    }
+    llvm::errs() << "total local cache size: " << lofst << " bytes\n";
 
-    // std::vector<NamedAttribute> temp_attrs;
-    // for (auto [tname, cache] : pools) {
-    //   temp_attrs.emplace_back(b.getStringAttr(tname), cache.toAttr(b));
-    // }
-    // mop->setAttr("rmem.templates", b.getDictionaryAttr(temp_attrs));
+    std::vector<NamedAttribute> temp_attrs;
+    for (auto [tname, cache] : pools) {
+      temp_attrs.emplace_back(b.getStringAttr(tname), cache.toAttr(b));
+    }
+    mop->setAttr("rmem.templates", b.getDictionaryAttr(temp_attrs));
   }
 };
 }

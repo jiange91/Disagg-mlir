@@ -15,7 +15,7 @@ namespace rmem {
 class RemoteMemTypeLowerer;
 }
 
-void populateEmitLLVMPatterns (rmem::RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, rmem::LocalCache> &pools);
+void populateEmitLLVMPatterns (rmem::RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, rmem::LocalCache> &pools, std::unordered_map<int, mlir::rmem::Cache*> caches);
 std::unique_ptr<Pass> createEmitLLVMPass();
 }
 

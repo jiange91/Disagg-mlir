@@ -13,7 +13,7 @@ namespace rmem {
 class RemoteMemTypeLowerer;
 }
 
-void populateRemoteMemToLLVMPatterns (rmem::RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, rmem::LocalCache> &pools);
+void populateRemoteMemToLLVMPatterns (rmem::RemoteMemTypeLowerer &converter, RewritePatternSet &patterns, DenseMap<StringRef, rmem::LocalCache> &pools, std::unordered_map<int, mlir::rmem::Cache*> &caches);
 std::unique_ptr<Pass> createRemoteMemToLLVMPass();
 }
 

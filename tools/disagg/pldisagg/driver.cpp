@@ -13,13 +13,15 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
-#include "Dialect/RemoteMem.h"
-#include "Conversion/Passes.h"
-#include "Lowering/Passes.h"
 #include "Dialect/Transforms/Passes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/InitAllPasses.h"
+
+#include "Dialect/RemoteMem.h"
+#include "Conversion/Passes.h"
+#include "Lowering/Passes.h"
+#include "Utils/Passes.h"
 
 using namespace mlir;
 
@@ -49,6 +51,9 @@ int main(int argc, char **argv) {
   // mlir::registerCanonicalizerPass();
   // mlir::registerSymbolDCEPass();
   // mlir::registerLoopInvariantCodeMotionPass();
+
+  // register util passes
+  mlir::registerAllocationAnnotationPass();
 
   // interface perpare
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {

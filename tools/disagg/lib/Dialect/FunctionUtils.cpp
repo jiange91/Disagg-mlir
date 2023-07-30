@@ -35,7 +35,7 @@ static constexpr llvm::StringRef kRRSync = "rsync";
 static constexpr llvm::StringRef kOffloadArgBuf = "offload_arg_buf";
 static constexpr llvm::StringRef kOffloadRetBuf = "offload_ret_buf";
 static constexpr llvm::StringRef kRDMASbuf = "sbuf";
-static constexpr llvm::StringRef kRDMARbuf = "rbuf";
+static constexpr llvm::StringRef kRDMARbuf = "_rbuf";
 static constexpr llvm::StringRef kTokens = "tokens";
 static constexpr llvm::StringRef kRDMAWRID = "rdma_wrid_cnt";
 static constexpr llvm::StringRef kCallOffloadService = "call_offloaded_service";
@@ -82,29 +82,23 @@ Value mlir::rmem::createIntConstant(OpBuilder &builder, Location loc, int64_t va
 
 // llvm.mlir.global external @tokens() {addr_space = 0 : i32} : !llvm.array<33554432 x struct<"struct.Token", (i64, i8, i8, i16, i32)>>
 LLVM::LLVMStructType mlir::rmem::getCacheTokenType(MLIRContext *ctx) {
-  llvm_unreachable("Should use int128_t for abi compatibility");
   /*
   typedef struct cache_token_t {
-    // key for pointer
-    struct {
-        uint64_t tag; // addr = tag + line_ofst
-        uint16_t line_ofst;
-    };
-
-    struct {
-        uint64_t head_addr;
-        uint16_t cache;
-    };
+    uint64_t tag;
+    uint8_t flags;
+    uint8_t pad0;
+    uint16_t seq;
+    pthread_spinlock_t lock;
   } cache_token_t;
   */
-  auto virtPart = LLVM::LLVMStructType::getLiteral(ctx,
-    {getIntBitType(ctx, 64), getIntBitType(ctx, 16)}
-  );
-  auto localPart = LLVM::LLVMStructType::getLiteral(ctx,
-    {getIntBitType(ctx, 64), getIntBitType(ctx, 16)}
-  );
   return LLVM::LLVMStructType::getLiteral(ctx,
-    {virtPart, localPart}
+    {
+      getIntBitType(ctx, 64),
+      getIntBitType(ctx, 8),
+      getIntBitType(ctx, 8),
+      getIntBitType(ctx, 16),
+      getIntBitType(ctx, 32),
+    }
   );
 }
 
@@ -168,7 +162,7 @@ LLVM::GlobalOp mlir::rmem::getOrCreateTokens(ModuleOp moduleOp) {
   MLIRContext *ctx = moduleOp.getContext();
   OpBuilder b(moduleOp.getBodyRegion());
   return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
-    LLVM::LLVMPointerType::get(getIntBitType(ctx, 128)),
+    LLVM::LLVMPointerType::get(rmem::getCacheTokenType(ctx)),
     false, 
     LLVM::Linkage::External, 
     kTokens,
@@ -495,7 +489,6 @@ LLVM::LLVMFuncOp mlir::rmem::lookupOrCreateCallOffloadService(ModuleOp moduleOp)
     getVoidPtrType(ctx)
   );
 }
-
 
 // ==============================================================
 // Helper Wrapper for type casting

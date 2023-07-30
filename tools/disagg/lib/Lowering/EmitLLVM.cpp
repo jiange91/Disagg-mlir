@@ -109,7 +109,7 @@ public:
 
 } // namespace
 
-void populateEmitLLVMPatterns(RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools, std::unordered_map<int, mlir::rmem::Cache*> caches) {
+void populateEmitLLVMPatterns(RemoteMemTypeLowerer &rmemTypeConverter, LLVMTypeConverter &llvmTypeConverter, RewritePatternSet &patterns, DenseMap<StringRef, LocalCache> &pools, std::unordered_map<int, mlir::rmem::Cache*> &caches) {
   populateLowerFuncRMemPatterns(rmemTypeConverter, patterns);
   populateLowerSCFRMemPatterns(rmemTypeConverter, patterns);
   populateLowerMemRefRMemPatterns(rmemTypeConverter, patterns, pools);

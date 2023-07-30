@@ -5,6 +5,7 @@
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
@@ -189,17 +190,81 @@ void mlir::rmem::readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> 
       caches.insert(std::make_pair(cache_id, new DirectMappedCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
     }
   }
+  llvm::errs() << caches.size() << " caches read\n";
+}
+
+Value Token::get_token(OpBuilder &rewriter, Value offI64, ModuleOp mop, mlir::Location loc) {
+  Value tbase = rewriter.create<LLVM::LoadOp>(loc, 
+    rewriter.create<LLVM::AddressOfOp>(loc, rmem::getOrCreateTokens(mop))
+  );
+  SmallVector<LLVM::GEPArg, 1> inds{offI64};
+  Value toff = rewriter.create<LLVM::GEPOp>(loc, 
+    tbase.getType(),
+    tbase, inds
+  );
+  return toff;
+}
+
+Value Token::get_field_ptr(OpBuilder &rewriter, Value token, int field, Type field_type, mlir::Location loc) {
+  SmallVector<LLVM::GEPArg, 2> inds;
+  inds.push_back(rewriter.create<arith::ConstantIntOp>(loc, 0, 64).getResult());
+  inds.push_back(field);
+
+  Value fp = rewriter.create<LLVM::GEPOp>(loc, LLVM::LLVMPointerType::get(field_type), token, inds);
+  return fp;
+}
+
+Value Token::check_flag(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc) {
+  Value fv = rewriter.create<LLVM::LoadOp>(loc, 
+    Token::get_field_ptr(rewriter, token, Token::FLAGS, rewriter.getI8Type(), loc));
+  Value b = rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::ne, 
+    rewriter.create<arith::AndIOp>(loc, 
+      fv, 
+      rewriter.create<arith::ConstantIntOp>(loc, flag, 8)),
+    rewriter.create<arith::ConstantIntOp>(loc, 0, 8)
+  );
+  Value r = rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), b);
+  return r;
+}
+
+Value Token::valid(OpBuilder &rewriter, Value token, mlir::Location loc) {
+  return Token::check_flag(rewriter, token, Token::Valid, loc);
+}
+
+Value Token::dirty(OpBuilder &rewriter, Value token, mlir::Location loc) {
+  return Token::check_flag(rewriter, token, Token::Dirty, loc);
+}
+
+Value Token::sync(OpBuilder &rewriter, Value token, mlir::Location loc) {
+  return Token::check_flag(rewriter, token, Token::Sync, loc);
+}
+
+void Token::set(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc) {
+  Value fp = Token::get_field_ptr(rewriter, token, Token::FLAGS, rewriter.getI8Type(), loc);
+  rewriter.create<LLVM::StoreOp>(loc, rewriter.create<arith::ConstantIntOp>(loc, flag, 8), fp);
+}
+
+void Token::add(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc) {
+  Value fp = Token::get_field_ptr(rewriter, token, Token::FLAGS, rewriter.getI8Type(), loc);
+  Value fv = rewriter.create<LLVM::LoadOp>(loc, fp);
+  Value newf = rewriter.create<arith::OrIOp>(loc, fv, rewriter.create<arith::ConstantIntOp>(loc, flag, 8));
+  rewriter.create<LLVM::StoreOp>(loc, newf, fp);
+}
+
+void Token::clear(OpBuilder &rewriter, Value token, mlir::Location loc) {
+  Token::set(rewriter, token, 0, loc);
+}
+
+Value Cache::tag(OpBuilder &rewriter, Value addr, mlir::Location loc) {
+  return rewriter.create<arith::AndIOp>(
+      loc, rewriter.getI64Type(), 
+      rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), addr),
+      rewriter.create<arith::ConstantIntOp>(loc, ~(this->line_size - 1), 64));
 }
 
 void Cache::request(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc) {
-  std::string fid = "_cache_" + std::to_string(cache_id) + "_request";
-  StringRef reqRef = getAPIRef(fid);
-  LLVM::LLVMFuncOp reqFn = rmem::lookupOrCreateFn(
-    mop, reqRef, {rewriter.getI64Type(), rewriter.getI64Type()}, nullptr
-  );
-  rmem::createLLVMCall(rewriter, loc, reqFn,
-    {offset, tag}
-  );
+  Value wr_ofst = rewriter.create<arith::ConstantIntOp>(loc, this->qid * 2, 32);
+  this->cache_request_impl(rewriter, mop, wr_ofst, tag, offset, loc);
 }
 
 // static inline T * paddr(int off, uint64_t vaddr) {
@@ -210,7 +275,8 @@ Value Cache::paddr(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value off
     rewriter.create<arith::ConstantIntOp>(loc, laddr_off, 64),
     rewriter.create<arith::AddIOp>(loc, 
       rewriter.create<arith::MulIOp>(loc, 
-        offset, rewriter.create<arith::ConstantIntOp>(loc, line_size, 64)),
+        rewriter.create<arith::ExtSIOp>(loc, rewriter.getI64Type(), offset), 
+        rewriter.create<arith::ConstantIntOp>(loc, line_size, 64)),
       rewriter.create<arith::RemSIOp>(loc, 
         vaddr, rewriter.create<arith::ConstantIntOp>(loc, line_size, 64))
     )
@@ -230,45 +296,130 @@ Value Cache::paddr(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value off
 }
 
 Value Cache::token(OpBuilder &rewriter, ModuleOp mop, Value offset, mlir::Location loc) {
-  Value tbase = rewriter.create<LLVM::LoadOp>(loc, 
-    rewriter.create<LLVM::AddressOfOp>(loc, rmem::getOrCreateTokens(mop))
+  Value _off = rewriter.create<arith::ExtSIOp>(loc, 
+    rewriter.getI64Type(),
+    rewriter.create<arith::AddIOp>(loc, 
+      offset, 
+      rewriter.create<arith::ConstantIntOp>(loc, this->token_off, 32))
   );
-  SmallVector<LLVM::GEPArg, 1> inds{offset};
-  Value toff = rewriter.create<LLVM::GEPOp>(loc, 
-    LLVM::LLVMPointerType::get(rmem::getIntBitType(mop.getContext(), 128)),
-    tbase, inds
-  );
-  return toff;
+  return Token::get_token(rewriter, _off, mop, loc);
 }
 
 Value Cache::get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc) {
-  // std::string fid = "_cache_" + std::to_string(cache_id) + "_get";
-  std::string getRef = "_cache_get";
-  // StringRef getRef = getAPIRef(fid);
-  Type voidPtr = rmem::getVoidPtrType(mop.getContext());
-  LLVM::LLVMFuncOp getFn = rmem::lookupOrCreateFn(
-    mop, getRef, {voidPtr}, outputType
+  Value tagI64 = this->tag(rewriter, vaddr, loc);
+  Value offI32 = this->select(rewriter, tagI64, loc);
+  Value pToken = this->token(rewriter, mop, offI32, loc);
+  Value laddr = this->paddr(rewriter, mop, 
+    outputType, 
+    offI32, 
+    rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), vaddr), loc);
+
+  Value isValid = Token::valid(rewriter, pToken, loc);
+
+  Value tokenTag = rewriter.create<LLVM::LoadOp>(loc, 
+    Token::get_field_ptr(rewriter, pToken, Token::TAG, rewriter.getI64Type(), loc));
+  Value tagMatch = rewriter.create<arith::CmpIOp>(loc, 
+    arith::CmpIPredicate::eq,
+    rewriter.create<arith::ConstantIntOp>(loc, 0, 64),
+    tokenTag
   );
-  Value input = vaddr;
-  if (vaddr.getType() != voidPtr)
-    input = rewriter.create<LLVM::BitcastOp>(loc, voidPtr, vaddr);
-  auto rels = rmem::createLLVMCall(rewriter, loc, getFn, {input});
-  return rels.front();
+  Value ifNeedPoll = rewriter.create<arith::CmpIOp>(loc, 
+    arith::CmpIPredicate::ne,
+    rewriter.create<arith::ConstantIntOp>(loc, 1, 8),
+    rewriter.create<arith::AndIOp>(loc, 
+      isValid, 
+      rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), tagMatch))
+  );
+
+  auto needPoll = rewriter.create<scf::IfOp>(loc, outputType, ifNeedPoll, true);
+  rewriter.setInsertionPointToStart(needPoll.thenBlock());
+  this->request_poll(rewriter, mop, offI32, tagI64, loc);
+  rewriter.create<scf::YieldOp>(loc, laddr);
+  rewriter.setInsertionPointToStart(needPoll.elseBlock());
+  rewriter.create<scf::YieldOp>(loc, laddr);
+  rewriter.setInsertionPointAfter(needPoll);
+
+  // needPoll->getBlock()->dump();
+  return needPoll.getResult(0);
 }
 
 Value Cache::get_mut(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc) {
-  // std::string fid = "_cache_" + std::to_string(cache_id) + "_get_mut";
-  std::string getMutRef = "_cache_get_mut";
-  // StringRef getMutRef = getAPIRef(fid);
-  Type voidPtr = rmem::getVoidPtrType(mop.getContext());
-  LLVM::LLVMFuncOp getFn = rmem::lookupOrCreateFn(
-    mop, getMutRef, {voidPtr}, outputType
+  Value tagI64 = this->tag(rewriter, vaddr, loc);
+  Value offI32 = this->select(rewriter, tagI64, loc);
+  Value pToken = this->token(rewriter, mop, offI32, loc);
+  Value laddr = this->paddr(rewriter, mop, 
+    outputType, 
+    offI32, 
+    rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), vaddr), loc);
+
+  Value isValid = Token::valid(rewriter, pToken, loc);
+
+  Value tokenTag = rewriter.create<LLVM::LoadOp>(loc, 
+    Token::get_field_ptr(rewriter, pToken, Token::TAG, rewriter.getI64Type(), loc));
+  Value tagMatch = rewriter.create<arith::CmpIOp>(loc, 
+    arith::CmpIPredicate::eq,
+    rewriter.create<arith::ConstantIntOp>(loc, 0, 64),
+    tokenTag
   );
-  Value input = vaddr;
-  if (vaddr.getType() != voidPtr)
-    input = rewriter.create<LLVM::BitcastOp>(loc, voidPtr, vaddr);
-  auto rels = rmem::createLLVMCall(rewriter, loc, getFn, {input});
-  return rels.front();
+  Value ifNeedPoll = rewriter.create<arith::CmpIOp>(loc, 
+    arith::CmpIPredicate::ne,
+    rewriter.create<arith::ConstantIntOp>(loc, 1, 8),
+    rewriter.create<arith::AndIOp>(loc, 
+      isValid, 
+      rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), tagMatch))
+  );
+  auto needPoll = rewriter.create<scf::IfOp>(loc,
+    ifNeedPoll, false);
+  rewriter.setInsertionPointToStart(needPoll.thenBlock());
+  this->request_poll(rewriter, mop, offI32, tagI64, loc);
+  rewriter.setInsertionPointAfter(needPoll);
+
+  Token::add(rewriter, pToken, Token::Dirty, loc);
+  return laddr;
+}
+
+void Cache::request_poll(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc) {
+  Value req_ofst = rewriter.create<arith::ConstantIntOp>(loc, this->qid * 2, 32);
+  this->cache_request_impl(rewriter, mop, req_ofst, tag, offset, loc);
+
+  Value _qid = rewriter.create<arith::ConstantIntOp>(loc, this->qid, 32);
+  Value _token = this->token(rewriter, mop, offset, loc);
+  SmallVector<LLVM::GEPArg, 2> inds;
+  inds.push_back(rewriter.create<arith::ConstantIntOp>(loc, 0, 64).getResult());
+  inds.push_back(3);
+  Value _seq = rewriter.create<LLVM::LoadOp>(loc, 
+    Token::get_field_ptr(rewriter, _token, Token::SEQ, rewriter.getI16Type(), loc));
+  this->poll_qid(rewriter, _qid, _seq, mop, loc);
+}
+
+Value Cache::cache_request_impl(OpBuilder &rewriter, ModuleOp mop, Value wr_offset, Value tag, Value offset, mlir::Location loc) {
+  auto reqFn = rmem::lookupOrCreateFn(
+    mop, "cache_request_impl_" + std::to_string(this->cache_id),
+    ArrayRef<Type>({
+      rewriter.getI32Type(),
+      rewriter.getI64Type(),
+      rewriter.getI32Type(),
+      // rmem::getVoidPtrType(ctx),
+      rewriter.getI8Type()
+    }),
+    rewriter.getI32Type()
+  );
+  auto rs = rmem::createLLVMCall(rewriter, loc, reqFn, {
+    wr_offset, tag, offset, rewriter.create<arith::ConstantIntOp>(loc, 1, 8)
+  });
+  return rs.front();
+}
+
+void Cache::poll_qid(OpBuilder &rewriter, Value qid, Value seq, ModuleOp mop, mlir::Location loc) {
+  auto pollFn = rmem::lookupOrCreateFn(
+    mop, "poll_qid" + std::to_string(this->cache_id),
+    ArrayRef<Type>({
+      rewriter.getI32Type(),
+      rewriter.getI16Type()
+    }),
+    nullptr
+  );
+  rmem::createLLVMCall(rewriter, loc, pollFn, {qid, seq});
 }
 
 void RemoteMemDialect::initialize() {

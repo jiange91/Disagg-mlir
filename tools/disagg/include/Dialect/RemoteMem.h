@@ -86,6 +86,34 @@ public:
   size_t nBlocks;
 };
 
+struct Token {
+  // uint64_t tag;
+  // uint8_t flags;
+  // uint8_t pad0;
+  // uint16_t seq;
+  // pthread_spinlock_t lock; i32
+  static Value get_token(OpBuilder &rewriter, Value offI64, ModuleOp mop, mlir::Location loc);
+  static Value get_field_ptr(OpBuilder &rewriter, Value token, int field, Type field_type, mlir::Location loc);
+  static Value check_flag(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc);
+
+  static Value valid(OpBuilder &rewriter, Value token, mlir::Location loc);
+  static Value dirty(OpBuilder &rewriter, Value token, mlir::Location loc);
+  static Value sync(OpBuilder &rewriter, Value token, mlir::Location loc);
+
+  static void set(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc);
+  static void add(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc);
+  static void clear(OpBuilder &rewriter, Value token, mlir::Location loc);
+
+  static const uint8_t Valid = 0x1;
+  static const uint8_t Dirty = 0x2;
+  static const uint8_t Sync = 0x4;
+
+  static const int TAG = 0;
+  static const int FLAGS = 0;
+  static const int PAD = 0;
+  static const int SEQ = 0;
+};
+
 struct Cache {
   // Cache(OpBuilder &_rewriter) : rewriter(_rewriter) {}
   Cache() = default;
@@ -110,22 +138,11 @@ struct Cache {
   Value base;
 
   // c++ APIs
-  std::set<std::string> api_names;
-  StringRef getAPIRef(std::string t) {
-    auto [it, ok] = api_names.insert(t);
-    return *it;
-  }
-
   // virtual function
   virtual Value select(OpBuilder &rewriter, Value tag, mlir::Location loc) = 0;
 
   // addr: llvm.ptr
-  Value tag(OpBuilder &rewriter, Value addr, mlir::Location loc) {
-    return rewriter.create<arith::AndIOp>(
-        loc, rewriter.getI64Type(), 
-        rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), addr),
-        rewriter.create<arith::ConstantIntOp>(loc, ~(line_size - 1), 64));
-  }
+  Value tag(OpBuilder &rewriter, Value addr, mlir::Location loc);
 
   void request(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc);
 
@@ -136,6 +153,12 @@ struct Cache {
   Value get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc);
 
   Value get_mut(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr, mlir::Location loc);
+
+  void request_poll(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc);
+
+  Value cache_request_impl(OpBuilder &rewriter, ModuleOp mop, Value wr_offset, Value tag, Value offset, mlir::Location loc);
+
+  void poll_qid(OpBuilder &rewriter, Value qid, Value seq, ModuleOp mop, mlir::Location loc);
 
   #if 0
   // Token Functions. instead of require tokens, we get token pointers and GEP the token
@@ -172,10 +195,13 @@ struct Cache {
 struct DirectMappedCache : public Cache {
   using Cache::Cache;
   Value select(OpBuilder &rewriter, Value tag, mlir::Location loc) override {
-    return rewriter.create<arith::RemSIOp>(
-        loc, rewriter.getI32Type(),
-          rewriter.create<arith::DivUIOp>(loc, tag,         rewriter.create<arith::ConstantIntOp>(loc, line_size, 64)), 
-          rewriter.create<arith::ConstantIntOp>(loc, slots, 64));
+    Value s64 = rewriter.create<arith::RemSIOp>(
+        loc, 
+        rewriter.create<arith::DivUIOp>(loc, 
+          tag, 
+          rewriter.create<arith::ConstantIntOp>(loc, line_size, 64)), 
+        rewriter.create<arith::ConstantIntOp>(loc, slots, 64));
+    return rewriter.create<arith::TruncIOp>(loc, rewriter.getI32Type(), s64);
   }
 };
 

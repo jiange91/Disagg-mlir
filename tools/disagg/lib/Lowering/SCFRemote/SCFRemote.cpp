@@ -26,6 +26,8 @@ namespace {
 class RemoteSCFYieldLowering : public RemoteMemOpLoweringPattern<scf::YieldOp> {
   using RemoteMemOpLoweringPattern<scf::YieldOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(scf::YieldOp op, scf::YieldOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    if (!op.getResults().size())
+      return mlir::failure();
     rewriter.replaceOpWithNewOp<scf::YieldOp>(op, adaptor.getResults());
     return mlir::success();
   }

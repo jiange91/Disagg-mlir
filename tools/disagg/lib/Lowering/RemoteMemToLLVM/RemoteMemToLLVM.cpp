@@ -571,6 +571,9 @@ public:
     
     ConversionTarget target(getContext());
     target.addLegalDialect<LLVM::LLVMDialect>();
+    target.markUnknownOpDynamicallyLegal(
+      [](Operation *op) { return true; }
+    );
     target.addIllegalOp<
       rmem::UndefOp,
       rmem::NullRefOp,
@@ -596,7 +599,6 @@ public:
       rmem::IntToPtrOp,
       rmem::ToAddressOp
     >();
-
     if (failed(applyPartialConversion(m, target, std::move(patterns))))
       signalPassFailure();
   }

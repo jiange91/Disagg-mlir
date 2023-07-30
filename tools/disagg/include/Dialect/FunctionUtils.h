@@ -108,8 +108,6 @@ LLVM::LLVMFuncOp lookupOrCreateInstrInc(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateInstrIncStep(ModuleOp moduleOp);
 LLVM::LLVMFuncOp lookupOrCreateCallOffloadService(ModuleOp moduleOp);
 
-
-
 Value cacheRequestCallWrapper(OpBuilder &builder, Location loc, LLVM::LLVMFuncOp reqFn, Value ptr);
 
 Value cacheAccessCallWrapper(OpBuilder &builder, Location loc, 

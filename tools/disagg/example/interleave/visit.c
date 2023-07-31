@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
+void setup();
+void computation(arc_p a, node_p n, int i);
+
 void visit(arc_p as) {
   for( int i = 0; i < M_arc; i++ )
   {

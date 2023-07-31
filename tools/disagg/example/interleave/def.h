@@ -13,7 +13,7 @@ typedef struct node *node_p;
 typedef struct arc arc_t;
 typedef struct arc *arc_p;
 
-#define SIMP 1
+#define SIMP 0
 
 #if SIMP
 
@@ -37,22 +37,21 @@ struct arc
 
 struct node
 {
-  arc_p firstin;
+  node_p child, parent;
+  arc_p firstout, firstin;
   int number;
 
   int payload[23];
 };
 
-
 struct arc
 {
-  node_p head;
-  arc_p nextin;
+  node_p tail, head;
+  arc_p nextout, nextin;
   int payload[8];
 };
 
 #endif
-
 
 extern node_t *node;
 extern arc_t *arc;
@@ -60,15 +59,6 @@ extern int g_payload[23];
 
 #define N_node (8 << 20)
 #define M_arc (64 << 20)
-
-
-void check();
-void visit(arc_p a);
-
-extern "C" {
-void setup();
-void computation(arc_p a, node_p n, int i);
-}
 
 
 static inline uint64_t getCurNs() {

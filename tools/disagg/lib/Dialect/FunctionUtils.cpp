@@ -161,8 +161,10 @@ LLVM::GlobalOp mlir::rmem::getOrCreateTokens(ModuleOp moduleOp) {
     return op;
   MLIRContext *ctx = moduleOp.getContext();
   OpBuilder b(moduleOp.getBodyRegion());
+  constexpr uint64_t NUM_TOKENS = 32ULL * 1024 * 1024;
+  Type globTokenType = LLVM::LLVMArrayType::get(rmem::getCacheTokenType(ctx), NUM_TOKENS);
   return b.create<LLVM::GlobalOp>(moduleOp->getLoc(), 
-    LLVM::LLVMPointerType::get(rmem::getCacheTokenType(ctx)),
+    globTokenType,
     false, 
     LLVM::Linkage::External, 
     kTokens,

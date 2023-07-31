@@ -109,9 +109,9 @@ struct Token {
   static const uint8_t Sync = 0x4;
 
   static const int TAG = 0;
-  static const int FLAGS = 0;
-  static const int PAD = 0;
-  static const int SEQ = 0;
+  static const int FLAGS = 1;
+  static const int PAD = 2;
+  static const int SEQ = 3;
 };
 
 struct Cache {

@@ -50,16 +50,3 @@ void setup() {
     arc[i].head = node + hi;
   }
 }
-
-
-void check() {
-  // printf("no check\n");
-  uint64_t check_sum = 0;
-  for (int i = 0; i < M_arc; ++ i) {
-#if !SIMP
-    check_sum += arc[i].tail->number;
-#endif
-    check_sum += arc[i].head->number;
-  }
-  printf("check: %lx\n", check_sum);
-}

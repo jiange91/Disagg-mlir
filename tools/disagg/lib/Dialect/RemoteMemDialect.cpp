@@ -194,9 +194,15 @@ void mlir::rmem::readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> 
 }
 
 Value Token::get_token(OpBuilder &rewriter, Value offI64, ModuleOp mop, mlir::Location loc) {
-  Value tbase = rewriter.create<LLVM::LoadOp>(loc, 
-    rewriter.create<LLVM::AddressOfOp>(loc, rmem::getOrCreateTokens(mop))
-  );
+  SmallVector<LLVM::GEPArg, 2> base_inds;
+  base_inds.push_back(0);
+  base_inds.push_back(0);
+  Value tbase = rewriter.create<LLVM::GEPOp>(loc, 
+    LLVM::LLVMPointerType::get(rmem::getCacheTokenType(mop.getContext())),
+    rewriter.create<LLVM::AddressOfOp>(loc, rmem::getOrCreateTokens(mop)),
+    base_inds
+    );
+
   SmallVector<LLVM::GEPArg, 1> inds{offI64};
   Value toff = rewriter.create<LLVM::GEPOp>(loc, 
     tbase.getType(),
@@ -207,7 +213,7 @@ Value Token::get_token(OpBuilder &rewriter, Value offI64, ModuleOp mop, mlir::Lo
 
 Value Token::get_field_ptr(OpBuilder &rewriter, Value token, int field, Type field_type, mlir::Location loc) {
   SmallVector<LLVM::GEPArg, 2> inds;
-  inds.push_back(rewriter.create<arith::ConstantIntOp>(loc, 0, 64).getResult());
+  inds.push_back(0);
   inds.push_back(field);
 
   Value fp = rewriter.create<LLVM::GEPOp>(loc, LLVM::LLVMPointerType::get(field_type), token, inds);
@@ -215,15 +221,14 @@ Value Token::get_field_ptr(OpBuilder &rewriter, Value token, int field, Type fie
 }
 
 Value Token::check_flag(OpBuilder &rewriter, Value token, uint8_t flag, mlir::Location loc) {
-  Value fv = rewriter.create<LLVM::LoadOp>(loc, 
-    Token::get_field_ptr(rewriter, token, Token::FLAGS, rewriter.getI8Type(), loc));
-  Value b = rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::ne, 
-    rewriter.create<arith::AndIOp>(loc, 
-      fv, 
-      rewriter.create<arith::ConstantIntOp>(loc, flag, 8)),
-    rewriter.create<arith::ConstantIntOp>(loc, 0, 8)
+  Value fv32 = rewriter.create<arith::ExtSIOp>(loc, rewriter.getI32Type(), 
+    rewriter.create<LLVM::LoadOp>(loc, 
+      Token::get_field_ptr(rewriter, token, Token::FLAGS, rewriter.getI8Type(), loc))
   );
-  Value r = rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), b);
+  Value b = rewriter.create<arith::AndIOp>(loc, 
+      fv32, 
+      rewriter.create<arith::ConstantIntOp>(loc, flag, 32));
+  Value r = rewriter.create<arith::TruncIOp>(loc, rewriter.getI8Type(), b);
   return r;
 }
 
@@ -315,23 +320,29 @@ Value Cache::get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr
     rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), vaddr), loc);
 
   Value isValid = Token::valid(rewriter, pToken, loc);
+  scf::IfOp ifNeedPoll = rewriter.create<scf::IfOp>(loc, 
+    rewriter.getI1Type(),
+    rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::ne, 
+      rewriter.create<arith::ExtSIOp>(loc, rewriter.getI32Type(), isValid), 
+      rewriter.create<arith::ConstantIntOp>(loc, 0, 32)),
+    true
+  );
 
+  rewriter.setInsertionPointToStart(ifNeedPoll.thenBlock());
   Value tokenTag = rewriter.create<LLVM::LoadOp>(loc, 
     Token::get_field_ptr(rewriter, pToken, Token::TAG, rewriter.getI64Type(), loc));
-  Value tagMatch = rewriter.create<arith::CmpIOp>(loc, 
-    arith::CmpIPredicate::eq,
-    rewriter.create<arith::ConstantIntOp>(loc, 0, 64),
-    tokenTag
-  );
-  Value ifNeedPoll = rewriter.create<arith::CmpIOp>(loc, 
+  Value tagNotMatch = rewriter.create<arith::CmpIOp>(loc, 
     arith::CmpIPredicate::ne,
-    rewriter.create<arith::ConstantIntOp>(loc, 1, 8),
-    rewriter.create<arith::AndIOp>(loc, 
-      isValid, 
-      rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), tagMatch))
+    tokenTag,
+    tagI64
   );
+  rewriter.create<scf::YieldOp>(loc, tagNotMatch);
 
-  auto needPoll = rewriter.create<scf::IfOp>(loc, outputType, ifNeedPoll, true);
+  rewriter.setInsertionPointToStart(ifNeedPoll.elseBlock());
+  rewriter.create<scf::YieldOp>(loc, rewriter.create<arith::ConstantIntOp>(loc, 1, 1).getResult());
+  rewriter.setInsertionPointAfter(ifNeedPoll);
+
+  auto needPoll = rewriter.create<scf::IfOp>(loc, outputType, ifNeedPoll.getResult(0), true);
   rewriter.setInsertionPointToStart(needPoll.thenBlock());
   this->request_poll(rewriter, mop, offI32, tagI64, loc);
   rewriter.create<scf::YieldOp>(loc, laddr);

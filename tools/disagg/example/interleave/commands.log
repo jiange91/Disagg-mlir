@@ -1,0 +1,7 @@
+# at /users/Zijian/Disagg-mlir/tools/disagg/example/interleave
+pldisagg --prop-rmem mlir/visit_anno.mlir -o mlir/target.mlir
+pldisagg --convert-target-to-remote mlir/target.mlir -o mlir/remote.mlir
+pldisagg mlir/remote.mlir --emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg" --reconcile-unrealized-cas
+ts -cse --canonicalize -o mlir/lower.mlir
+mlir-translate --mlir-to-llvmir mlir/lower.mlir -o mlir/lower.ll
+clang-16 -O3 -c mlir/lower.ll -o mlir/lower.o

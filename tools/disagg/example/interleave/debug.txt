@@ -1,0 +1,3485 @@
+2 caches read
+
+//===-------------------------------------------===//
+Legalizing operation : 'builtin.module'(0x3ca92c0) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.func'(0x3c20ca0) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.global'(0x3c0d8e0) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.global'(0x3c5da50) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.global'(0x3c60490) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.global'(0x3c606f0) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.global -> ()' {
+    ** Insert  : 'llvm.mlir.global'(0x3c220f0)
+    ** Erase   : 'rmem.llvm.global'(0x3c606f0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.global'(0x3c220f0) {
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.func'(0x3c78dc0) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.global'(0x3c78e20) {
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.func'(0x3ca3460) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.func -> ()' {
+    ** Insert  : 'llvm.func'(0x3c221e0)
+    ** Erase   : 'func.func'(0x3ca3460)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.func'(0x3c221e0) {
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c79190) {
+  %0 = "arith.constant"() {value = 1.000000e+06 : f64} : () -> f64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3cd5160)
+    ** Replace : 'arith.constant'(0x3c79190)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3cd5160) {
+      %0 = "llvm.mlir.constant"() {value = 1.000000e+06 : f64} : () -> f64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c86fd0) {
+  %2 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ccf6c0)
+    ** Replace : 'arith.constant'(0x3c86fd0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ccf6c0) {
+      %2 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.call'(0x3c89a60) {
+  "func.call"() {callee = @setup} : () -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.call -> ()' {
+    ** Insert  : 'llvm.call'(0x3cdad80)
+    ** Replace : 'func.call'(0x3c89a60)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3cdad80) {
+      "llvm.call"() {callee = @setup, fastmathFlags = #llvm.fastmath<none>} : () -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.addressof'(0x3c8c4b0) {
+  %4 = "llvm.mlir.addressof"() {global_name = @str0} : () -> !llvm.ptr<array<13 x i8>>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3c90440) {
+  %5 = "llvm.getelementptr"(%4) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<array<13 x i8>>) -> !llvm.ptr<i8>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.call'(0x3c92f10) {
+  %6 = "llvm.call"(%5) {callee = @printf, fastmathFlags = #llvm.fastmath<none>} : (!llvm.ptr<i8>) -> i32
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.call'(0x3c271d0) {
+  %7 = "func.call"() {callee = @microtime} : () -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.call -> ()' {
+    ** Insert  : 'llvm.call'(0x3cdae30)
+    ** Replace : 'func.call'(0x3c271d0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3cdae30) {
+      %7 = "llvm.call"() {callee = @microtime, fastmathFlags = #llvm.fastmath<none>} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.addressof'(0x3c96fe0) {
+  %9 = "rmem.llvm.addressof"() {global_name = @arc} : () -> !llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.addressof -> ()' {
+    ** Insert  : 'llvm.mlir.addressof'(0x3cdff30)
+    ** Replace : 'rmem.llvm.addressof'(0x3c96fe0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cdff30) {
+      %9 = "llvm.mlir.addressof"() {global_name = @arc} : () -> !llvm.ptr<ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.load'(0x3c970a0) {
+  %11 = "rmem.llvm.load"(%10) : (!llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>>) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.load -> ()' {
+    ** Insert  : 'llvm.load'(0x3ce00e0)
+    ** Replace : 'rmem.llvm.load'(0x3c970a0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3ce00e0) {
+      %11 = "llvm.load"(%9) : (!llvm.ptr<ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>>) -> !llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.call'(0x3c98670) {
+  "func.call"(%12) {callee = @visit} : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.call -> ()' {
+    ** Failure : unable to convert type for operand #0, type was '!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>'
+  } -> FAILURE : pattern failed to match
+
+  * Pattern : 'func.call -> ()' {
+    ** Insert  : 'func.call'(0x3cdffc0)
+    ** Replace : 'func.call'(0x3c98670)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'func.call'(0x3cdffc0) {
+      "func.call"(%11) {callee = @visit} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'func.call -> ()' {
+        ** Insert  : 'llvm.call'(0x3ce2670)
+        ** Replace : 'func.call'(0x3cdffc0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.call'(0x3ce2670) {
+          "llvm.call"(%11) {callee = @visit, fastmathFlags = #llvm.fastmath<none>} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.call'(0x3c98700) {
+  %13 = "func.call"() {callee = @microtime} : () -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.call -> ()' {
+    ** Insert  : 'llvm.call'(0x3ce3d10)
+    ** Replace : 'func.call'(0x3c98700)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3ce3d10) {
+      %13 = "llvm.call"() {callee = @microtime, fastmathFlags = #llvm.fastmath<none>} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.addressof'(0x3c99ca0) {
+  %15 = "llvm.mlir.addressof"() {global_name = @str1} : () -> !llvm.ptr<array<18 x i8>>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3c9b250) {
+  %16 = "llvm.getelementptr"(%15) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.subi'(0x3c21a70) {
+  %17 = "arith.subi"(%14, %8) : (i64, i64) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.subi -> ()' {
+    ** Insert  : 'llvm.sub'(0x3c859d0)
+    ** Replace : 'arith.subi'(0x3c21a70)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.sub'(0x3c859d0) {
+      %17 = "llvm.sub"(%13, %7) : (i64, i64) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.sitofp'(0x3c21b80) {
+  %19 = "arith.sitofp"(%18) : (i64) -> f64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.sitofp -> ()' {
+    ** Insert  : 'llvm.sitofp'(0x3cb74b0)
+    ** Replace : 'arith.sitofp'(0x3c21b80)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.sitofp'(0x3cb74b0) {
+      %19 = "llvm.sitofp"(%17) : (i64) -> f64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.divf'(0x3c86df0) {
+  %21 = "arith.divf"(%20, %1) : (f64, f64) -> f64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.divf -> ()' {
+    ** Insert  : 'llvm.fdiv'(0x3c85a80)
+    ** Replace : 'arith.divf'(0x3c86df0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.fdiv'(0x3c85a80) {
+      %21 = "llvm.fdiv"(%19, %0) {fastmathFlags = #llvm.fastmath<none>} : (f64, f64) -> f64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.call'(0x3c21f90) {
+  %23 = "llvm.call"(%16, %22) {callee = @printf, fastmathFlags = #llvm.fastmath<none>} : (!llvm.ptr<i8>, f64) -> i32
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.addressof'(0x3c220a0) {
+  %24 = "llvm.mlir.addressof"() {global_name = @str2} : () -> !llvm.ptr<array<18 x i8>>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3c22160) {
+  %25 = "llvm.getelementptr"(%24) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.mlir.addressof'(0x3c86f50) {
+  %26 = "llvm.mlir.addressof"() {global_name = @g_payload} : () -> !llvm.ptr<array<23 x i32>>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3c22500) {
+  %27 = "llvm.getelementptr"(%26) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<array<23 x i32>>) -> !llvm.ptr<i32>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3c225f0) {
+  %28 = "llvm.getelementptr"(%27) {rawConstantIndices = array<i32: 5>} : (!llvm.ptr<i32>) -> !llvm.ptr<i32>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.load'(0x3ca31f0) {
+  %29 = "llvm.load"(%28) : (!llvm.ptr<i32>) -> i32
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.call'(0x3ca32e0) {
+  %30 = "llvm.call"(%25, %29) {callee = @printf, fastmathFlags = #llvm.fastmath<none>} : (!llvm.ptr<i8>, i32) -> i32
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.return'(0x3ca33e0) {
+  "func.return"(%3) : (i32) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.return -> ()' {
+    ** Insert  : 'llvm.return'(0x3ce3d70)
+    ** Replace : 'func.return'(0x3ca33e0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.return'(0x3ce3d70) {
+      "llvm.return"(%2) : (i32) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.func'(0x3ca34c0) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.func -> ()' {
+    ** Insert  : 'llvm.func'(0x3ce25d0)
+    ** Erase   : 'func.func'(0x3ca34c0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.func'(0x3ce25d0) {
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.func'(0x3ca3180) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.func -> ()' {
+    ** Insert  : 'llvm.func'(0x3ce3ec0)
+    ** Erase   : 'func.func'(0x3ca3180)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.func'(0x3ce3ec0) {
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c9b2e0) {
+  %0 = "arith.constant"() {value = 1000 : i64} : () -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce2250)
+    ** Replace : 'arith.constant'(0x3c9b2e0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce2250) {
+      %0 = "llvm.mlir.constant"() {value = 1000 : i64} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3ca3390) {
+  %2 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce22b0)
+    ** Replace : 'arith.constant'(0x3ca3390)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce22b0) {
+      %2 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3ca3280) {
+  %4 = "arith.constant"() {value = 1 : i64} : () -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce2310)
+    ** Replace : 'arith.constant'(0x3ca3280)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce2310) {
+      %4 = "llvm.mlir.constant"() {value = 1 : i64} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.alloca'(0x3ca5ff0) {
+  %6 = "llvm.alloca"(%5) : (i64) -> !llvm.ptr<struct<"struct.timespec", (i64, i64)>>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.call'(0x3ca6080) {
+  %7 = "llvm.call"(%3, %6) {callee = @clock_gettime, fastmathFlags = #llvm.fastmath<none>} : (i32, !llvm.ptr<struct<"struct.timespec", (i64, i64)>>) -> i32
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3ca7620) {
+  %8 = "llvm.getelementptr"(%6) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<struct<"struct.timespec", (i64, i64)>>) -> !llvm.ptr<i64>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.load'(0x3ca76b0) {
+  %9 = "llvm.load"(%8) : (!llvm.ptr<i64>) -> i64
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.muli'(0x3ca7740) {
+  %10 = "arith.muli"(%9, %1) : (i64, i64) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.muli -> ()' {
+    ** Insert  : 'llvm.mul'(0x3ce2370)
+    ** Replace : 'arith.muli'(0x3ca7740)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mul'(0x3ce2370) {
+      %10 = "llvm.mul"(%9, %0) : (i64, i64) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.muli'(0x3ca77f0) {
+  %12 = "arith.muli"(%11, %1) : (i64, i64) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.muli -> ()' {
+    ** Insert  : 'llvm.mul'(0x3ce2420)
+    ** Replace : 'arith.muli'(0x3ca77f0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mul'(0x3ce2420) {
+      %12 = "llvm.mul"(%10, %0) : (i64, i64) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.getelementptr'(0x3ca8d90) {
+  %14 = "llvm.getelementptr"(%6) {rawConstantIndices = array<i32: 0, 1>} : (!llvm.ptr<struct<"struct.timespec", (i64, i64)>>) -> !llvm.ptr<i64>
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'llvm.load'(0x3ca8e20) {
+  %15 = "llvm.load"(%14) : (!llvm.ptr<i64>) -> i64
+
+} -> SUCCESS : operation marked legal by the target
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.divsi'(0x3ca8eb0) {
+  %16 = "arith.divsi"(%15, %1) : (i64, i64) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.divsi -> ()' {
+    ** Insert  : 'llvm.sdiv'(0x3ce24d0)
+    ** Replace : 'arith.divsi'(0x3ca8eb0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.sdiv'(0x3ce24d0) {
+      %16 = "llvm.sdiv"(%15, %0) : (i64, i64) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.addi'(0x3ca8fc0) {
+  %18 = "arith.addi"(%13, %17) : (i64, i64) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.addi -> ()' {
+    ** Insert  : 'llvm.add'(0x3ce3310)
+    ** Replace : 'arith.addi'(0x3ca8fc0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.add'(0x3ce3310) {
+      %18 = "llvm.add"(%12, %16) : (i64, i64) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.return'(0x3ca4a10) {
+  "func.return"(%19) : (i64) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.return -> ()' {
+    ** Insert  : 'llvm.return'(0x3ce33b0)
+    ** Replace : 'func.return'(0x3ca4a10)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.return'(0x3ce33b0) {
+      "llvm.return"(%18) : (i64) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.func'(0x3c99cf0) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.func -> ()' {
+  } -> FAILURE : pattern failed to match
+
+  * Pattern : 'func.func -> ()' {
+    ** Insert  : 'func.func'(0x3ce2570)
+    ** Erase   : 'func.func'(0x3c99cf0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'func.func'(0x3ce2570) {
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'func.func -> ()' {
+        ** Insert  : 'llvm.func'(0x3ce4330)
+        ** Erase   : 'func.func'(0x3ce2570)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.func'(0x3ce4330) {
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c8c510) {
+  %0 = "arith.constant"() {value = 67108864 : index} : () -> index
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce43a0)
+    ** Replace : 'arith.constant'(0x3c8c510)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce43a0) {
+      %0 = "llvm.mlir.constant"() {value = 67108864 : index} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3ca4aa0) {
+  %2 = "arith.constant"() {value = 0 : index} : () -> index
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce45c0)
+    ** Replace : 'arith.constant'(0x3ca4aa0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce45c0) {
+      %2 = "llvm.mlir.constant"() {value = 0 : index} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c904d0) {
+  %4 = "arith.constant"() {value = 1 : index} : () -> index
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce4620)
+    ** Replace : 'arith.constant'(0x3c904d0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce4620) {
+      %4 = "llvm.mlir.constant"() {value = 1 : index} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.constant'(0x3c94490) {
+  %6 = "arith.constant"() {value = 1 : i64} : () -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.constant -> ()' {
+    ** Insert  : 'llvm.mlir.constant'(0x3ce0d80)
+    ** Replace : 'arith.constant'(0x3c94490)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.constant'(0x3ce0d80) {
+      %6 = "llvm.mlir.constant"() {value = 1 : i64} : () -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.alloca_ptr'(0x3cabd80) {
+  %8 = "rmem.alloca_ptr"(%7) {elem_type = !llvm.struct<"struct.node", (ptr<struct<"struct.arc", (ptr<struct<"struct.node">>, ptr<struct<"struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>} : (i64) -> !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.alloca_ptr -> ()' {
+    ** Insert  : 'llvm.alloca'(0x3ce3c80)
+    ** Replace : 'rmem.alloca_ptr'(0x3cabd80)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.alloca'(0x3ce3c80) {
+      %8 = "llvm.alloca"(%6) : (i64) -> !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.alloca_ptr'(0x3cabe10) {
+  %10 = "rmem.alloca_ptr"(%7) {elem_type = !llvm.struct<"struct.arc", (ptr<struct<"struct.node", (ptr<struct<"struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"struct.arc">>, array<8 x i32>)>} : (i64) -> !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.alloca_ptr -> ()' {
+    ** Insert  : 'llvm.alloca'(0x3ce7ad0)
+    ** Replace : 'rmem.alloca_ptr'(0x3cabe10)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.alloca'(0x3ce7ad0) {
+      %10 = "llvm.alloca"(%6) : (i64) -> !llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.getelementptr'(0x3cabea0) {
+  %12 = "rmem.llvm.getelementptr"(%11) {structIndices = array<i32: 0, 0>} : (!llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>) -> !llvm.ptr<!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.getelementptr -> ()' {
+    ** Insert  : 'llvm.getelementptr'(0x3ce7c90)
+    ** Replace : 'rmem.llvm.getelementptr'(0x3cabea0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3ce7c90) {
+      %12 = "llvm.getelementptr"(%10) {rawConstantIndices = array<i32: 0, 0>} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> !llvm.ptr<ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'scf.for'(0x3cade00) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'scf.for -> ()' {
+    ** Insert  : 'arith.addi'(0x3ce7840)
+    ** Insert  : 'cf.br'(0x3c37e70)
+    ** Erase   : 'scf.yield'(0x3cabf20)
+    ** Insert  : 'cf.br'(0x3cafad0)
+    ** Insert  : 'arith.cmpi'(0x3ce6df0)
+    ** Insert  : 'cf.cond_br'(0x3ce0160)
+    ** Replace : 'scf.for'(0x3cade00)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3ce7840) {
+      %22 = "arith.addi"(<<UNKNOWN SSA VALUE>>, %5) : (index, index) -> index
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3ce7e90)
+        ** Replace : 'arith.addi'(0x3ce7840)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3ce7e90) {
+          %22 = "llvm.add"(%14, %4) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'cf.br'(0x3c37e70) {
+      "cf.br"(%23)[^bb1] : (index) -> ()
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'cf.br -> ()' {
+        ** Insert  : 'llvm.br'(0x3ce7f30)
+        ** Replace : 'cf.br'(0x3c37e70)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.br'(0x3ce7f30) {
+          "llvm.br"(%22)[^bb1] : (i64) -> ()
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'cf.br'(0x3cafad0) {
+      "cf.br"(%3)[^bb1] : (index) -> ()
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'cf.br -> ()' {
+        ** Insert  : 'llvm.br'(0x3ce7fd0)
+        ** Replace : 'cf.br'(0x3cafad0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.br'(0x3ce7fd0) {
+          "llvm.br"(%2)[^bb1] : (i64) -> ()
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3ce6df0) {
+      %15 = "arith.cmpi"(<<UNKNOWN SSA VALUE>>, %1) {predicate = 2 : i64} : (index, index) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3ce5eb0)
+        ** Replace : 'arith.cmpi'(0x3ce6df0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3ce5eb0) {
+          %15 = "llvm.icmp"(%14, %0) {predicate = 2 : i64} : (i64, i64) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'cf.cond_br'(0x3ce0160) {
+      "cf.cond_br"(%16)[^bb2, ^bb3] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'cf.cond_br -> ()' {
+        ** Insert  : 'llvm.cond_br'(0x3ce5f50)
+        ** Replace : 'cf.cond_br'(0x3ce0160)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.cond_br'(0x3ce5f50) {
+          "llvm.cond_br"(%15)[^bb2, ^bb3] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.index_cast'(0x3cadf60) {
+  %17 = "arith.index_cast"(<<UNKNOWN SSA VALUE>>) : (index) -> i32
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.index_cast -> ()' {
+    ** Insert  : 'llvm.trunc'(0x3ce0050)
+    ** Replace : 'arith.index_cast'(0x3cadf60)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.trunc'(0x3ce0050) {
+      %17 = "llvm.trunc"(%14) : (i64) -> i32
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'arith.index_cast'(0x3cae050) {
+  %19 = "arith.index_cast"(<<UNKNOWN SSA VALUE>>) : (index) -> i64
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'arith.index_cast -> ()' {
+    ** Replace : 'arith.index_cast'(0x3cae050)
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.getelementptr'(0x3caf6e0) {
+  %20 = "rmem.llvm.getelementptr"(<<UNKNOWN SSA VALUE>>, %19) {structIndices = array<i32>} : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i64) -> !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.getelementptr -> ()' {
+    ** Insert  : 'llvm.getelementptr'(0x3ce62e0)
+    ** Replace : 'rmem.llvm.getelementptr'(0x3caf6e0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3ce62e0) {
+      %20 = "llvm.getelementptr"(%arg0, %14) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i64) -> !llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.load'(0x3caf7f0) {
+  %22 = "rmem.llvm.load"(%21) : (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>) -> !llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.load -> ()' {
+    ** Insert  : 'llvm.ptrtoint'(0x3ce7a40)
+    ** Insert  : 'arith.constant'(0x3ce6ee0)
+    ** Insert  : 'arith.andi'(0x3ce63f0)
+    ** Insert  : 'arith.constant'(0x3ce6640)
+    ** Insert  : 'arith.divui'(0x3ced1e0)
+    ** Insert  : 'arith.constant'(0x3ce66a0)
+    ** Insert  : 'arith.remsi'(0x3ced290)
+    ** Insert  : 'arith.trunci'(0x3ce6020)
+    ** Insert  : 'arith.constant'(0x3ced340)
+    ** Insert  : 'arith.addi'(0x3ced3a0)
+    ** Insert  : 'arith.extsi'(0x3ced7d0)
+    ** Insert  : 'llvm.mlir.addressof'(0x3ceedb0)
+    ** Insert  : 'llvm.load'(0x3ceee10)
+    ** Insert  : 'llvm.getelementptr'(0x3ceeea0)
+    ** Insert  : 'llvm.ptrtoint'(0x3ceef50)
+    ** Insert  : 'arith.constant'(0x3ceefe0)
+    ** Insert  : 'arith.extsi'(0x3cef040)
+    ** Insert  : 'arith.constant'(0x3cef0d0)
+    ** Insert  : 'arith.muli'(0x3cef130)
+    ** Insert  : 'arith.constant'(0x3cef1e0)
+    ** Insert  : 'arith.remsi'(0x3cef240)
+    ** Insert  : 'arith.addi'(0x3cef2f0)
+    ** Insert  : 'arith.addi'(0x3cef3a0)
+    ** Insert  : 'llvm.mlir.addressof'(0x3cf09a0)
+    ** Insert  : 'llvm.load'(0x3cf0a00)
+    ** Insert  : 'llvm.getelementptr'(0x3cf0a90)
+    ** Insert  : 'llvm.bitcast'(0x3cf0b40)
+    ** Insert  : 'arith.constant'(0x3cf0bd0)
+    ** Insert  : 'llvm.getelementptr'(0x3cf2120)
+    ** Insert  : 'llvm.load'(0x3cf21d0)
+    ** Insert  : 'arith.constant'(0x3cf2260)
+    ** Insert  : 'arith.andi'(0x3cf22c0)
+    ** Insert  : 'arith.constant'(0x3cf2370)
+    ** Insert  : 'arith.cmpi'(0x3cf23d0)
+    ** Insert  : 'arith.extui'(0x3cf2480)
+    ** Insert  : 'arith.constant'(0x3cf2510)
+    ** Insert  : 'llvm.getelementptr'(0x3cf2570)
+    ** Insert  : 'llvm.load'(0x3cf2620)
+    ** Insert  : 'arith.constant'(0x3cf26b0)
+    ** Insert  : 'arith.cmpi'(0x3cf2710)
+    ** Insert  : 'arith.constant'(0x3cf27c0)
+    ** Insert  : 'arith.extui'(0x3cf2820)
+    ** Insert  : 'arith.andi'(0x3cf28b0)
+    ** Insert  : 'arith.cmpi'(0x3cf2960)
+    ** Insert  : 'scf.if'(0x3ce6150)
+    ** Insert  : 'arith.constant'(0x3cf2a60)
+    ** Insert  : 'arith.constant'(0x3cf4010)
+    ** Insert  : 'llvm.call'(0x3c790a0)
+    ** Insert  : 'arith.constant'(0x3cf4880)
+    ** Insert  : 'arith.constant'(0x3cf48e0)
+    ** Insert  : 'arith.addi'(0x3cf4940)
+    ** Insert  : 'arith.extsi'(0x3cf49f0)
+    ** Insert  : 'llvm.mlir.addressof'(0x3cf4a80)
+    ** Insert  : 'llvm.load'(0x3cf4ae0)
+    ** Insert  : 'llvm.getelementptr'(0x3cf4b70)
+    ** Insert  : 'arith.constant'(0x3cf4c20)
+    ** Insert  : 'arith.constant'(0x3cf4c80)
+    ** Insert  : 'llvm.getelementptr'(0x3cf4ce0)
+    ** Insert  : 'llvm.load'(0x3cf4d90)
+    ** Insert  : 'llvm.call'(0x3ce60a0)
+    ** Insert  : 'scf.yield'(0x3ce6f70)
+    ** Insert  : 'scf.yield'(0x3cf7840)
+    ** Insert  : 'llvm.load'(0x3cf78d0)
+    ** Replace : 'rmem.llvm.load'(0x3caf7f0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.ptrtoint'(0x3ce7a40) {
+      %22 = "llvm.ptrtoint"(%20) : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3ce6ee0) {
+      %23 = "arith.constant"() {value = -6144 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfa1e0)
+        ** Replace : 'arith.constant'(0x3ce6ee0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfa1e0) {
+          %23 = "llvm.mlir.constant"() {value = -6144 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3ce63f0) {
+      %25 = "arith.andi"(%22, %24) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3cfa240)
+        ** Replace : 'arith.andi'(0x3ce63f0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3cfa240) {
+          %25 = "llvm.and"(%22, %23) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3ce6640) {
+      %27 = "arith.constant"() {value = 6144 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfa2f0)
+        ** Replace : 'arith.constant'(0x3ce6640)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfa2f0) {
+          %27 = "llvm.mlir.constant"() {value = 6144 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.divui'(0x3ced1e0) {
+      %29 = "arith.divui"(%26, %28) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.divui -> ()' {
+        ** Insert  : 'llvm.udiv'(0x3cfa350)
+        ** Replace : 'arith.divui'(0x3ced1e0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.udiv'(0x3cfa350) {
+          %29 = "llvm.udiv"(%25, %27) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3ce66a0) {
+      %31 = "arith.constant"() {value = 4096 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfa400)
+        ** Replace : 'arith.constant'(0x3ce66a0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfa400) {
+          %31 = "llvm.mlir.constant"() {value = 4096 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.remsi'(0x3ced290) {
+      %33 = "arith.remsi"(%30, %32) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.remsi -> ()' {
+        ** Insert  : 'llvm.srem'(0x3cfa460)
+        ** Replace : 'arith.remsi'(0x3ced290)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.srem'(0x3cfa460) {
+          %33 = "llvm.srem"(%29, %31) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.trunci'(0x3ce6020) {
+      %35 = "arith.trunci"(%34) : (i64) -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.trunci -> ()' {
+        ** Insert  : 'llvm.trunc'(0x3cfa510)
+        ** Replace : 'arith.trunci'(0x3ce6020)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.trunc'(0x3cfa510) {
+          %35 = "llvm.trunc"(%33) : (i64) -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3ced340) {
+      %37 = "arith.constant"() {value = 2097152 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfa5a0)
+        ** Replace : 'arith.constant'(0x3ced340)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfa5a0) {
+          %37 = "llvm.mlir.constant"() {value = 2097152 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3ced3a0) {
+      %39 = "arith.addi"(%36, %38) : (i32, i32) -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cf88c0)
+        ** Replace : 'arith.addi'(0x3ced3a0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cf88c0) {
+          %39 = "llvm.add"(%35, %37) : (i32, i32) -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3ced7d0) {
+      %41 = "arith.extsi"(%40) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3cf8970)
+        ** Replace : 'arith.extsi'(0x3ced7d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3cf8970) {
+          %41 = "llvm.sext"(%39) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3ceedb0) {
+      %43 = "llvm.mlir.addressof"() {global_name = @tokens} : () -> !llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3ceee10) {
+      %44 = "llvm.load"(%43) : (!llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3ceeea0) {
+      %45 = "llvm.getelementptr"(%44, %42) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.ptrtoint'(0x3ceef50) {
+      %46 = "llvm.ptrtoint"(%20) : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3ceefe0) {
+      %47 = "arith.constant"() {value = 1073741824 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8a00)
+        ** Replace : 'arith.constant'(0x3ceefe0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8a00) {
+          %47 = "llvm.mlir.constant"() {value = 1073741824 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3cef040) {
+      %49 = "arith.extsi"(%36) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3cf8b10)
+        ** Replace : 'arith.extsi'(0x3cef040)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3cf8b10) {
+          %49 = "llvm.sext"(%35) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cef0d0) {
+      %51 = "arith.constant"() {value = 6144 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8ba0)
+        ** Replace : 'arith.constant'(0x3cef0d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8ba0) {
+          %51 = "llvm.mlir.constant"() {value = 6144 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.muli'(0x3cef130) {
+      %53 = "arith.muli"(%50, %52) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.muli -> ()' {
+        ** Insert  : 'llvm.mul'(0x3cf8a60)
+        ** Replace : 'arith.muli'(0x3cef130)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mul'(0x3cf8a60) {
+          %53 = "llvm.mul"(%49, %51) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cef1e0) {
+      %55 = "arith.constant"() {value = 6144 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8c00)
+        ** Replace : 'arith.constant'(0x3cef1e0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8c00) {
+          %55 = "llvm.mlir.constant"() {value = 6144 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.remsi'(0x3cef240) {
+      %57 = "arith.remsi"(%46, %56) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.remsi -> ()' {
+        ** Insert  : 'llvm.srem'(0x3cf8c60)
+        ** Replace : 'arith.remsi'(0x3cef240)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.srem'(0x3cf8c60) {
+          %57 = "llvm.srem"(%46, %55) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cef2f0) {
+      %59 = "arith.addi"(%54, %58) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cf9520)
+        ** Replace : 'arith.addi'(0x3cef2f0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cf9520) {
+          %59 = "llvm.add"(%53, %57) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cef3a0) {
+      %61 = "arith.addi"(%48, %60) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cf95d0)
+        ** Replace : 'arith.addi'(0x3cef3a0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cf95d0) {
+          %61 = "llvm.add"(%47, %59) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cf09a0) {
+      %63 = "llvm.mlir.addressof"() {global_name = @rbuf} : () -> !llvm.ptr<ptr<i8>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf0a00) {
+      %64 = "llvm.load"(%63) : (!llvm.ptr<ptr<i8>>) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cf0a90) {
+      %65 = "llvm.getelementptr"(%64, %62) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.bitcast'(0x3cf0b40) {
+      %66 = "llvm.bitcast"(%65) : (!llvm.ptr<i8>) -> !llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf0bd0) {
+      %67 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf9e90)
+        ** Replace : 'arith.constant'(0x3cf0bd0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf9e90) {
+          %67 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cf2120) {
+      %69 = "llvm.getelementptr"(%45, %68) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf21d0) {
+      %70 = "llvm.load"(%69) : (!llvm.ptr<i8>) -> i8
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf2260) {
+      %71 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf9fa0)
+        ** Replace : 'arith.constant'(0x3cf2260)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf9fa0) {
+          %71 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3cf22c0) {
+      %73 = "arith.andi"(%70, %72) : (i8, i8) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3cf9ef0)
+        ** Replace : 'arith.andi'(0x3cf22c0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3cf9ef0) {
+          %73 = "llvm.and"(%70, %71) : (i8, i8) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf2370) {
+      %75 = "arith.constant"() {value = 0 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfa000)
+        ** Replace : 'arith.constant'(0x3cf2370)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfa000) {
+          %75 = "llvm.mlir.constant"() {value = 0 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cf23d0) {
+      %77 = "arith.cmpi"(%74, %76) {predicate = 1 : i64} : (i8, i8) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cfa060)
+        ** Replace : 'arith.cmpi'(0x3cf23d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cfa060) {
+          %77 = "llvm.icmp"(%73, %75) {predicate = 1 : i64} : (i8, i8) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extui'(0x3cf2480) {
+      %79 = "arith.extui"(%78) : (i1) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extui -> ()' {
+        ** Insert  : 'llvm.zext'(0x3cfa110)
+        ** Replace : 'arith.extui'(0x3cf2480)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.zext'(0x3cfa110) {
+          %79 = "llvm.zext"(%77) : (i1) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf2510) {
+      %81 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfaa60)
+        ** Replace : 'arith.constant'(0x3cf2510)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfaa60) {
+          %81 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cf2570) {
+      %83 = "llvm.getelementptr"(%45, %82) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i64>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf2620) {
+      %84 = "llvm.load"(%83) : (!llvm.ptr<i64>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf26b0) {
+      %85 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfaac0)
+        ** Replace : 'arith.constant'(0x3cf26b0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfaac0) {
+          %85 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cf2710) {
+      %87 = "arith.cmpi"(%86, %84) {predicate = 0 : i64} : (i64, i64) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cfab20)
+        ** Replace : 'arith.cmpi'(0x3cf2710)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cfab20) {
+          %87 = "llvm.icmp"(%84, %85) {predicate = 0 : i64} : (i64, i64) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf27c0) {
+      %89 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfabd0)
+        ** Replace : 'arith.constant'(0x3cf27c0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfabd0) {
+          %89 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extui'(0x3cf2820) {
+      %91 = "arith.extui"(%88) : (i1) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extui -> ()' {
+        ** Insert  : 'llvm.zext'(0x3cfac30)
+        ** Replace : 'arith.extui'(0x3cf2820)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.zext'(0x3cfac30) {
+          %91 = "llvm.zext"(%87) : (i1) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3cf28b0) {
+      %93 = "arith.andi"(%80, %92) : (i8, i8) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3cfacc0)
+        ** Replace : 'arith.andi'(0x3cf28b0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3cfacc0) {
+          %93 = "llvm.and"(%79, %91) : (i8, i8) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cf2960) {
+      %95 = "arith.cmpi"(%90, %94) {predicate = 1 : i64} : (i8, i8) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cfad70)
+        ** Replace : 'arith.cmpi'(0x3cf2960)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cfad70) {
+          %95 = "llvm.icmp"(%93, %89) {predicate = 1 : i64} : (i8, i8) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.if'(0x3ce6150) {
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'scf.if -> ()' {
+        ** Insert  : 'cf.br'(0x3cfae10)
+        ** Insert  : 'cf.br'(0x3cfae90)
+        ** Erase   : 'scf.yield'(0x3ce6f70)
+        ** Insert  : 'cf.br'(0x3cfaf30)
+        ** Erase   : 'scf.yield'(0x3cf7840)
+        ** Insert  : 'cf.cond_br'(0x3cfafd0)
+        ** Replace : 'scf.if'(0x3ce6150)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cfae10) {
+          "cf.br"()[^bb6] : () -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3cfb130)
+            ** Replace : 'cf.br'(0x3cfae10)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3cfb130) {
+              "llvm.br"()[^bb6] : () -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cfae90) {
+          "cf.br"(%66)[^bb5] : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3cfb1b0)
+            ** Replace : 'cf.br'(0x3cfae90)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3cfb1b0) {
+              "llvm.br"(%66)[^bb5] : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cfaf30) {
+          "cf.br"(%66)[^bb5] : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3cfb250)
+            ** Replace : 'cf.br'(0x3cfaf30)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3cfb250) {
+              "llvm.br"(%66)[^bb5] : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.cond_br'(0x3cfafd0) {
+          "cf.cond_br"(%96)[^bb3, ^bb4] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.cond_br -> ()' {
+            ** Insert  : 'llvm.cond_br'(0x3cfb2f0)
+            ** Replace : 'cf.cond_br'(0x3cfafd0)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.cond_br'(0x3cfb2f0) {
+              "llvm.cond_br"(%95)[^bb3, ^bb4] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf2a60) {
+      %97 = "arith.constant"() {value = 2 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfd9f0)
+        ** Replace : 'arith.constant'(0x3cf2a60)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfd9f0) {
+          %97 = "llvm.mlir.constant"() {value = 2 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf4010) {
+      %99 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfb3c0)
+        ** Replace : 'arith.constant'(0x3cf4010)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfb3c0) {
+          %99 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3c790a0) {
+      %101 = "llvm.call"(%98, %26, %36, %100) {callee = @cache_request_impl_1, fastmathFlags = #llvm.fastmath<none>} : (i32, i64, i32, i8) -> i32
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf4880) {
+      %102 = "arith.constant"() {value = 1 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfb420)
+        ** Replace : 'arith.constant'(0x3cf4880)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfb420) {
+          %102 = "llvm.mlir.constant"() {value = 1 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf48e0) {
+      %104 = "arith.constant"() {value = 2097152 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfb480)
+        ** Replace : 'arith.constant'(0x3cf48e0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfb480) {
+          %104 = "llvm.mlir.constant"() {value = 2097152 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cf4940) {
+      %106 = "arith.addi"(%36, %105) : (i32, i32) -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cfda50)
+        ** Replace : 'arith.addi'(0x3cf4940)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cfda50) {
+          %106 = "llvm.add"(%35, %104) : (i32, i32) -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3cf49f0) {
+      %108 = "arith.extsi"(%107) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3cfb4e0)
+        ** Replace : 'arith.extsi'(0x3cf49f0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3cfb4e0) {
+          %108 = "llvm.sext"(%106) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cf4a80) {
+      %110 = "llvm.mlir.addressof"() {global_name = @tokens} : () -> !llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf4ae0) {
+      %111 = "llvm.load"(%110) : (!llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cf4b70) {
+      %112 = "llvm.getelementptr"(%111, %109) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf4c20) {
+      %113 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfb570)
+        ** Replace : 'arith.constant'(0x3cf4c20)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfb570) {
+          %113 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cf4c80) {
+      %115 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cfb5d0)
+        ** Replace : 'arith.constant'(0x3cf4c80)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cfb5d0) {
+          %115 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cf4ce0) {
+      %117 = "llvm.getelementptr"(%112, %116) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i16>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf4d90) {
+      %118 = "llvm.load"(%117) : (!llvm.ptr<i16>) -> i16
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3ce60a0) {
+      "llvm.call"(%103, %118) {callee = @poll_qid1, fastmathFlags = #llvm.fastmath<none>} : (i32, i16) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.yield'(0x3ce6f70) {
+      "scf.yield"(%66) : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked 'ignored' during conversion
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.yield'(0x3cf7840) {
+      "scf.yield"(%66) : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked 'ignored' during conversion
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cf78d0) {
+      %121 = "llvm.load"(%120) : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> !llvm.struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.store'(0x3c55b70) {
+  "rmem.llvm.store"(%122, %11) : (!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.store -> ()' {
+    ** Insert  : 'llvm.store'(0x3cfb730)
+    ** Replace : 'rmem.llvm.store'(0x3c55b70)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.store'(0x3cfb730) {
+      "llvm.store"(%121, %10) : (!llvm.struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>, !llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.load'(0x3caf900) {
+  %123 = "rmem.llvm.load"(%13) : (!llvm.ptr<!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>>>) -> !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.load -> ()' {
+    ** Insert  : 'llvm.load'(0x3cfb890)
+    ** Replace : 'rmem.llvm.load'(0x3caf900)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfb890) {
+      %123 = "llvm.load"(%12) : (!llvm.ptr<ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>>) -> !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.load'(0x3caf9d0) {
+  %125 = "rmem.llvm.load"(%124) : (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>>) -> !llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.load -> ()' {
+    ** Insert  : 'llvm.ptrtoint'(0x3cfb920)
+    ** Insert  : 'arith.constant'(0x3cfb630)
+    ** Insert  : 'arith.andi'(0x3cfb690)
+    ** Insert  : 'arith.constant'(0x3cfcbf0)
+    ** Insert  : 'arith.divui'(0x3cfcc50)
+    ** Insert  : 'arith.constant'(0x3cfcd00)
+    ** Insert  : 'arith.remsi'(0x3cfcd60)
+    ** Insert  : 'arith.trunci'(0x3cfce10)
+    ** Insert  : 'arith.constant'(0x3cfcea0)
+    ** Insert  : 'arith.addi'(0x3cfcf00)
+    ** Insert  : 'arith.extsi'(0x3cfcfb0)
+    ** Insert  : 'llvm.mlir.addressof'(0x3cfd040)
+    ** Insert  : 'llvm.load'(0x3cfd0a0)
+    ** Insert  : 'llvm.getelementptr'(0x3cfd130)
+    ** Insert  : 'llvm.ptrtoint'(0x3cfd1e0)
+    ** Insert  : 'arith.constant'(0x3cfd270)
+    ** Insert  : 'arith.extsi'(0x3cfd2d0)
+    ** Insert  : 'arith.constant'(0x3cfd360)
+    ** Insert  : 'arith.muli'(0x3cfd3c0)
+    ** Insert  : 'arith.constant'(0x3cfd470)
+    ** Insert  : 'arith.remsi'(0x3cfd4d0)
+    ** Insert  : 'arith.addi'(0x3cfd580)
+    ** Insert  : 'arith.addi'(0x3cfd630)
+    ** Insert  : 'llvm.mlir.addressof'(0x3cfd6e0)
+    ** Insert  : 'llvm.load'(0x3cfd740)
+    ** Insert  : 'llvm.getelementptr'(0x3cfd7d0)
+    ** Insert  : 'llvm.bitcast'(0x3cfd880)
+    ** Insert  : 'arith.constant'(0x3cfd910)
+    ** Insert  : 'llvm.getelementptr'(0x3cfdb00)
+    ** Insert  : 'llvm.load'(0x3cfdbb0)
+    ** Insert  : 'arith.constant'(0x3cfd970)
+    ** Insert  : 'arith.andi'(0x3cfdc40)
+    ** Insert  : 'arith.constant'(0x3cfdcf0)
+    ** Insert  : 'arith.cmpi'(0x3cfdd50)
+    ** Insert  : 'arith.extui'(0x3cfde00)
+    ** Insert  : 'arith.constant'(0x3cfde90)
+    ** Insert  : 'llvm.getelementptr'(0x3cfdef0)
+    ** Insert  : 'llvm.load'(0x3cfdfa0)
+    ** Insert  : 'arith.constant'(0x3cfe030)
+    ** Insert  : 'arith.cmpi'(0x3cfe090)
+    ** Insert  : 'arith.constant'(0x3cfe140)
+    ** Insert  : 'arith.extui'(0x3cfe1a0)
+    ** Insert  : 'arith.andi'(0x3cfe230)
+    ** Insert  : 'arith.cmpi'(0x3cfe2e0)
+    ** Insert  : 'scf.if'(0x3cfb9b0)
+    ** Insert  : 'arith.constant'(0x3cfe8d0)
+    ** Insert  : 'arith.constant'(0x3cfe990)
+    ** Insert  : 'llvm.call'(0x3c78f50)
+    ** Insert  : 'arith.constant'(0x3cfe9f0)
+    ** Insert  : 'arith.constant'(0x3cfea50)
+    ** Insert  : 'arith.addi'(0x3cfeab0)
+    ** Insert  : 'arith.extsi'(0x3cfeb60)
+    ** Insert  : 'llvm.mlir.addressof'(0x3cfebf0)
+    ** Insert  : 'llvm.load'(0x3cfec50)
+    ** Insert  : 'llvm.getelementptr'(0x3cfece0)
+    ** Insert  : 'arith.constant'(0x3cfed90)
+    ** Insert  : 'arith.constant'(0x3cfedf0)
+    ** Insert  : 'llvm.getelementptr'(0x3cfee50)
+    ** Insert  : 'llvm.load'(0x3cfef00)
+    ** Insert  : 'llvm.call'(0x3cfba60)
+    ** Insert  : 'scf.yield'(0x3cfb800)
+    ** Insert  : 'scf.yield'(0x3cffff0)
+    ** Insert  : 'llvm.load'(0x3d00080)
+    ** Replace : 'rmem.llvm.load'(0x3caf9d0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.ptrtoint'(0x3cfb920) {
+      %125 = "llvm.ptrtoint"(%123) : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfb630) {
+      %126 = "arith.constant"() {value = -512 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3d02990)
+        ** Replace : 'arith.constant'(0x3cfb630)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3d02990) {
+          %126 = "llvm.mlir.constant"() {value = -512 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3cfb690) {
+      %128 = "arith.andi"(%125, %127) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3d029f0)
+        ** Replace : 'arith.andi'(0x3cfb690)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3d029f0) {
+          %128 = "llvm.and"(%125, %126) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfcbf0) {
+      %130 = "arith.constant"() {value = 512 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf80b0)
+        ** Replace : 'arith.constant'(0x3cfcbf0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf80b0) {
+          %130 = "llvm.mlir.constant"() {value = 512 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.divui'(0x3cfcc50) {
+      %132 = "arith.divui"(%129, %131) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.divui -> ()' {
+        ** Insert  : 'llvm.udiv'(0x3cf79b0)
+        ** Replace : 'arith.divui'(0x3cfcc50)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.udiv'(0x3cf79b0) {
+          %132 = "llvm.udiv"(%128, %130) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfcd00) {
+      %134 = "arith.constant"() {value = 2097152 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf7a60)
+        ** Replace : 'arith.constant'(0x3cfcd00)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf7a60) {
+          %134 = "llvm.mlir.constant"() {value = 2097152 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.remsi'(0x3cfcd60) {
+      %136 = "arith.remsi"(%133, %135) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.remsi -> ()' {
+        ** Insert  : 'llvm.srem'(0x3cf7ac0)
+        ** Replace : 'arith.remsi'(0x3cfcd60)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.srem'(0x3cf7ac0) {
+          %136 = "llvm.srem"(%132, %134) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.trunci'(0x3cfce10) {
+      %138 = "arith.trunci"(%137) : (i64) -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.trunci -> ()' {
+        ** Insert  : 'llvm.trunc'(0x3cf7b70)
+        ** Replace : 'arith.trunci'(0x3cfce10)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.trunc'(0x3cf7b70) {
+          %138 = "llvm.trunc"(%136) : (i64) -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfcea0) {
+      %140 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf7c00)
+        ** Replace : 'arith.constant'(0x3cfcea0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf7c00) {
+          %140 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cfcf00) {
+      %142 = "arith.addi"(%139, %141) : (i32, i32) -> i32
+
+      * Fold {
+        ** Replace : 'arith.addi'(0x3cfcf00)
+      } -> SUCCESS
+    } -> SUCCESS : operation was folded
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3cfcfb0) {
+      %143 = "arith.extsi"(%142) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3cf7c60)
+        ** Replace : 'arith.extsi'(0x3cfcfb0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3cf7c60) {
+          %143 = "llvm.sext"(%138) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cfd040) {
+      %145 = "llvm.mlir.addressof"() {global_name = @tokens} : () -> !llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfd0a0) {
+      %146 = "llvm.load"(%145) : (!llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfd130) {
+      %147 = "llvm.getelementptr"(%146, %144) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.ptrtoint'(0x3cfd1e0) {
+      %148 = "llvm.ptrtoint"(%123) : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfd270) {
+      %149 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3d02780)
+        ** Replace : 'arith.constant'(0x3cfd270)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3d02780) {
+          %149 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3cfd2d0) {
+      %151 = "arith.extsi"(%139) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3d02890)
+        ** Replace : 'arith.extsi'(0x3cfd2d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3d02890) {
+          %151 = "llvm.sext"(%138) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfd360) {
+      %153 = "arith.constant"() {value = 512 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3d02920)
+        ** Replace : 'arith.constant'(0x3cfd360)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3d02920) {
+          %153 = "llvm.mlir.constant"() {value = 512 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.muli'(0x3cfd3c0) {
+      %155 = "arith.muli"(%152, %154) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.muli -> ()' {
+        ** Insert  : 'llvm.mul'(0x3d027e0)
+        ** Replace : 'arith.muli'(0x3cfd3c0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mul'(0x3d027e0) {
+          %155 = "llvm.mul"(%151, %153) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfd470) {
+      %157 = "arith.constant"() {value = 512 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf7cf0)
+        ** Replace : 'arith.constant'(0x3cfd470)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf7cf0) {
+          %157 = "llvm.mlir.constant"() {value = 512 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.remsi'(0x3cfd4d0) {
+      %159 = "arith.remsi"(%148, %158) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.remsi -> ()' {
+        ** Insert  : 'llvm.srem'(0x3cf7d50)
+        ** Replace : 'arith.remsi'(0x3cfd4d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.srem'(0x3cf7d50) {
+          %159 = "llvm.srem"(%148, %157) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cfd580) {
+      %161 = "arith.addi"(%156, %160) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cf7e00)
+        ** Replace : 'arith.addi'(0x3cfd580)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cf7e00) {
+          %161 = "llvm.add"(%155, %159) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cfd630) {
+      %163 = "arith.addi"(%150, %162) : (i64, i64) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.addi -> ()' {
+        ** Insert  : 'llvm.add'(0x3cf7eb0)
+        ** Replace : 'arith.addi'(0x3cfd630)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.add'(0x3cf7eb0) {
+          %163 = "llvm.add"(%149, %161) : (i64, i64) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cfd6e0) {
+      %165 = "llvm.mlir.addressof"() {global_name = @rbuf} : () -> !llvm.ptr<ptr<i8>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfd740) {
+      %166 = "llvm.load"(%165) : (!llvm.ptr<ptr<i8>>) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfd7d0) {
+      %167 = "llvm.getelementptr"(%166, %164) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.bitcast'(0x3cfd880) {
+      %168 = "llvm.bitcast"(%167) : (!llvm.ptr<i8>) -> !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfd910) {
+      %169 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf7f60)
+        ** Replace : 'arith.constant'(0x3cfd910)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf7f60) {
+          %169 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfdb00) {
+      %171 = "llvm.getelementptr"(%147, %170) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i8>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfdbb0) {
+      %172 = "llvm.load"(%171) : (!llvm.ptr<i8>) -> i8
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfd970) {
+      %173 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8110)
+        ** Replace : 'arith.constant'(0x3cfd970)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8110) {
+          %173 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3cfdc40) {
+      %175 = "arith.andi"(%172, %174) : (i8, i8) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3cf7fc0)
+        ** Replace : 'arith.andi'(0x3cfdc40)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3cf7fc0) {
+          %175 = "llvm.and"(%172, %173) : (i8, i8) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfdcf0) {
+      %177 = "arith.constant"() {value = 0 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8170)
+        ** Replace : 'arith.constant'(0x3cfdcf0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8170) {
+          %177 = "llvm.mlir.constant"() {value = 0 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cfdd50) {
+      %179 = "arith.cmpi"(%176, %178) {predicate = 1 : i64} : (i8, i8) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cf81d0)
+        ** Replace : 'arith.cmpi'(0x3cfdd50)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cf81d0) {
+          %179 = "llvm.icmp"(%175, %177) {predicate = 1 : i64} : (i8, i8) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extui'(0x3cfde00) {
+      %181 = "arith.extui"(%180) : (i1) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extui -> ()' {
+        ** Insert  : 'llvm.zext'(0x3cf8280)
+        ** Replace : 'arith.extui'(0x3cfde00)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.zext'(0x3cf8280) {
+          %181 = "llvm.zext"(%179) : (i1) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfde90) {
+      %183 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8310)
+        ** Replace : 'arith.constant'(0x3cfde90)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8310) {
+          %183 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfdef0) {
+      %185 = "llvm.getelementptr"(%147, %184) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i64>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfdfa0) {
+      %186 = "llvm.load"(%185) : (!llvm.ptr<i64>) -> i64
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfe030) {
+      %187 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8370)
+        ** Replace : 'arith.constant'(0x3cfe030)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8370) {
+          %187 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cfe090) {
+      %189 = "arith.cmpi"(%188, %186) {predicate = 0 : i64} : (i64, i64) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cf83d0)
+        ** Replace : 'arith.cmpi'(0x3cfe090)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cf83d0) {
+          %189 = "llvm.icmp"(%186, %187) {predicate = 0 : i64} : (i64, i64) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfe140) {
+      %191 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf8480)
+        ** Replace : 'arith.constant'(0x3cfe140)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf8480) {
+          %191 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extui'(0x3cfe1a0) {
+      %193 = "arith.extui"(%190) : (i1) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extui -> ()' {
+        ** Insert  : 'llvm.zext'(0x3cf84e0)
+        ** Replace : 'arith.extui'(0x3cfe1a0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.zext'(0x3cf84e0) {
+          %193 = "llvm.zext"(%189) : (i1) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.andi'(0x3cfe230) {
+      %195 = "arith.andi"(%182, %194) : (i8, i8) -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.andi -> ()' {
+        ** Insert  : 'llvm.and'(0x3cf8570)
+        ** Replace : 'arith.andi'(0x3cfe230)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.and'(0x3cf8570) {
+          %195 = "llvm.and"(%181, %193) : (i8, i8) -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.cmpi'(0x3cfe2e0) {
+      %197 = "arith.cmpi"(%192, %196) {predicate = 1 : i64} : (i8, i8) -> i1
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.cmpi -> ()' {
+        ** Insert  : 'llvm.icmp'(0x3cf8620)
+        ** Replace : 'arith.cmpi'(0x3cfe2e0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.icmp'(0x3cf8620) {
+          %197 = "llvm.icmp"(%195, %191) {predicate = 1 : i64} : (i8, i8) -> i1
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.if'(0x3cfb9b0) {
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'scf.if -> ()' {
+        ** Insert  : 'cf.br'(0x3cf8710)
+        ** Insert  : 'cf.br'(0x3cf8790)
+        ** Erase   : 'scf.yield'(0x3cfb800)
+        ** Insert  : 'cf.br'(0x3cf8d00)
+        ** Erase   : 'scf.yield'(0x3cffff0)
+        ** Insert  : 'cf.cond_br'(0x3cf8da0)
+        ** Replace : 'scf.if'(0x3cfb9b0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cf8710) {
+          "cf.br"()[^bb10] : () -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3cf8830)
+            ** Replace : 'cf.br'(0x3cf8710)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3cf8830) {
+              "llvm.br"()[^bb10] : () -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cf8790) {
+          "cf.br"(%168)[^bb9] : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3d02680)
+            ** Replace : 'cf.br'(0x3cf8790)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3d02680) {
+              "llvm.br"(%168)[^bb9] : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.br'(0x3cf8d00) {
+          "cf.br"(%168)[^bb9] : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.br -> ()' {
+            ** Insert  : 'llvm.br'(0x3cf8f50)
+            ** Replace : 'cf.br'(0x3cf8d00)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.br'(0x3cf8f50) {
+              "llvm.br"(%168)[^bb9] : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'cf.cond_br'(0x3cf8da0) {
+          "cf.cond_br"(%198)[^bb7, ^bb8] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+          * Fold {
+          } -> FAILURE : unable to fold
+
+          * Pattern : 'cf.cond_br -> ()' {
+            ** Insert  : 'llvm.cond_br'(0x3cf8ff0)
+            ** Replace : 'cf.cond_br'(0x3cf8da0)
+
+            //===-------------------------------------------===//
+            Legalizing operation : 'llvm.cond_br'(0x3cf8ff0) {
+              "llvm.cond_br"(%197)[^bb7, ^bb8] {operand_segment_sizes = array<i32: 1, 0, 0>} : (i1) -> ()
+
+            } -> SUCCESS : operation marked legal by the target
+            //===-------------------------------------------===//
+          } -> SUCCESS : pattern applied successfully
+        } -> SUCCESS
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfe8d0) {
+      %199 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3d02580)
+        ** Replace : 'arith.constant'(0x3cfe8d0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3d02580) {
+          %199 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfe990) {
+      %201 = "arith.constant"() {value = 1 : i8} : () -> i8
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf90c0)
+        ** Replace : 'arith.constant'(0x3cfe990)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf90c0) {
+          %201 = "llvm.mlir.constant"() {value = 1 : i8} : () -> i8
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3c78f50) {
+      %203 = "llvm.call"(%200, %129, %139, %202) {callee = @cache_request_impl_2, fastmathFlags = #llvm.fastmath<none>} : (i32, i64, i32, i8) -> i32
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfe9f0) {
+      %204 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf9120)
+        ** Replace : 'arith.constant'(0x3cfe9f0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf9120) {
+          %204 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfea50) {
+      %206 = "arith.constant"() {value = 0 : i32} : () -> i32
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf9180)
+        ** Replace : 'arith.constant'(0x3cfea50)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf9180) {
+          %206 = "llvm.mlir.constant"() {value = 0 : i32} : () -> i32
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.addi'(0x3cfeab0) {
+      %208 = "arith.addi"(%139, %207) : (i32, i32) -> i32
+
+      * Fold {
+        ** Replace : 'arith.addi'(0x3cfeab0)
+      } -> SUCCESS
+    } -> SUCCESS : operation was folded
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.extsi'(0x3cfeb60) {
+      %209 = "arith.extsi"(%208) : (i32) -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.extsi -> ()' {
+        ** Insert  : 'llvm.sext'(0x3cf91e0)
+        ** Replace : 'arith.extsi'(0x3cfeb60)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.sext'(0x3cf91e0) {
+          %209 = "llvm.sext"(%138) : (i32) -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.mlir.addressof'(0x3cfebf0) {
+      %211 = "llvm.mlir.addressof"() {global_name = @tokens} : () -> !llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfec50) {
+      %212 = "llvm.load"(%211) : (!llvm.ptr<ptr<struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfece0) {
+      %213 = "llvm.getelementptr"(%212, %210) {rawConstantIndices = array<i32: -2147483648>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfed90) {
+      %214 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf9270)
+        ** Replace : 'arith.constant'(0x3cfed90)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf9270) {
+          %214 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'arith.constant'(0x3cfedf0) {
+      %216 = "arith.constant"() {value = 0 : i64} : () -> i64
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'arith.constant -> ()' {
+        ** Insert  : 'llvm.mlir.constant'(0x3cf92d0)
+        ** Replace : 'arith.constant'(0x3cfedf0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.mlir.constant'(0x3cf92d0) {
+          %216 = "llvm.mlir.constant"() {value = 0 : i64} : () -> i64
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.getelementptr'(0x3cfee50) {
+      %218 = "llvm.getelementptr"(%213, %217) {rawConstantIndices = array<i32: -2147483648, 0>} : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<i16>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3cfef00) {
+      %219 = "llvm.load"(%218) : (!llvm.ptr<i16>) -> i16
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.call'(0x3cfba60) {
+      "llvm.call"(%205, %219) {callee = @poll_qid2, fastmathFlags = #llvm.fastmath<none>} : (i32, i16) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.yield'(0x3cfb800) {
+      "scf.yield"(%168) : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked 'ignored' during conversion
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'scf.yield'(0x3cffff0) {
+      "scf.yield"(%168) : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked 'ignored' during conversion
+    //===-------------------------------------------===//
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.load'(0x3d00080) {
+      %222 = "llvm.load"(%221) : (!llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> !llvm.struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'rmem.llvm.store'(0x3c57100) {
+  "rmem.llvm.store"(%223, %9) : (!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'rmem.llvm.store -> ()' {
+    ** Insert  : 'llvm.store'(0x3cf9380)
+    ** Replace : 'rmem.llvm.store'(0x3c57100)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.store'(0x3cf9380) {
+      "llvm.store"(%222, %8) : (!llvm.struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>, !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>) -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.call'(0x3ba28f0) {
+  "func.call"(%11, %9, %18) {callee = @computation} : (!llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>, i32) -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.call -> ()' {
+    ** Failure : unable to convert type for operand #0, type was '!llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>'
+  } -> FAILURE : pattern failed to match
+
+  * Pattern : 'func.call -> ()' {
+    ** Insert  : 'func.call'(0x3d02020)
+    ** Replace : 'func.call'(0x3ba28f0)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'func.call'(0x3d02020) {
+      "func.call"(%10, %8, %17) {callee = @computation} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>, i32) -> ()
+
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'func.call -> ()' {
+        ** Insert  : 'llvm.call'(0x3d02310)
+        ** Replace : 'func.call'(0x3d02020)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.call'(0x3d02310) {
+          "llvm.call"(%10, %8, %17) {callee = @computation, fastmathFlags = #llvm.fastmath<none>} : (!llvm.ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc">>, i32, array<23 x i32>)>>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, !llvm.ptr<struct<"_Lowered_disagg@struct.node", (ptr<struct<"_Lowered_disagg@struct.arc", (ptr<struct<"_Lowered_disagg@struct.node">>, ptr<struct<"_Lowered_disagg@struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)>>, i32) -> ()
+
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'scf.yield'(0x3cabf20) {
+  "scf.yield"() : () -> ()
+
+} -> SUCCESS : operation marked 'ignored' during conversion
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.return'(0x3c97120) {
+  "func.return"() : () -> ()
+
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.return -> ()' {
+    ** Insert  : 'llvm.return'(0x3cf9320)
+    ** Replace : 'func.return'(0x3c97120)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'llvm.return'(0x3cf9320) {
+      "llvm.return"() : () -> ()
+
+    } -> SUCCESS : operation marked legal by the target
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Legalizing operation : 'func.func'(0x3ca9260) {
+  * Fold {
+  } -> FAILURE : unable to fold
+
+  * Pattern : 'func.func -> ()' {
+  } -> FAILURE : pattern failed to match
+
+  * Pattern : 'func.func -> ()' {
+    ** Insert  : 'func.func'(0x3cf94a0)
+    ** Erase   : 'func.func'(0x3ca9260)
+
+    //===-------------------------------------------===//
+    Legalizing operation : 'func.func'(0x3cf94a0) {
+      * Fold {
+      } -> FAILURE : unable to fold
+
+      * Pattern : 'func.func -> ()' {
+        ** Insert  : 'llvm.func'(0x3d02470)
+        ** Erase   : 'func.func'(0x3cf94a0)
+
+        //===-------------------------------------------===//
+        Legalizing operation : 'llvm.func'(0x3d02470) {
+        } -> SUCCESS : operation marked legal by the target
+        //===-------------------------------------------===//
+      } -> SUCCESS : pattern applied successfully
+    } -> SUCCESS
+    //===-------------------------------------------===//
+  } -> SUCCESS : pattern applied successfully
+} -> SUCCESS
+//===-------------------------------------------===//

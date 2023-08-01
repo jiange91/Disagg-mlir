@@ -61,8 +61,8 @@ class ForLoopPrefetchInternal {
   };
   
 public:
-  ForLoopPrefetchInternal(scf::ForOp loop, OpBuilder &rewriter, WorkloadComplexityAnalyzer &analyzer, RemoteMemTypeLowerer &typeConverter,     std::unordered_map<int, mlir::rmem::Cache*> &caches): 
-  loop(loop), rewriter(rewriter), loopInternal(0), analyzer(analyzer), typeConverter(typeConverter), caches(caches) {}
+  ForLoopPrefetchInternal(scf::ForOp loop, OpBuilder &rewriter, WorkloadComplexityAnalyzer &analyzer, RemoteMemTypeLowerer &typeConverter,     std::unordered_map<int, mlir::rmem::Cache*> &caches, unsigned prefDist): 
+  loop(loop), rewriter(rewriter), loopInternal(0), analyzer(analyzer), typeConverter(typeConverter), caches(caches), prefDist(prefDist) {}
 
   static bool is_prefetch_target(Operation& op) {
     auto is_v = rmem::isRemoteAccess(&op);
@@ -106,7 +106,7 @@ public:
         if (checkDFS(dfs, &op)) {
           // leave addr computation only
           dfs.erase(&op);
-          unsigned DC = dfsComplexity(dfs);
+          // unsigned DC = dfsComplexity(dfs);
           Value addr;
           if (auto load = dyn_cast<rmem::LoadOp>(op)) {
             addr = load.getAddr();
@@ -118,7 +118,7 @@ public:
           // Not likely
           pattern.prefetches[&op] = std::pair(addr, dfs);
           // distances[&op] = ceilDiv(2000, DC + loopInterval);
-          pattern.distances[&op] = 8;
+          pattern.distances[&op] = this->prefDist;
           pattern.maxDistance = std::max(pattern.maxDistance, pattern.distances[&op]);
         }
       }
@@ -175,18 +175,19 @@ public:
 
   // set builder to correct position before calling this
   // prefOfst: index 
-  // slotOfst: i64
+  // slotOfst: i32
+  // request returns token offset, store to offset[slotofst]
   void emitCacheRequest(Operation *op, unsigned cache_id, Value prefOfst, Value slotOfst, mlir::Location loc) {
     Value vaddr = getAddrByInduction(op, prefOfst);
     Value ofst_id = rewriter.create<rmem::RequestOp>(loc, 
-      rewriter.getI64Type(),
+      rewriter.getI32Type(),
       vaddr,
       rewriter.getI32IntegerAttr(cache_id)
     );
     Value offsets = pattern.offsetIds[op];
     Value pref_ofst_slot = rewriter.create<LLVM::GEPOp>(loc, 
       offsets.getType(), offsets.getType(), offsets,
-      slotOfst
+      rewriter.create<arith::ExtSIOp>(loc, rewriter.getI64Type(), slotOfst).getResult()
     );
     rewriter.create<LLVM::StoreOp>(loc, ofst_id, pref_ofst_slot);
   }
@@ -195,13 +196,13 @@ public:
     rewriter.setInsertionPoint(loop);
     mlir::Location loc = op->getLoc();
     Value disaggAddr = pattern.prefetches[op].first;
-    Type eleType = rmem::getEleTypeFromRemoteMemRef(disaggAddr.getType().cast<RemoteMemRefType>());
     unsigned cache_id = disaggAddr.getType().cast<RemoteMemRefType>().getCanRemote();
 
     // ring for offset id
+    // offset[head + 1]: ptr<i32>
     Value offsets = rewriter.create<LLVM::AllocaOp>(loc, 
-      LLVM::LLVMPointerType::get(loop.getContext(), rewriter.getI64Type(), 0),
-      rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op]+1, 64), 0
+      LLVM::LLVMPointerType::get(loop.getContext(), rewriter.getI32Type(), 0),
+      rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op]+1, 32), 0
     ); 
     pattern.offsetIds[op] = offsets;
     // populate prologue prefetches
@@ -215,7 +216,7 @@ public:
     Value prefOfst = rewriter.create<arith::MulIOp>(loc,
         prologue.getInductionVar(),
         rewriter.create<arith::ConstantIndexOp>(loc, pattern.perBlock));
-    Value slotOfst = rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), prologue.getInductionVar());
+    Value slotOfst = rewriter.create<arith::IndexCastOp>(loc, rewriter.getI32Type(), prologue.getInductionVar());
     emitCacheRequest(op, cache_id, prefOfst, slotOfst, loc);
   }
 
@@ -242,8 +243,10 @@ public:
     auto inBound = rewriter.create<scf::IfOp>(loc, sltTLim, false);
     rewriter.setInsertionPointToStart(inBound.thenBlock()); 
     // pref_slot = (j + ahead) % (ahead + 1)
-    Value slotOfst = rewriter.create<arith::RemSIOp>(loc, 
-      tPre, rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op] + 1, 64));
+    Value slotOfst = rewriter.create<arith::TruncIOp>(loc, rewriter.getI32Type(), 
+      rewriter.create<arith::RemSIOp>(loc, 
+        tPre, rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op] + 1, 64))
+    );
     Value prefOfst = rewriter.create<arith::MulIOp>(loc,
         rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), tPre),
         rewriter.create<arith::ConstantIndexOp>(loc, pattern.perBlock));
@@ -257,11 +260,6 @@ public:
   // sync prefetched and get raw pointer
   void emitInnerPreLoop(Operation *op) {
     mlir::Location loc = loop.getLoc();
-    // int idx = j % (n_ahead + 1);
-    Value slotOfst = rewriter.create<arith::RemSIOp>(loc, 
-        rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), outerLoop.getInductionVar()),
-        rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op] + 1, 64)); 
-
     Value baseOfst = rewriter.create<arith::MulIOp>(loc, 
       outerLoop.getInductionVar(),
       rewriter.create<arith::ConstantIndexOp>(loc, pattern.perBlock));
@@ -269,6 +267,14 @@ public:
     unsigned cache_id = disaggAddr.getType().cast<RemoteMemRefType>().getCanRemote(); 
     unsigned access_type = isa<rmem::LoadOp>(op) ? 0 : 1;
 
+    // int idx = j % (n_ahead + 1);
+    Value slotIdx = rewriter.create<arith::RemSIOp>(loc, 
+        rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), outerLoop.getInductionVar()),
+        rewriter.create<arith::ConstantIntOp>(loc, pattern.distances[op] + 1, 64)); 
+    Value offsets = pattern.offsetIds[op];
+    Value slotOfst = rewriter.create<LLVM::LoadOp>(loc, 
+      rewriter.create<LLVM::GEPOp>(loc, offsets.getType(), offsets, slotIdx)
+    );
     // sync token prefetch
     rewriter.create<rmem::PollReqOp>(loc, 
       slotOfst, rewriter.getI32IntegerAttr(cache_id), rewriter.getI32IntegerAttr(access_type)
@@ -382,6 +388,7 @@ protected:
   WorkloadComplexityAnalyzer &analyzer;
   RemoteMemTypeLowerer &typeConverter;
   std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  unsigned prefDist;
 
   LoopMeta pattern;
   scf::ForOp outerLoop;
@@ -454,6 +461,10 @@ namespace {
 class RMEMLoopNormalCache : public impl::RMEMLoopNormalCacheBase <RMEMLoopNormalCache> {
 
   void runOnOperation() override {
+    unsigned dist = prefDist;
+    if (dist == 0)
+      return;
+
     ModuleOp op = getOperation();
     MLIRContext *ctx = op.getContext();
     RemoteMemTypeLowerer typeConverter(ctx);
@@ -469,7 +480,7 @@ class RMEMLoopNormalCache : public impl::RMEMLoopNormalCacheBase <RMEMLoopNormal
     // Populate worklist
     std::vector<ForLoopPrefetchInternal> workList;
     op.walk([&](scf::ForOp loop) {
-      workList.push_back(ForLoopPrefetchInternal(loop, ob, internalAnalyzer, typeConverter, caches));
+      workList.push_back(ForLoopPrefetchInternal(loop, ob, internalAnalyzer, typeConverter, caches, dist));
     });
 
     for (auto PI : workList) {

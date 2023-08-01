@@ -25,10 +25,6 @@ def RemoteMem_FromAddressOp: RemoteMem_Op<"from_addr"> {
   let summary = "Create remote memref handler with the given address";
   let description = [{
     The main purpose of this operation is to resolve type conflict (source materialize) when the function signature requires remote memref. 
-    
-    There should be two type resolving types: Dummy / Real, where:
-    - The first type is used when converting a pointer from stack/local heap: materialization of remote memrefs stemming from this type should be very straightforward without remote memory involement. 
-    - The second type is used for conversions of refs from virtual address, representing returning the memory back to remote controller.
   }];
   let arguments = (ins AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $addr);
   let results = (outs RemoteMemRef: $rmemref);
@@ -161,7 +157,7 @@ def RemoteMem_RequestOp : RemoteMem_Op<"request"> {
     RemoteMemRef: $vaddr,
     I32Attr: $cache_id
   );
-  let results = (outs I64: $offset);
+  let results = (outs I32: $offset);
   let assemblyFormat = [{
     $cache_id`,`$vaddr attr-dict `:` functional-type(operands, results)  
   }];
@@ -170,7 +166,7 @@ def RemoteMem_RequestOp : RemoteMem_Op<"request"> {
 def RemoteMem_PollReqOp : RemoteMem_Op<"poll"> {
   let summary = "poll a request token from cache";
   let arguments = (ins
-    I64: $offset,
+    I32: $offset,
     I32Attr: $cache_id,
     I32Attr: $access_type // 0 -> read, 1 -> write
   );
@@ -182,7 +178,7 @@ def RemoteMem_PollReqOp : RemoteMem_Op<"poll"> {
 def RemoteMem_PaddrOp : RemoteMem_Op<"paddr"> {
   let summary = "get raw pointer given virtual address and slot id";
   let arguments = (ins
-    I64: $offset,
+    I32: $offset,
     AnyTypeOf<[LLVM_AnyPointer,RemoteMemRef]>: $vaddr,
     I32Attr: $cache_id
   );

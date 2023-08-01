@@ -403,6 +403,87 @@ public:
   }
 };
 
+class RemoteMemRequestLowering : public RemoteMemOpLoweringPattern<rmem::RequestOp> {
+public:
+  std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  RemoteMemRequestLowering(std::unordered_map<int, mlir::rmem::Cache*> &caches,
+    rmem::RemoteMemTypeLowerer &typeLowerer, MLIRContext *ctx) :
+    RemoteMemOpLoweringPattern<rmem::RequestOp>::RemoteMemOpLoweringPattern(typeLowerer, ctx), caches(caches) {}
+
+  LogicalResult matchAndRewrite(rmem::RequestOp op, rmem::RequestOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // tags[i] = C2::Op::tag((uint64_t)(arc + i * eles));
+    // offs[i] = C2::select(tags[i]);
+    // C2R::request(offs[i], tags[i]);
+    mlir::Location loc = op.getLoc();
+    rmem::RemoteMemRefType vaddrType = op.getVaddr().getType().cast<rmem::RemoteMemRefType>();
+    if (!rmem::isTrueRemoteRef(vaddrType)) {
+      llvm::errs() << "This will never happen, since fake remote access should not be the prefetch target\n";
+      return mlir::failure();
+    }
+    unsigned cache_id = vaddrType.getCanRemote();
+    ModuleOp mop = op->getParentOfType<ModuleOp>(); 
+    Value vaddr = adaptor.getVaddr();
+    Value tagI64 = caches[cache_id]->tag(rewriter, vaddr, loc);
+    Value offI32 = caches[cache_id]->select(rewriter, tagI64, loc);
+    Value wr_ofst = rewriter.create<arith::ConstantIntOp>(loc, 0, 32);
+    caches[cache_id]->cache_request_impl(rewriter, mop, wr_ofst, tagI64, offI32, loc);
+    rewriter.replaceOp(op, offI32);
+    return mlir::success();
+  }
+};
+
+class RemoteMemPollReqLowering : public RemoteMemOpLoweringPattern<rmem::PollReqOp> {
+public:
+  std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  RemoteMemPollReqLowering(std::unordered_map<int, mlir::rmem::Cache*> &caches,
+    rmem::RemoteMemTypeLowerer &typeLowerer, MLIRContext *ctx) :
+    RemoteMemOpLoweringPattern<rmem::PollReqOp>::RemoteMemOpLoweringPattern(typeLowerer, ctx), caches(caches) {}
+
+  LogicalResult matchAndRewrite(rmem::PollReqOp op, rmem::PollReqOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    // // sync current
+    // auto &token = C2::Op::token(offs[idx]);
+    // poll_qid(C2::Value::qid, token.seq);
+    // ? token.add(Token::Dirty);
+    mlir::Location loc = op.getLoc();
+    ModuleOp mop = op->getParentOfType<ModuleOp>(); 
+
+    unsigned cache_id = adaptor.getCacheId();
+    Value pToken = caches[cache_id]->token(rewriter, mop, adaptor.getOffset(), loc);
+    Value _qid = rewriter.create<arith::ConstantIntOp>(loc, caches[cache_id]->qid, 32);
+    Value _seq = rewriter.create<LLVM::LoadOp>(loc, 
+      Token::get_field_ptr(rewriter, pToken, Token::SEQ, rewriter.getI16Type(), loc));
+    caches[cache_id]->poll_qid(rewriter, _qid, _seq, mop, loc);
+    rewriter.eraseOp(op);
+    return mlir::success();
+  }
+};
+
+class RemoteMemPaddrLowering : public RemoteMemOpLoweringPattern<rmem::PaddrOp> {
+public:
+  std::unordered_map<int, mlir::rmem::Cache*> &caches;
+  RemoteMemPaddrLowering(std::unordered_map<int, mlir::rmem::Cache*> &caches,
+    rmem::RemoteMemTypeLowerer &typeLowerer, MLIRContext *ctx) :
+    RemoteMemOpLoweringPattern<rmem::PaddrOp>::RemoteMemOpLoweringPattern(typeLowerer, ctx), caches(caches) {}
+  
+  LogicalResult matchAndRewrite(rmem::PaddrOp op, rmem::PaddrOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Value newAddr = adaptor.getVaddr();
+    // if not true remote, do nothing
+    auto r = rmem::isTrueRemoteRef(op.getVaddr().getType());
+    if (r) {
+      Location loc = op->getLoc();
+      ModuleOp mop = op->getParentOfType<ModuleOp>();
+      unsigned cache_id = adaptor.getCacheId();
+      newAddr = caches[cache_id]->paddr(rewriter, mop, 
+      newAddr.getType(), 
+      adaptor.getOffset(), 
+      rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), newAddr), 
+      loc);
+    }
+    rewriter.replaceOp(op, newAddr);
+    return mlir::success();
+  }
+};
+
 class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
   using RemoteMemOpLoweringPattern<rmem::GEPOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::GEPOp op, rmem::GEPOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
@@ -415,13 +496,15 @@ class RemoteMemGEPOpLowering : public RemoteMemOpLoweringPattern<rmem::GEPOp> {
       indices.push_back(i);
     }
 
+    auto resPtrType = getTypeConverter()->convertType(op.getRes().getType()).cast<LLVM::LLVMPointerType>();
+
     SmallVector<NamedAttribute, 2> newAttr;
     for (auto &attr : adaptor.getAttributes().getValue()) {
       if (attr.getName() == "structIndices") continue;
+      // FIXME: Not sure why this would happen but it happens
+      if (attr.getName() == "elem_type" && !resPtrType.isOpaque()) continue;
       newAttr.push_back(attr);
     }
-
-    Type resPtrType = getTypeConverter()->convertType(op.getRes().getType());
     Value newGEPRel = rewriter.create<LLVM::GEPOp>(
       op.getLoc(),
       resPtrType,
@@ -542,6 +625,14 @@ class RemoteMemToAddressLowering : public RemoteMemOpLoweringPattern<rmem::ToAdd
   }
 };
 
+class RemoteMemFromAddressLowering : public RemoteMemOpLoweringPattern<rmem::FromAddressOp> {
+  using RemoteMemOpLoweringPattern<rmem::FromAddressOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::FromAddressOp op, rmem::FromAddressOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOp(op, adaptor.getAddr());
+    return mlir::success();
+  }
+};
+
 // =================================================================
 }
 
@@ -597,7 +688,11 @@ public:
       rmem::LLVMMemsetOp,
       rmem::PtrToIntOp,
       rmem::IntToPtrOp,
-      rmem::ToAddressOp
+      rmem::ToAddressOp,
+      rmem::FromAddressOp,
+      rmem::PaddrOp,
+      rmem::RequestOp,
+      rmem::PollReqOp
     >();
     if (failed(applyPartialConversion(m, target, std::move(patterns))))
       signalPassFailure();
@@ -629,12 +724,16 @@ void populateRemoteMemToLLVMPatterns(RemoteMemTypeLowerer &converter, RewritePat
   RemoteMemMemsetLowering,
   RemoteMemPtrToIntLowering,
   RemoteMemIntToPtrLowering,
-  RemoteMemToAddressLowering
+  RemoteMemToAddressLowering,
+  RemoteMemFromAddressLowering
   >(converter, &converter.getContext());
 
   patterns.add<
   RemoteMemStoreLowering,
-  RemoteMemLoadLowering
+  RemoteMemLoadLowering,
+  RemoteMemPaddrLowering,
+  RemoteMemRequestLowering,
+  RemoteMemPollReqLowering
   >(caches, converter, &converter.getContext());
 }
 

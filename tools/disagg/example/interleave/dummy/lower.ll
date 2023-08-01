@@ -4,8 +4,8 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16
 target triple = "x86_64-unknown-linux-gnu"
 
 %struct.timespec = type { i64, i64 }
-%struct.node = type { ptr, i32, [23 x i32] }
-%struct.arc = type { ptr, ptr, [8 x i32] }
+%struct.node = type { ptr, ptr, ptr, ptr, i32, [23 x i32] }
+%struct.arc = type { ptr, ptr, ptr, ptr, [8 x i32] }
 
 @g_payload = external global [23 x i32]
 @str2 = internal constant [18 x i8] c"Dont opt this %d\0A\00"
@@ -56,7 +56,7 @@ define internal i64 @microtime() !dbg !21 {
 define void @visit(ptr %0) !dbg !34 {
   %2 = alloca %struct.node, i64 1, align 8, !dbg !35
   %3 = alloca %struct.arc, i64 1, align 8, !dbg !37
-  %4 = getelementptr %struct.arc, ptr %3, i32 0, i32 0, !dbg !38
+  %4 = getelementptr %struct.arc, ptr %3, i32 0, i32 1, !dbg !38
   br label %5, !dbg !39
 
 5:                                                ; preds = %8, %1
@@ -89,7 +89,7 @@ declare void @computation(ptr, ptr, i32)
 !1 = !DIFile(filename: "LLVMDialectModule", directory: "/")
 !2 = !{i32 2, !"Debug Info Version", i32 3}
 !3 = distinct !DISubprogram(name: "main", linkageName: "main", scope: null, file: !4, line: 9, type: !5, scopeLine: 9, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !0, retainedNodes: !6)
-!4 = !DIFile(filename: "dummy/lower.local.mlir", directory: "/users/Zijian/Disagg-mlir/tools/disagg/example/interleave")
+!4 = !DIFile(filename: "dummy/lower.mlir", directory: "/users/Zijian/Disagg-mlir/tools/disagg/example/interleave")
 !5 = !DISubroutineType(types: !6)
 !6 = !{}
 !7 = !DILocation(line: 12, column: 5, scope: !8)

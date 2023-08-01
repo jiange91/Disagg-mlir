@@ -395,9 +395,6 @@ void Cache::request_poll(OpBuilder &rewriter, ModuleOp mop, Value offset, Value 
 
   Value _qid = rewriter.create<arith::ConstantIntOp>(loc, this->qid, 32);
   Value _token = this->token(rewriter, mop, offset, loc);
-  SmallVector<LLVM::GEPArg, 2> inds;
-  inds.push_back(rewriter.create<arith::ConstantIntOp>(loc, 0, 64).getResult());
-  inds.push_back(3);
   Value _seq = rewriter.create<LLVM::LoadOp>(loc, 
     Token::get_field_ptr(rewriter, _token, Token::SEQ, rewriter.getI16Type(), loc));
   this->poll_qid(rewriter, _qid, _seq, mop, loc);

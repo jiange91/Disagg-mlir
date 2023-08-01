@@ -1,7 +1,17 @@
-# at /users/Zijian/Disagg-mlir/tools/disagg/example/interleave
+# DO ONCE: at /users/Zijian/Disagg-mlir/tools/disagg/example/interleave
 pldisagg --prop-rmem mlir/visit_anno.mlir -o mlir/target.mlir
 pldisagg --convert-target-to-remote mlir/target.mlir -o mlir/remote.mlir
-pldisagg mlir/remote.mlir --emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg" --reconcile-unrealized-cas
-ts -cse --canonicalize -o mlir/lower.mlir
-mlir-translate --mlir-to-llvmir mlir/lower.mlir -o mlir/lower.ll
+
+# EVERY TIME config changes
+# change config at /users/Zijian/new_rt/apps/bench-interleave-mlir/remote.cc
+# change /users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg accordingly
+
+# change dist = 0 if not prefetch
+pldisagg mlir/remote.mlir --rmem-loop-normal-cache="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg dist=11" -cse --canonicalize -o mlir/pref.mlir
+
+pldisagg mlir/pref.mlir --emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg" -reconcile-unrealized-casts -cse --canonicalize -cse -o mlir/lower_remote.mlir
+mlir-translate --mlir-to-llvmir mlir/lower_remote.mlir -o mlir/lower.ll
 clang-16 -O3 -c mlir/lower.ll -o mlir/lower.o
+
+# at /users/Zijian/new_rt/build
+make interlf-mlir-remote

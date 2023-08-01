@@ -160,36 +160,6 @@ struct Cache {
 
   void poll_qid(OpBuilder &rewriter, Value qid, Value seq, ModuleOp mop, mlir::Location loc);
 
-  #if 0
-  // Token Functions. instead of require tokens, we get token pointers and GEP the token
-
-  Value get(Type type, Value addr,
-           std::optional<int> miss_counter = std::nullopt,
-           std::optional<int> hit_counter = std::nullopt) {
-    Value _tag = tag(addr);
-    Value _offset = select(_tag);
-    Value _token = token(_offset);
-
-    Value ret = paddr(type, _offset, addr);
-    auto ifOp = rewriter.create<scf::IfOp>(loc, rewriter.getI64Type(), token_valid(), true);
-
-    rewriter.setInsertionPointToStart(ifOp.thenBlock());
-    if (hit_counter.has_value()) {
-      // TODO: place counter
-    }
-    rewriter.create<scf::YieldOp>(loc, ret);
-
-    rewriter.setInsertionPointToStart(ifOp.elseBlock());
-    if (miss_counter.has_value()) {
-      // TODO: place counter
-    }
-    // TODO: call request poll
-
-    rewriter.setInsertionPointAfter(ifOp);
-    return ifOp.getResult(0);
-  }
-
-  #endif
 };
 
 struct DirectMappedCache : public Cache {

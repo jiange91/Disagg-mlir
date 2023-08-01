@@ -52,16 +52,16 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     return %9 : i64
   }
   func.func @visit(%arg0: !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>) attributes {llvm.linkage = #llvm.linkage<external>} {
-    %c4096 = arith.constant 4096 : index
-    %c4096_i64 = arith.constant 4096 : i64
+    %c2048 = arith.constant 2048 : index
+    %c2048_i64 = arith.constant 2048 : i64
     %c67108864_i64 = arith.constant 67108864 : i64
     %c12_i64 = arith.constant 12 : i64
     %c11_i64 = arith.constant 11 : i64
-    %c16384 = arith.constant 16384 : index
+    %c32768 = arith.constant 32768 : index
     %c1 = arith.constant 1 : index
     %c11 = arith.constant 11 : index
     %c12_i32 = arith.constant 12 : i32
-    %c16384_i64 = arith.constant 16384 : i64
+    %c32768_i64 = arith.constant 32768 : i64
     %c0 = arith.constant 0 : index
     %c1_i64 = arith.constant 1 : i64
     %0 = rmem.alloca_ptr %c1_i64 x !llvm.struct<"struct.node", (ptr<struct<"struct.node">>, ptr<struct<"struct.node">>, ptr<struct<"struct.arc", (ptr<struct<"struct.node">>, ptr<struct<"struct.node">>, ptr<struct<"struct.arc">>, ptr<struct<"struct.arc">>, array<8 x i32>)>>, ptr<struct<"struct.arc", (ptr<struct<"struct.node">>, ptr<struct<"struct.node">>, ptr<struct<"struct.arc">>, ptr<struct<"struct.arc">>, array<8 x i32>)>>, i32, array<23 x i32>)> : (i64) -> !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>
@@ -69,7 +69,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %2 = rmem.llvm.getelementptr %1[ [0, 1]] : (!llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>) -> !llvm.ptr<!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i32, array<23 x i32>)>>>>
     %3 = llvm.alloca %c12_i32 x i32 : (i32) -> !llvm.ptr<i32>
     scf.for %arg1 = %c0 to %c11 step %c1 {
-      %4 = arith.muli %arg1, %c16384 : index
+      %4 = arith.muli %arg1, %c32768 : index
       %5 = arith.index_cast %arg1 : index to i32
       %6 = arith.index_cast %4 : index to i64
       %7 = rmem.llvm.getelementptr %arg0[%6 []] : (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i64) -> !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>
@@ -78,15 +78,15 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
       %10 = llvm.getelementptr %3[%9] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
       llvm.store %8, %10 : !llvm.ptr<i32>
     }
-    scf.for %arg1 = %c0 to %c4096 step %c1 {
+    scf.for %arg1 = %c0 to %c2048 step %c1 {
       %4 = arith.index_cast %arg1 : index to i64
       %5 = arith.addi %4, %c11_i64 : i64
-      %6 = arith.cmpi slt, %5, %c4096_i64 : i64
+      %6 = arith.cmpi slt, %5, %c2048_i64 : i64
       scf.if %6 {
         %20 = arith.remsi %5, %c12_i64 : i64
         %21 = arith.trunci %20 : i64 to i32
         %22 = arith.index_cast %5 : i64 to index
-        %23 = arith.muli %22, %c16384 : index
+        %23 = arith.muli %22, %c32768 : index
         %24 = arith.index_cast %23 : index to i64
         %25 = rmem.llvm.getelementptr %arg0[%24 []] : (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i64) -> !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>
         %26 = rmem.request 2, %25 : (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>) -> i32
@@ -94,7 +94,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
         %28 = llvm.getelementptr %3[%27] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
         llvm.store %26, %28 : !llvm.ptr<i32>
       }
-      %7 = arith.muli %arg1, %c16384 : index
+      %7 = arith.muli %arg1, %c32768 : index
       %8 = arith.index_cast %7 : index to i64
       %9 = rmem.llvm.getelementptr %arg0[%8 []] : (!rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>, i64) -> !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>
       %10 = arith.remsi %4, %c12_i64 : i64
@@ -103,16 +103,16 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
       rmem.poll 2, %12, 0 : (i32) -> ()
       %13 = rmem.paddr 2, %12, %9 : (i32, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>>) -> !llvm.ptr<!llvm.struct<"disagg@struct.arc", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node", (!rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<1, !llvm.ptr<!llvm.struct<"disagg@struct.node">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, i32, array<23 x i32>)>>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, !rmem.rmref<2, !llvm.ptr<!llvm.struct<"disagg@struct.arc">>>, array<8 x i32>)>>
       %14 = arith.addi %4, %c1_i64 : i64
-      %15 = arith.muli %14, %c16384_i64 : i64
+      %15 = arith.muli %14, %c32768_i64 : i64
       %16 = arith.cmpi slt, %15, %c67108864_i64 : i64
       %17 = scf.if %16 -> (i64) {
-        scf.yield %c16384_i64 : i64
+        scf.yield %c32768_i64 : i64
       } else {
-        %20 = arith.muli %4, %c16384_i64 : i64
+        %20 = arith.muli %4, %c32768_i64 : i64
         %21 = arith.subi %c67108864_i64, %20 : i64
         scf.yield %21 : i64
       }
-      %18 = arith.muli %4, %c16384_i64 : i64
+      %18 = arith.muli %4, %c32768_i64 : i64
       %19 = arith.index_cast %17 : i64 to index
       scf.for %arg2 = %c0 to %19 step %c1 {
         %20 = arith.index_cast %18 : i64 to index

@@ -175,6 +175,11 @@ struct DirectMappedCache : public Cache {
   }
 };
 
+struct FullLRUCache : public Cache {
+  using Cache::Cache;
+  Value select(OpBuilder &rewriter, Value tag, mlir::Location loc) override;
+};
+
 void readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> &caches, std::string &path);
 
 // TODO: finish this

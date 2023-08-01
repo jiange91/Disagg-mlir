@@ -188,6 +188,8 @@ void mlir::rmem::readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> 
   while (cfg >> cache_id >> type >> token_off >> raddr_off >> laddr_off >> slots >> line_size >> qid) {
     if (type == 0) {
       caches.insert(std::make_pair(cache_id, new DirectMappedCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
+    } else if (type == 2) {
+      caches.insert(std::make_pair(cache_id, new FullLRUCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
     }
   }
   llvm::errs() << caches.size() << " caches read\n";
@@ -349,7 +351,7 @@ Value Cache::get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr
   rewriter.setInsertionPointToStart(needPoll.elseBlock());
   rewriter.create<scf::YieldOp>(loc, laddr);
   rewriter.setInsertionPointAfter(needPoll);
-
+  Token::add(rewriter, pToken, Token::Dirty, loc);
   // needPoll->getBlock()->dump();
   return needPoll.getResult(0);
 }
@@ -428,6 +430,19 @@ void Cache::poll_qid(OpBuilder &rewriter, Value qid, Value seq, ModuleOp mop, ml
     nullptr
   );
   rmem::createLLVMCall(rewriter, loc, pollFn, {qid, seq});
+}
+
+Value FullLRUCache::select(OpBuilder &rewriter, Value tag, mlir::Location loc) {
+  ModuleOp mop = tag.getDefiningOp()->getParentOfType<ModuleOp>();
+  auto selFn = rmem::lookupOrCreateFn(
+    mop, "select_" + std::to_string(this->cache_id),
+    ArrayRef<Type>({
+      rewriter.getI64Type()
+    }),
+    rewriter.getI32Type()
+  );
+  auto rels = rmem::createLLVMCall(rewriter, loc, selFn, {tag});
+  return rels.front();
 }
 
 void RemoteMemDialect::initialize() {

@@ -6,7 +6,8 @@ pldisagg --convert-target-to-remote mlir/target.mlir -o mlir/remote.mlir
 # change config at /users/Zijian/new_rt/apps/bench-interleave-mlir/remote.cc
 # change /users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg accordingly
 
-# change dist = 0 if not prefetch
+# change dist = 0 if not prefetch & not batch
+# comment out line 465-466 in /users/Zijian/Disagg-mlir/tools/disagg/lib/Dialect/Transforms/LoopNormalCache.cpp, then dist = 0 will do batch but no prefetch
 pldisagg mlir/remote.mlir --rmem-loop-normal-cache="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg dist=11" -cse --canonicalize -o mlir/pref.mlir
 
 pldisagg mlir/pref.mlir --emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/interleave/cache.cfg" -reconcile-unrealized-casts -cse --canonicalize -cse -o mlir/lower_remote.mlir

@@ -48,9 +48,14 @@ void AllocationAnnotationPass::runOnOperation() {
                       builder.getI32IntegerAttr(curAllocation));
 
         if (allocationMap.find(curAllocation) != allocationMap.end()) {
-          if (objectLimitFilter(curAllocation, op->getResult(0).getType(), memoryLimit))
+          if (objectLimitFilter(curAllocation, op->getResult(0).getType(), memoryLimit) && objectDependencyFilter(op))
             op->setAttr("remote_target", builder.getI64IntegerAttr(1));
         }
+
+	for (auto user : op->getUsers()) {
+		if (user->getName().getStringRef() == func::ReturnOp::getOperationName())
+			op->setAttr("remote_target", builder.getI64IntegerAttr(1));
+	}
 
       } else if (isa<func::FuncOp>(op)) {
         auto funcOp = cast<func::FuncOp>(op);
@@ -94,6 +99,17 @@ void AllocationAnnotationPass::parseProfilingResults() {
   }
 
   return;
+}
+
+bool objectDependencyFilter(Operation *op) {
+  for (auto user : op->getUsers()) {
+      if (user->getName().getStringRef() == func::CallOp::getOperationName()) {
+          return false;
+      } else if (user->getName().getStringRef() == memref::CastOp::getOperationName()) {
+          return objectDependencyFilter(user);
+      }
+  }
+  return true;
 }
 
 bool objectLimitFilter(uint64_t number, Type type, uint64_t memoryLimit) {

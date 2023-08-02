@@ -86,5 +86,6 @@ inline void registerAllocationAnnotationPass() {
 }
 
 bool objectLimitFilter(uint64_t number, mlir::Type type, uint64_t memoryLimit);
+bool objectDependencyFilter(mlir::Operation *op);
 
 #endif // MLIR_DISAGG_UTIL_PROFILE_READER_H

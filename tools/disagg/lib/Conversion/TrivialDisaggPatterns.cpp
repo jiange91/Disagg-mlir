@@ -40,10 +40,12 @@ using TrivialArithAddIConversion = TrivialMappingToRemotePattern<arith::AddIOp, 
 using TrivialArithAddFConversion = TrivialMappingToRemotePattern<arith::AddFOp, arith::AddFOp>;
 using TrivialArithMulFConversion = TrivialMappingToRemotePattern<arith::MulFOp, arith::MulFOp>;
 using TrivialArithDivFConversion = TrivialMappingToRemotePattern<arith::DivFOp, arith::DivFOp>;
+using TrivialArithDivSIConversion = TrivialMappingToRemotePattern<arith::DivSIOp, arith::DivSIOp>;
 using TrivialArithAndIConversion = TrivialMappingToRemotePattern<arith::AndIOp, arith::AndIOp>;
 using TrivialArithXorIConversion = TrivialMappingToRemotePattern<arith::XOrIOp, arith::XOrIOp>;
 using TrivialArithSI2FPConversion = TrivialMappingToRemotePattern<arith::SIToFPOp, arith::SIToFPOp>;
 using TrivialArithExtUIConversion = TrivialMappingToRemotePattern<arith::ExtUIOp, arith::ExtUIOp>;
+using TrivialArithTruncIConversion = TrivialMappingToRemotePattern<arith::TruncIOp, arith::TruncIOp>;
 using TrivialArithIndexCastConversion = TrivialMappingToRemotePattern<arith::IndexCastOp, arith::IndexCastOp>;
 
 //===============================================================
@@ -65,6 +67,7 @@ void mlir::disagg::populateTrivialDisaggPatterns(MLIRContext *ctx, RewritePatter
     TrivialArithAddFConversion,
     TrivialArithMulFConversion,
     TrivialArithDivFConversion,
+    TrivialArithDivSIConversion,
     TrivialArithCmpIConversion,
     TrivialArithCmpFConversion,
     TrivialArithSubIConversion,
@@ -73,6 +76,7 @@ void mlir::disagg::populateTrivialDisaggPatterns(MLIRContext *ctx, RewritePatter
     TrivialArithXorIConversion,
     TrivialArithSI2FPConversion,
     TrivialArithExtUIConversion,
+    TrivialArithTruncIConversion,
     TrivialArithIndexCastConversion,
 
     TrivialVecBroadCastConversion,

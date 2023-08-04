@@ -175,6 +175,14 @@ struct DirectMappedCache : public Cache {
   }
 };
 
+struct SetAssocativeCache : public Cache {
+  SetAssocativeCache(int cache_id, int slots, int qid, uint64_t token_off, uint64_t raddr_off, uint64_t laddr_off, uint64_t line_size, int num_ways): 
+    Cache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size), num_ways(num_ways) {}
+    
+  int num_ways;
+  Value select(OpBuilder &rewriter, Value tag, mlir::Location loc) override;
+};
+
 struct FullLRUCache : public Cache {
   using Cache::Cache;
   Value select(OpBuilder &rewriter, Value tag, mlir::Location loc) override;

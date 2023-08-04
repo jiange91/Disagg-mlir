@@ -183,13 +183,19 @@ void mlir::rmem::readCachesFromFile(std::unordered_map<int, mlir::rmem::Cache*> 
     llvm::errs() << "cannot open cache config file: " << path << "\n";
   }
   // format: cache id, type, token offset, raddr offset, laddr offset, slots, line size bytes, qid 
-  int cache_id, type, slots, qid;
+  int cache_id, type, slots, qid, num_ways;
   uint64_t token_off, raddr_off, laddr_off, line_size;
   while (cfg >> cache_id >> type >> token_off >> raddr_off >> laddr_off >> slots >> line_size >> qid) {
     if (type == 0) {
       caches.insert(std::make_pair(cache_id, new DirectMappedCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
+    } else if (type == 1) {
+      cfg >> num_ways;
+      caches.insert(std::make_pair(cache_id, new SetAssocativeCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size, num_ways))); 
     } else if (type == 2) {
       caches.insert(std::make_pair(cache_id, new FullLRUCache(cache_id, slots, qid, token_off, raddr_off, laddr_off, line_size))); 
+    } else {
+      llvm::errs() << "cannot recognize cache type: " << type << "\n";
+      exit(1);
     }
   }
   llvm::errs() << caches.size() << " caches read\n";
@@ -430,6 +436,19 @@ void Cache::poll_qid(OpBuilder &rewriter, Value qid, Value seq, ModuleOp mop, ml
     nullptr
   );
   rmem::createLLVMCall(rewriter, loc, pollFn, {qid, seq});
+}
+
+Value SetAssocativeCache::select(OpBuilder &rewriter, Value tag, mlir::Location loc) {
+  ModuleOp mop = tag.getDefiningOp()->getParentOfType<ModuleOp>();
+  auto selFn = rmem::lookupOrCreateFn(
+    mop, "select_" + std::to_string(this->cache_id),
+    ArrayRef<Type>({
+      rewriter.getI64Type()
+    }),
+    rewriter.getI32Type()
+  );
+  auto rels = rmem::createLLVMCall(rewriter, loc, selFn, {tag});
+  return rels.front();
 }
 
 Value FullLRUCache::select(OpBuilder &rewriter, Value tag, mlir::Location loc) {

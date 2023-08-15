@@ -36,6 +36,42 @@ void AllocationAnnotationPass::runOnOperation() {
     float memoryFactor = memoryFactorOption.hasValue() ? annotateOption.getValue() : 1;
     uint64_t memoryLimit = 4096;
 
+    moduleOp->walk([&memoryFactor, &memoryLimit](const func::FuncOp &op) {
+      OpBuilder builder(op);
+      auto funcOp = cast<func::FuncOp>(op);
+      auto funcType = funcOp.getFunctionType();
+
+      // annotate on non-allocation part
+      if (memoryFactor != 1 && funcType.getNumResults() > 0) {
+        op->setAttr("remote_target", builder.getI64IntegerAttr(1));
+
+        auto operandTypes = funcType.getInputs();
+        std::vector<Type> newOperandTypes;
+        std::transform(operandTypes.begin(), operandTypes.end(),
+                       std::back_inserter(newOperandTypes),
+                       [memoryLimit](const Type &t) -> Type {
+                         return objectLimitFilter(1, t, memoryLimit)
+                                    ? rmem::RemoteMemRefType::get(t, 1)
+                                    : t;
+                       });
+        op->setAttr("operand_types", builder.getTypeArrayAttr(newOperandTypes));
+
+        auto retType = rmem::RemoteMemRefType::get(funcType.getResult(0), 1);
+        op->setAttr("rel_types", builder.getTypeArrayAttr(retType));
+      }
+    });
+
+    moduleOp->walk([](const func::CallOp &op) {
+      OpBuilder builder(op);
+      auto callOp = cast<func::CallOp>(op);
+      auto func = callOp.getCallableForCallee();
+      if (isa<Value>(func)) { // Not safe for pointers
+        op->setAttr("no_remote_target", builder.getI16IntegerAttr(1));
+      } else if (isa<SymbolRefAttr>(func)) {
+        auto symbolRef = cast<SymbolRefAttr>(func);
+      }
+    });
+
     moduleOp->walk([isAnnotation, memoryFactor, memoryLimit,
                     &allocationId,
                     &allocationMap = allocationMap](mlir::Operation *op) {
@@ -48,35 +84,9 @@ void AllocationAnnotationPass::runOnOperation() {
                       builder.getI32IntegerAttr(curAllocation));
 
         if (allocationMap.find(curAllocation) != allocationMap.end()) {
-          if (objectLimitFilter(curAllocation, op->getResult(0).getType(), memoryLimit) && objectDependencyFilter(op))
+          if (objectLimitFilter(curAllocation, op->getResult(0).getType(), memoryLimit))
             op->setAttr("remote_target", builder.getI64IntegerAttr(1));
         }
-
-	for (auto user : op->getUsers()) {
-		if (user->getName().getStringRef() == func::ReturnOp::getOperationName())
-			op->setAttr("remote_target", builder.getI64IntegerAttr(1));
-	}
-
-      } else if (isa<func::FuncOp>(op)) {
-        auto funcOp = cast<func::FuncOp>(op);
-        auto funcType = funcOp.getFunctionType();
-
-        // annotate on non-allocation part
-        if (memoryFactor != 1 && funcType.getNumResults() > 0) {
-          op->setAttr("remote_target", builder.getI64IntegerAttr(1));
-
-          auto operandTypes = funcType.getInputs();
-          std::vector<Type> newOperandTypes;
-          std::transform(operandTypes.begin(), operandTypes.end(),
-                         std::back_inserter(newOperandTypes), [memoryLimit](const Type &t) -> Type {
-                          return objectLimitFilter(1, t, memoryLimit) ?  rmem::RemoteMemRefType::get(t, 1) : t;
-                         });
-          op->setAttr("operand_types", builder.getTypeArrayAttr(newOperandTypes));
-
-          auto retType = rmem::RemoteMemRefType::get(funcType.getResult(0), 1);
-          op->setAttr("rel_types", builder.getTypeArrayAttr(retType));
-        }
-      } else if (isa<func::CallOp>(op)) {
 
       }
     });
@@ -103,11 +113,13 @@ void AllocationAnnotationPass::parseProfilingResults() {
 
 bool objectDependencyFilter(Operation *op) {
   for (auto user : op->getUsers()) {
-      if (user->getName().getStringRef() == func::CallOp::getOperationName()) {
-          return false;
-      } else if (user->getName().getStringRef() == memref::CastOp::getOperationName()) {
-          return objectDependencyFilter(user);
-      }
+    if (isa<func::CallOp>(user)) {
+      if (!user->hasAttr("remote_target"))
+        return false;
+    } else if (isa<memref::CastOp>(user) || isa<memref::ReinterpretCastOp>(user)) {
+      // Follow the casting Ops
+      return objectDependencyFilter(user);
+    }
   }
   return true;
 }

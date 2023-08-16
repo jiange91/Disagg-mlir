@@ -1,0 +1,15 @@
+# at step1/
+cgeist -S -std=c++14 /users/Zijian/new_rt/apps/dataframe/new_app/step1.cc -I /users/Zijian/new_rt/apps/dataframe/include -o step1.mlir
+# after annotation
+pldisagg --prop-rmem step1_anno.mlir -o target.mlir
+pldisagg --convert-target-to-remote target.mlir -o remote.mlir
+
+# prefetch and batch
+pldisagg remote.mlir --rmem-loop-normal-cache="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/dataframe/cache.cfg dist=8" -cse --canonicalize -o pref.mlir
+
+pldisagg --emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/dataframe/cache.cfg" -reconcile-unrealized-casts -cse --canonicalize -cse pref.mlir -o lower.mlir
+mlir-translate --mlir-to-llvmir lower.mlir -o lower.ll
+clang-16 -c -O3 lower.ll -o lower.o
+
+# to /users/Zijian/new_rt/build
+make step1_mlir

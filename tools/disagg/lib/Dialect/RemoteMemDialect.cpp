@@ -372,29 +372,38 @@ Value Cache::get_mut(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value v
     rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), vaddr), loc);
 
   Value isValid = Token::valid(rewriter, pToken, loc);
+  scf::IfOp ifNeedPoll = rewriter.create<scf::IfOp>(loc, 
+    rewriter.getI1Type(),
+    rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::ne, 
+      rewriter.create<arith::ExtSIOp>(loc, rewriter.getI32Type(), isValid), 
+      rewriter.create<arith::ConstantIntOp>(loc, 0, 32)),
+    true
+  );
 
+  rewriter.setInsertionPointToStart(ifNeedPoll.thenBlock());
   Value tokenTag = rewriter.create<LLVM::LoadOp>(loc, 
     Token::get_field_ptr(rewriter, pToken, Token::TAG, rewriter.getI64Type(), loc));
-  Value tagMatch = rewriter.create<arith::CmpIOp>(loc, 
-    arith::CmpIPredicate::eq,
-    rewriter.create<arith::ConstantIntOp>(loc, 0, 64),
-    tokenTag
-  );
-  Value ifNeedPoll = rewriter.create<arith::CmpIOp>(loc, 
+  Value tagNotMatch = rewriter.create<arith::CmpIOp>(loc, 
     arith::CmpIPredicate::ne,
-    rewriter.create<arith::ConstantIntOp>(loc, 1, 8),
-    rewriter.create<arith::AndIOp>(loc, 
-      isValid, 
-      rewriter.create<arith::ExtUIOp>(loc, rewriter.getI8Type(), tagMatch))
+    tokenTag,
+    tagI64
   );
-  auto needPoll = rewriter.create<scf::IfOp>(loc,
-    ifNeedPoll, false);
+  rewriter.create<scf::YieldOp>(loc, tagNotMatch);
+
+  rewriter.setInsertionPointToStart(ifNeedPoll.elseBlock());
+  rewriter.create<scf::YieldOp>(loc, rewriter.create<arith::ConstantIntOp>(loc, 1, 1).getResult());
+  rewriter.setInsertionPointAfter(ifNeedPoll);
+
+  auto needPoll = rewriter.create<scf::IfOp>(loc, outputType, ifNeedPoll.getResult(0), true);
   rewriter.setInsertionPointToStart(needPoll.thenBlock());
   this->request_poll(rewriter, mop, offI32, tagI64, loc);
+  rewriter.create<scf::YieldOp>(loc, laddr);
+  rewriter.setInsertionPointToStart(needPoll.elseBlock());
+  rewriter.create<scf::YieldOp>(loc, laddr);
   rewriter.setInsertionPointAfter(needPoll);
 
   Token::add(rewriter, pToken, Token::Dirty, loc);
-  return laddr;
+  return needPoll.getResult(0);
 }
 
 void Cache::request_poll(OpBuilder &rewriter, ModuleOp mop, Value offset, Value tag, mlir::Location loc) {

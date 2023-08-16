@@ -127,14 +127,14 @@ isFusionLegal(ForOp firstLoop, ForOp secondLoop,
               const BlockAndValueMapping &firstToSecondLoopIndices) {
   if (auto fuseL = firstLoop->getAttrOfType<BoolAttr>("fuse_cand")) {
     if (auto fuseR = secondLoop->getAttrOfType<BoolAttr>("fuse_cand")) {
-      if (fuseL.getValue() && fuseR.getValue()) {
-        return equalIterationSpaces(firstLoop, secondLoop) &&
-         (true || succeeded(verifyDependencies(firstLoop, secondLoop,
-                                      firstToSecondLoopIndices)));
+      if (!fuseL.getValue() || !fuseR.getValue()) {
+        return false;
       }
     }
   }
-  return false;
+  return equalIterationSpaces(firstLoop, secondLoop) &&
+    (true || succeeded(verifyDependencies(firstLoop, secondLoop,
+                                firstToSecondLoopIndices)));
 }
 
 static void fuseIfLegalAndTarget(ForOp firstLoop, ForOp secondLoop, OpBuilder b) {

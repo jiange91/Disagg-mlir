@@ -49,19 +49,20 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
   }
   llvm.mlir.global internal constant @str12("number of vendor_ids in the train dataset: %ld\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str11("print_number_vendor_ids_and_unique()\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str10("Total: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str9("Step 8: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str8("Step 7: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str7("Step 5: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str6("Step 4: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str5("Step 3: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str4("Step 2-2: %ld us\0A\00") {addr_space = 0 : i32}
-  llvm.mlir.global internal constant @str3("Step 2-1: %ld us\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str10("Total: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str9("Step 8: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str8("Step 7: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str7("Step 5: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str6("Step 4: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str5("Step 3: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str4("Step 2-2: %.6f s\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str3("Step 2-1: %.6f s\0A\00") {addr_space = 0 : i32}
   llvm.func @printf(!llvm.ptr<i8>, ...) -> i32
-  llvm.mlir.global internal constant @str2("Step 1: %ld us\0A\00") {addr_space = 0 : i32}
+  llvm.mlir.global internal constant @str2("Step 1: %.6f s\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str1("pickup_month\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str0("pickup_day\00") {addr_space = 0 : i32}
   func.func @main() -> i32 attributes {llvm.linkage = #llvm.linkage<external>} {
+    %cst = arith.constant 1.000000e+06 : f64
     %c2_i32 = arith.constant 2 : i32
     %c1_i32 = arith.constant 1 : i32
     %c10 = arith.constant 10 : index
@@ -100,9 +101,9 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     call @_Z9ext_setupv() : () -> ()
     %29 = llvm.getelementptr %27[0, 0] : (!llvm.ptr<array<10 x struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>>) -> !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>
     scf.for %arg0 = %c0 to %c10 step %c1 {
-      %114 = arith.index_cast %arg0 : index to i64
-      %115 = llvm.getelementptr %29[%114] : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, i64) -> !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>
-      func.call @_ZNSt6chrono10time_pointINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEEEC1Ev(%115) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> ()
+      %132 = arith.index_cast %arg0 : index to i64
+      %133 = llvm.getelementptr %29[%132] : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, i64) -> !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>
+      func.call @_ZNSt6chrono10time_pointINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEEEC1Ev(%133) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> ()
     }
     %30 = call @_ZNSt6chrono3_V212steady_clock3nowEv() : () -> !llvm.struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>
     llvm.store %30, %26 : !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>
@@ -158,71 +159,89 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     %63 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%17) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
     llvm.store %63, %16 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
     %64 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%16) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %65 = llvm.call @printf(%61, %64) : (!llvm.ptr<i8>, i64) -> i32
-    %66 = llvm.mlir.addressof @str3 : !llvm.ptr<array<18 x i8>>
-    %67 = llvm.getelementptr %66[0, 0] : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
-    %68 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%35, %32) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %68, %15 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %69 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%15) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %69, %14 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %70 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%14) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %71 = llvm.call @printf(%67, %70) : (!llvm.ptr<i8>, i64) -> i32
-    %72 = llvm.mlir.addressof @str4 : !llvm.ptr<array<18 x i8>>
-    %73 = llvm.getelementptr %72[0, 0] : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
-    %74 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%38, %35) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %74, %13 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %75 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%13) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %75, %12 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %76 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%12) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %77 = llvm.call @printf(%73, %76) : (!llvm.ptr<i8>, i64) -> i32
-    %78 = llvm.mlir.addressof @str5 : !llvm.ptr<array<16 x i8>>
-    %79 = llvm.getelementptr %78[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
-    %80 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%41, %38) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %80, %11 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %81 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%11) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %81, %10 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %82 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%10) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %83 = llvm.call @printf(%79, %82) : (!llvm.ptr<i8>, i64) -> i32
-    %84 = llvm.mlir.addressof @str6 : !llvm.ptr<array<16 x i8>>
+    %65 = arith.sitofp %64 : i64 to f64
+    %66 = arith.divf %65, %cst : f64
+    %67 = llvm.call @printf(%61, %66) : (!llvm.ptr<i8>, f64) -> i32
+    %68 = llvm.mlir.addressof @str3 : !llvm.ptr<array<18 x i8>>
+    %69 = llvm.getelementptr %68[0, 0] : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
+    %70 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%35, %32) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %70, %15 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %71 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%15) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %71, %14 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %72 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%14) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %73 = arith.sitofp %72 : i64 to f64
+    %74 = arith.divf %73, %cst : f64
+    %75 = llvm.call @printf(%69, %74) : (!llvm.ptr<i8>, f64) -> i32
+    %76 = llvm.mlir.addressof @str4 : !llvm.ptr<array<18 x i8>>
+    %77 = llvm.getelementptr %76[0, 0] : (!llvm.ptr<array<18 x i8>>) -> !llvm.ptr<i8>
+    %78 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%38, %35) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %78, %13 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %79 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%13) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %79, %12 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %80 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%12) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %81 = arith.sitofp %80 : i64 to f64
+    %82 = arith.divf %81, %cst : f64
+    %83 = llvm.call @printf(%77, %82) : (!llvm.ptr<i8>, f64) -> i32
+    %84 = llvm.mlir.addressof @str5 : !llvm.ptr<array<16 x i8>>
     %85 = llvm.getelementptr %84[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
-    %86 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%44, %41) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %86, %9 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %87 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%9) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %87, %8 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %88 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%8) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %89 = llvm.call @printf(%85, %88) : (!llvm.ptr<i8>, i64) -> i32
-    %90 = llvm.mlir.addressof @str7 : !llvm.ptr<array<16 x i8>>
-    %91 = llvm.getelementptr %90[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
-    %92 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%47, %44) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %92, %7 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %93 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%7) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %93, %6 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %94 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%6) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %95 = llvm.call @printf(%91, %94) : (!llvm.ptr<i8>, i64) -> i32
-    %96 = llvm.mlir.addressof @str8 : !llvm.ptr<array<16 x i8>>
-    %97 = llvm.getelementptr %96[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
-    %98 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%52, %47) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %98, %5 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %99 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%5) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %99, %4 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %100 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%4) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %101 = llvm.call @printf(%97, %100) : (!llvm.ptr<i8>, i64) -> i32
-    %102 = llvm.mlir.addressof @str9 : !llvm.ptr<array<16 x i8>>
-    %103 = llvm.getelementptr %102[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
-    %104 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%57, %52) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %104, %3 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %105 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%3) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %105, %2 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %106 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%2) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %107 = llvm.call @printf(%103, %106) : (!llvm.ptr<i8>, i64) -> i32
-    %108 = llvm.mlir.addressof @str10 : !llvm.ptr<array<15 x i8>>
-    %109 = llvm.getelementptr %108[0, 0] : (!llvm.ptr<array<15 x i8>>) -> !llvm.ptr<i8>
-    %110 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%57, %29) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
-    llvm.store %110, %1 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
-    %111 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%1) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
-    llvm.store %111, %0 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
-    %112 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%0) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
-    %113 = llvm.call @printf(%109, %112) : (!llvm.ptr<i8>, i64) -> i32
+    %86 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%41, %38) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %86, %11 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %87 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%11) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %87, %10 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %88 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%10) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %89 = arith.sitofp %88 : i64 to f64
+    %90 = arith.divf %89, %cst : f64
+    %91 = llvm.call @printf(%85, %90) : (!llvm.ptr<i8>, f64) -> i32
+    %92 = llvm.mlir.addressof @str6 : !llvm.ptr<array<16 x i8>>
+    %93 = llvm.getelementptr %92[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
+    %94 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%44, %41) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %94, %9 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %95 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%9) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %95, %8 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %96 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%8) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %97 = arith.sitofp %96 : i64 to f64
+    %98 = arith.divf %97, %cst : f64
+    %99 = llvm.call @printf(%93, %98) : (!llvm.ptr<i8>, f64) -> i32
+    %100 = llvm.mlir.addressof @str7 : !llvm.ptr<array<16 x i8>>
+    %101 = llvm.getelementptr %100[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
+    %102 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%47, %44) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %102, %7 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %103 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%7) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %103, %6 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %104 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%6) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %105 = arith.sitofp %104 : i64 to f64
+    %106 = arith.divf %105, %cst : f64
+    %107 = llvm.call @printf(%101, %106) : (!llvm.ptr<i8>, f64) -> i32
+    %108 = llvm.mlir.addressof @str8 : !llvm.ptr<array<16 x i8>>
+    %109 = llvm.getelementptr %108[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
+    %110 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%52, %47) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %110, %5 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %111 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%5) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %111, %4 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %112 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%4) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %113 = arith.sitofp %112 : i64 to f64
+    %114 = arith.divf %113, %cst : f64
+    %115 = llvm.call @printf(%109, %114) : (!llvm.ptr<i8>, f64) -> i32
+    %116 = llvm.mlir.addressof @str9 : !llvm.ptr<array<16 x i8>>
+    %117 = llvm.getelementptr %116[0, 0] : (!llvm.ptr<array<16 x i8>>) -> !llvm.ptr<i8>
+    %118 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%57, %52) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %118, %3 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %119 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%3) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %119, %2 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %120 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%2) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %121 = arith.sitofp %120 : i64 to f64
+    %122 = arith.divf %121, %cst : f64
+    %123 = llvm.call @printf(%117, %122) : (!llvm.ptr<i8>, f64) -> i32
+    %124 = llvm.mlir.addressof @str10 : !llvm.ptr<array<15 x i8>>
+    %125 = llvm.getelementptr %124[0, 0] : (!llvm.ptr<array<15 x i8>>) -> !llvm.ptr<i8>
+    %126 = call @_ZNSt6chronomiINS_3_V212steady_clockENS_8durationIlSt5ratioILl1ELl1000000000EEEES6_EENSt11common_typeIJT0_T1_EE4typeERKNS_10time_pointIT_S8_EERKNSC_ISD_S9_EE(%57, %29) : (!llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>, !llvm.ptr<struct<"struct.std::chrono::time_point", (struct<"struct.std::chrono::duration", (i64)>)>>) -> !llvm.struct<"struct.std::chrono::duration", (i64)>
+    llvm.store %126, %1 : !llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>
+    %127 = call @_ZNSt6chrono13duration_castINS_8durationIlSt5ratioILl1ELl1000000EEEElS2_ILl1ELl1000000000EEEENSt9enable_ifIXsr13__is_durationIT_EE5valueES7_E4typeERKNS1_IT0_T1_EE(%1) : (!llvm.ptr<struct<"struct.std::chrono::duration", (i64)>>) -> !llvm.struct<"struct.std::chrono::duration.0", (i64)>
+    llvm.store %127, %0 : !llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>
+    %128 = call @_ZNKSt6chrono8durationIlSt5ratioILl1ELl1000000EEE5countEv(%0) : (!llvm.ptr<struct<"struct.std::chrono::duration.0", (i64)>>) -> i64
+    %129 = arith.sitofp %128 : i64 to f64
+    %130 = arith.divf %129, %cst : f64
+    %131 = llvm.call @printf(%125, %130) : (!llvm.ptr<i8>, f64) -> i32
     return %28 : i32
   }
   func.func private @_Z9ext_setupv() attributes {llvm.linkage = #llvm.linkage<external>}

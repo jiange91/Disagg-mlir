@@ -53,6 +53,7 @@ class ForLoopPrefetchInternal {
     DenseMap<Operation*, Value> innerBase;
     DenseMap<Operation*, RingCache> caches;
     DenseMap<Operation*, Value> offsetIds;
+    DenseMap<Operation*, std::tuple<Value, unsigned>> syncMetas;
 
     unsigned maxDistance;
     unsigned perBlock;
@@ -92,7 +93,7 @@ public:
       if (!dfs.size()) 
         return false;
       for (auto op : dfs) {
-        if (op != t && is_prefetch_target(*op)) 
+        if (is_prefetch_target(*op)) 
           return false;
       }
       return true;
@@ -101,11 +102,10 @@ public:
     // only dfs that involve induction var and within the current loop
     // will be valid
     for (auto &op : loop.getBody()->getOperations()) {
-      if (is_prefetch_target(op)) {
-        auto dfs = addrPathDFS(&op);
+      auto rp = rmem::isRemoteAccess(&op);
+      if (rp.first) {
+        auto dfs = newAddrPathDFS(rp.second);
         if (checkDFS(dfs, &op)) {
-          // leave addr computation only
-          dfs.erase(&op);
           // unsigned DC = dfsComplexity(dfs);
           Value addr;
           if (auto load = dyn_cast<rmem::LoadOp>(op)) {
@@ -230,9 +230,8 @@ public:
     );
   }
 
-  void emitPrefetches(Operation *op) {
+  scf::IfOp emitPrefetches(Operation *op) {
     mlir::Location loc = loop.getLoc();
-    rewriter.setInsertionPointToStart(outerLoop.getBody());
     // j + n_ahead
     Value tPre = rewriter.create<arith::AddIOp>(loc, 
       rewriter.create<arith::IndexCastOp>(loc, rewriter.getI64Type(), outerLoop.getInductionVar()),
@@ -253,11 +252,14 @@ public:
     Value disaggAddr = pattern.prefetches[op].first;
     unsigned cache_id = disaggAddr.getType().cast<RemoteMemRefType>().getCanRemote();
     emitCacheRequest(op, cache_id, prefOfst, slotOfst, loc);
-    rewriter.setInsertionPointAfter(inBound);
+    return inBound;
+    // rewriter.setInsertionPointAfter(inBound);
   }
 
   // set rewriter to the right position before calling this
-  // sync prefetched and get raw pointer
+  // get raw pointer
+  // Only sync the last prefetch, so only meta of last sync
+  // is needed
   void emitInnerPreLoop(Operation *op) {
     mlir::Location loc = loop.getLoc();
     Value baseOfst = rewriter.create<arith::MulIOp>(loc, 
@@ -275,10 +277,6 @@ public:
     Value slotOfst = rewriter.create<LLVM::LoadOp>(loc, 
       rewriter.create<LLVM::GEPOp>(loc, offsets.getType(), offsets, slotIdx)
     );
-    // sync token prefetch
-    rewriter.create<rmem::PollReqOp>(loc, 
-      slotOfst, rewriter.getI32IntegerAttr(cache_id), rewriter.getI32IntegerAttr(access_type)
-    );
 
     // get raw base pointer
     Value innerAddr = rewriter.create<rmem::PaddrOp>(loc, 
@@ -286,6 +284,15 @@ public:
       slotOfst, disaggAddr, rewriter.getI32IntegerAttr(cache_id)
     );
     pattern.innerBase[op] = innerAddr;
+
+    // if mut, add dirty
+    if (access_type) {
+      ModuleOp mop = op->getParentOfType<ModuleOp>(); 
+      Value pToken = caches[cache_id]->token(rewriter, mop, slotOfst, loc);
+      Token::add(rewriter, pToken, Token::Dirty, loc);
+    }
+
+    pattern.syncMetas[op] = std::make_tuple(slotOfst, cache_id);
   }
 
   // for( int i = 0; i < eles; i++ ) {
@@ -364,12 +371,22 @@ public:
     }
 
     emitOuterLoop();
+    Operation *lastPref = nullptr;
+    rewriter.setInsertionPointToStart(outerLoop.getBody());
     for (auto &[target, addr_dfs] : pattern.prefetches) {
-      emitPrefetches(target);
+      auto inBound = emitPrefetches(target);
+      lastPref = target;
+      rewriter.setInsertionPointAfter(inBound);
     }
-
     for (auto &[target, addr_dfs] : pattern.prefetches) {
       emitInnerPreLoop(target);
+    }
+    // sync last pref only
+    if (lastPref) {
+      auto [slotOfst, cache_id] = pattern.syncMetas[lastPref];
+      rewriter.create<rmem::PollReqOp>(lastPref->getLoc(), 
+        slotOfst, rewriter.getI32IntegerAttr(cache_id)
+      );
     }
 
     emitInnerLoop();
@@ -393,11 +410,14 @@ protected:
   LoopMeta pattern;
   scf::ForOp outerLoop;
   scf::ForOp innerLoop;
+  
+  std::set<Operation *> newAddrPathDFS(Value raddr) {
+    Operation *def = raddr.getDefiningOp();
+    return addrPathDFS(def);
+  }
 
   std::set<Operation *> addrPathDFS(Operation *op) {
     std::set<Operation *> search;
-    // rewriter.cloneRegionBefore(loop.getBodyRegion(), loop.getBodyRegion(), loop.getBodyRegion().);
-    // rewriter.setInsertionPoint(&loop.getBody()->back());
     for (OpOperand &opd : op->getOpOperands()) {
       if (opd.get() == loop.getInductionVar())
         search.insert(op);

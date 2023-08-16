@@ -28,6 +28,8 @@ using namespace mlir::disagg;
 using TrivialMathPowfConversion = TrivialMappingToRemotePattern<math::PowFOp, math::PowFOp>;
 using TrivialMathSqrtConversion = TrivialMappingToRemotePattern<math::SqrtOp, math::SqrtOp>;
 using TrivialMathExpConversion = TrivialMappingToRemotePattern<math::ExpOp, math::ExpOp>;
+using TrivialMathSinConversion = TrivialMappingToRemotePattern<math::SinOp, math::SinOp>;
+using TrivialMathCosConversion = TrivialMappingToRemotePattern<math::CosOp, math::CosOp>;
 
 //===============================================================
 // Arith trivial conversion
@@ -62,6 +64,8 @@ void mlir::disagg::populateTrivialDisaggPatterns(MLIRContext *ctx, RewritePatter
     TrivialMathPowfConversion,
     TrivialMathSqrtConversion, 
     TrivialMathExpConversion,
+    TrivialMathSinConversion,
+    TrivialMathCosConversion,
 
     TrivialArithAddIConversion,
     TrivialArithAddFConversion,

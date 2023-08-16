@@ -357,7 +357,7 @@ Value Cache::get(OpBuilder &rewriter, ModuleOp mop, Type outputType, Value vaddr
   rewriter.setInsertionPointToStart(needPoll.elseBlock());
   rewriter.create<scf::YieldOp>(loc, laddr);
   rewriter.setInsertionPointAfter(needPoll);
-  Token::add(rewriter, pToken, Token::Dirty, loc);
+  // Token::add(rewriter, pToken, Token::Dirty, loc);
   // needPoll->getBlock()->dump();
   return needPoll.getResult(0);
 }

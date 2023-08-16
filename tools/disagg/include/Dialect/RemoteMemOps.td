@@ -167,11 +167,10 @@ def RemoteMem_PollReqOp : RemoteMem_Op<"poll"> {
   let summary = "poll a request token from cache";
   let arguments = (ins
     I32: $offset,
-    I32Attr: $cache_id,
-    I32Attr: $access_type // 0 -> read, 1 -> write
+    I32Attr: $cache_id
   );
   let assemblyFormat = [{
-    $cache_id`,`$offset`,`$access_type attr-dict `:` functional-type(operands, results)  
+    $cache_id`,`$offset attr-dict `:` functional-type(operands, results)  
   }];
 }
 

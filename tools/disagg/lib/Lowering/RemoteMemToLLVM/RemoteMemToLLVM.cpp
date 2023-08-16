@@ -453,7 +453,6 @@ public:
     Value _seq = rewriter.create<LLVM::LoadOp>(loc, 
       Token::get_field_ptr(rewriter, pToken, Token::SEQ, rewriter.getI16Type(), loc));
     caches[cache_id]->poll_qid(rewriter, _qid, _seq, mop, loc);
-    Token::add(rewriter, pToken, Token::Dirty, loc);
     rewriter.eraseOp(op);
     return mlir::success();
   }

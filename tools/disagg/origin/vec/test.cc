@@ -18,9 +18,9 @@ int main () {
 
   printf("%zu\n", v.size());
 
-  // v.push_back(1);
-  // int s = sum(&v);
-  // printf("%d\n", s);
+  v.push_back(1);
+  int s = sum(&v);
+  printf("%d\n", s);
 
   return 0;
 }

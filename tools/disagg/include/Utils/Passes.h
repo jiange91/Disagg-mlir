@@ -9,6 +9,8 @@
 
 #include <set>
 #include <vector>
+#include <tuple>
+#include <map>
 
 using llvm::yaml::MappingTraits;
 using llvm::yaml::IO;
@@ -72,6 +74,12 @@ struct AllocationAnnotationPass
     std::map<uint64_t,ProfilingResult> allocationMap{};
     void parseProfilingResults();
 
+    void propogateRemotableOperator(Operation* op, Type remoteType, Operation* parentOp = nullptr);
+    void propogateRemotable();
+    void duplicateFunctions();
+
+    std::map<std::pair<std::string,int>, std::map<llvm::hash_code, func::FuncOp>> funcOverrideMap{};
+    func::FuncOp propogateRemotableFunction(func::FuncOp funcOp, int index, Type type);
 };
 
 std::unique_ptr<Pass> createAllocationAnnotationPass();
@@ -81,7 +89,6 @@ inline void registerAllocationAnnotationPass() {
         return createAllocationAnnotationPass();
     });
 }
-
 
 }
 

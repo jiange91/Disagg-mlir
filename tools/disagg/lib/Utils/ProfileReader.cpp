@@ -77,6 +77,7 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
   auto newFuncOp = dyn_cast<func::FuncOp>(funcOp->clone());
   newFuncOp.setName(funcOp.getName().str() + "__" + std::to_string(typeFuncs.size()));
 
+  llvm::errs() << "create remote function: " << newFuncOp.getName() << ", index " << index << ", type" << type << "\n";
   auto types = newFuncOp->hasAttr("operand_types")
                   ? llvm::to_vector(llvm::map_range(
                       newFuncOp->getAttrOfType<ArrayAttr>("operand_types").getValue(),
@@ -89,11 +90,12 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
 
   auto id = walkRemoteType(type);
 
-  auto _retType = newFuncOp.getResultTypes()[0];
-  if (isa<LLVM::LLVMPointerType>(_retType))
-    newFuncOp->setAttr("rel_types", builder.getTypeArrayAttr(rmem::RemoteMemRefType::get(_retType, id)));
-  llvm::errs() << "propogate remotable function: " << newFuncOp.getName() << "\n";
-  llvm::errs() << "propogate remotable function: " << newFuncOp << "\n\n\n";
+  if (newFuncOp.getNumResults() != 0) {
+    auto _retType = newFuncOp.getResultTypes()[0];
+    if (isa<LLVM::LLVMPointerType>(_retType))
+      newFuncOp->setAttr("rel_types", builder.getTypeArrayAttr(rmem::RemoteMemRefType::get(_retType, id)));
+    llvm::errs() << "propogate remotable function: " << newFuncOp << "\n\n\n";
+  }
 
   builder.setInsertionPointAfter(funcOp);
   builder.insert(newFuncOp);

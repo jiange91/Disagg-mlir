@@ -74,7 +74,7 @@ struct AllocationAnnotationPass
     std::map<uint64_t,ProfilingResult> allocationMap{};
     void parseProfilingResults();
 
-    void propogateRemotableOperator(Operation* op, Type remoteType, Operation* parentOp = nullptr, Value *parentValue = nullptr);
+    void propogateRemotableOperator(Operation* op, Type remoteType, Operation* parentOp = nullptr);
     void propogateRemotable();
     void duplicateFunctions();
 

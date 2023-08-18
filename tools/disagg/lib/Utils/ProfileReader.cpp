@@ -2,7 +2,6 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/IR/IntegerSet.h"
-#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -75,13 +74,10 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
   if (auto typeIt = typeFuncs.find(hash_value(type)); typeIt != typeFuncs.end())
     return typeIt->second;
 
-  auto newFuncOp = dyn_cast<func::FuncOp>(funcOp->clone(Operation::CloneOptions::all()));
+  auto newFuncOp = dyn_cast<func::FuncOp>(funcOp->clone());
   newFuncOp.setName(funcOp.getName().str() + "__" + std::to_string(typeFuncs.size()));
 
-  builder.setInsertionPointAfter(funcOp);
-  builder.insert(newFuncOp);
-
-  llvm::errs() << "create remote function: " << newFuncOp.getName() << ", index " << index << ", type " << type << "\n";
+  llvm::errs() << "create remote function: " << newFuncOp.getName() << ", index " << index << ", type" << type << "\n";
   auto types = newFuncOp->hasAttr("operand_types")
                   ? llvm::to_vector(llvm::map_range(
                       newFuncOp->getAttrOfType<ArrayAttr>("operand_types").getValue(),
@@ -94,14 +90,6 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
 
   auto id = walkRemoteType(type);
 
-  llvm::errs() << "tracing arguments: " << newFuncOp.getNumArguments() << ", index: " << index << "\n";
-  if (newFuncOp.getArguments().size() != 0) {
-    auto arg = newFuncOp.getArgument(index);
-    for (auto use : arg.getUsers()) {
-      propogateRemotableOperator(use, type, arg.getDefiningOp(), &arg);
-    }
-  }
-
   if (newFuncOp.getNumResults() != 0) {
     auto _retType = newFuncOp.getResultTypes()[0];
     if (isa<LLVM::LLVMPointerType>(_retType))
@@ -109,15 +97,15 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
     llvm::errs() << "propogate remotable function: " << newFuncOp << "\n\n\n";
   }
 
+  builder.setInsertionPointAfter(funcOp);
+  builder.insert(newFuncOp);
+
   typeFuncs[hash_value(type)] = newFuncOp;
   return newFuncOp;
 }
 
-void AllocationAnnotationPass::propogateRemotableOperator(Operation *op,
-                                                          Type remoteType,
-                                                          Operation *parentOp,
-                                                          Value *value) {
-  auto moduleOp = op->getParentOfType<ModuleOp>();
+void AllocationAnnotationPass::propogateRemotableOperator(Operation* op, Type remoteType, Operation* parentOp) {
+  auto moduleOp = getOperation();
   SymbolTableCollection symbolTable;
   OpBuilder builder(op);
 
@@ -149,12 +137,10 @@ void AllocationAnnotationPass::propogateRemotableOperator(Operation *op,
     auto callee = callOp.getCallee();
     symbolTable.getSymbolTable(moduleOp);
     auto funcOp = symbolTable.lookupNearestSymbolFrom(callOp, builder.getStringAttr(callee));
-    llvm::errs() << "trace to function: " << callee << ", result: " << funcOp << " ,op " << parentOp << "\n";
+    llvm::errs() << "trace to function: " << callee << ", result: " << funcOp << "\n";
 
     auto operands = callOp.getArgOperands();
-    Value targetValue = parentOp ? parentOp->getResult(0) : *value;
-    auto index = std::distance(operands.begin(), std::find(operands.begin(), operands.end(), targetValue));
-    
+    auto index = std::distance(operands.begin(), std::find(operands.begin(), operands.end(), parentOp->getResult(0)));
     auto targetCallee = propogateRemotableFunction(dyn_cast<func::FuncOp>(funcOp), index, remoteType);
 
     callOp->setAttr("remote_target", builder.getI64IntegerAttr(1));
@@ -162,7 +148,7 @@ void AllocationAnnotationPass::propogateRemotableOperator(Operation *op,
       callOp->setAttr("rel_types", targetCallee->getAttr("rel_types"));
     if (targetCallee.getName() != dyn_cast<func::FuncOp>(funcOp).getName())
       callOp->setAttr("remote_callee", builder.getStringAttr(targetCallee.getName()));
-  }
+  } 
 }
 
 void AllocationAnnotationPass::propogateRemotable() {

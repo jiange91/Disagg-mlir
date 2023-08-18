@@ -150,11 +150,43 @@ def RemoteMem_WaitReqOp : RemoteMem_Op<"sync"> {
   }];
 }
 
+//------ affine prefetch compatible with new runtime ----//
+def RemoteMem_AffineReqOp : RemoteMem_Op<"affine.req"> {
+  let summary = "Asynchronously perform a cache request with affine map";
+  let arguments = (ins 
+    StrAttr: $mem,
+    I32Attr: $cache_id,
+    RemoteMemRef: $rbase,
+    Variadic<Index>: $mapInput,
+    AffineMapAttr: $map
+  );
+  let results = (outs 
+    I32: $slot
+  );
+  let assemblyFormat = [{
+    $rbase `[` $mapInput `]` attr-dict `:` functional-type(operands, results) 
+  }];
+}
+
+def RemoteMem_AffinePaddrOp : RemoteMem_Op<"affine.paddr"> {
+  let summary = "get raw memref given base, slot id and affine map";
+  let arguments = (ins
+    I32: $offset,
+    RemoteMemRef: $rbase,
+    Variadic<Index>: $mapInput,
+    AffineMapAttr: $map
+  );
+  let results = (outs AnyTypeOf<[AnyMemRef, LLVM_AnyPointer]>: $localRef);
+  let assemblyFormat = [{
+    $offset`,`$rbase `[` $mapInput `]` attr-dict `:` functional-type(operands, results)  
+  }]; 
+}
+
 //------ High level primitives for cache access -----//
 def RemoteMem_RequestOp : RemoteMem_Op<"request"> {
   let summary = "request a token from cache";
   let arguments = (ins
-    RemoteMemRef: $vaddr,
+    AnyTypeOf<[LLVM_AnyPointer,RemoteMemRef]>: $vaddr,
     I32Attr: $cache_id
   );
   let results = (outs I32: $offset);

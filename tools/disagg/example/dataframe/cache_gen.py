@@ -1,5 +1,5 @@
 s1_nb = 512 * 1024
-s1_n_block = 120
+s1_n_block = 24
 
 # cache id, type, token offset, raddr offset, laddr offset, slots, line size bytes, qid
 # 0-direct 1-set 2-full'

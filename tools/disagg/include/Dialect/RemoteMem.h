@@ -37,7 +37,7 @@ enum ibv_wr_opcode {
 class RingCache {
 public:
   RingCache() = default;
-  RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::Type eleType, size_t eleTypeSize); 
+  RingCache(size_t blockSize, size_t nBlocks, rmem::RemoteMemRefType vaddrType, size_t perBlock, Value lbase, Value rbase); 
   size_t blockSize;
   size_t nBlocks;
   size_t totalSize;
@@ -46,7 +46,7 @@ public:
   mlir::Value lbase;
   mlir::Value rbase;
   mlir::Value tags;
-  mlir::Type eleType;
+  rmem::RemoteMemRefType vaddrType;
 
   mlir::Value readID;
   mlir::Value writeID;

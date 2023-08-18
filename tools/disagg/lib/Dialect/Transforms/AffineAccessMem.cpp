@@ -47,10 +47,17 @@ public:
 
   void inspectAccessMemDetails();
 
+  LocalCache &base_to_cache(Value base) {
+    StringRef tname = catch_to_temp[mem_to_catcher[base]];
+    return localPools[tname];
+  }
+
   // level = 1 means the immediate parent loop
   void getAccessRangeAtLevel(RmemAccess &access, unsigned level, DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range);
 
-  void mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range);
+  void mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range,
+    DenseMap<AffineForOp, DenseMap<Value, std::pair<AffineMap, AffineMap>>> &fop_base_low_high, 
+    DenseMap<AffineForOp, DenseMap<Value, int64_t>> &fop_base_size);
 
   RemoteMemTypeLowerer &typeConverter;
   // Encolsing relationship <v `is closest parent of` k>
@@ -257,7 +264,9 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
     for (auto [op, ra] : accessInternal.raccess) {
       accessInternal.getAccessRangeAtLevel(ra, 10, range);
     }
-    accessInternal.mergeRange(range);
+    DenseMap<AffineForOp, DenseMap<Value, std::pair<AffineMap, AffineMap>>> fop_base_low_high;
+    DenseMap<AffineForOp, DenseMap<Value, int64_t>> fop_base_size;
+    accessInternal.mergeRange(range, fop_base_low_high, fop_base_size);
 
     uint64_t lofst = 0;
     for (auto &[tname, cache] : pools) {
@@ -272,6 +281,41 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
       temp_attrs.emplace_back(b.getStringAttr(tname), cache.toAttr(b));
     }
     mop->setAttr("rmem.templates", b.getDictionaryAttr(temp_attrs));
+
+    // set fop access mem
+    // NOTE: access_mem.batch size = template.blocksize / access_mem.size
+    for (auto &[fop, access_mem] : range) {
+      OpBuilder b(ctx);
+      SmallVector<Attribute> access_mem_attrs;
+      size_t loop_batch = 0;
+      for (auto [base, lh] : fop_base_low_high[fop]) {
+        StringRef catcher = accessInternal.mem_to_catcher[base];
+        AffineMap ofst = lh.first;
+        uint64_t size = fop_base_size[fop][base];
+        StringRef tname = accessInternal.catch_to_temp[catcher];
+        SmallVector<Attribute> mem_attr = {
+          b.getStringAttr(catcher),
+          AffineMapAttr::get(ofst),
+          b.getIntegerAttr(b.getI64Type(), size),
+          b.getStringAttr(tname)
+        };
+        access_mem_attrs.push_back(b.getArrayAttr(mem_attr));
+
+        // if batch sizes within a loop are the same, it's OK to use batch
+        // to adopt inconsistent block size
+        size_t cache_line_size = accessInternal.base_to_cache(base).blockSize;
+        assert(cache_line_size % size == 0 && "cache line size must be multiple times of access size");
+        size_t batch = cache_line_size / size;
+        if (loop_batch)
+          assert(loop_batch == batch && "batch within a loop must be the same");
+        else
+          loop_batch = batch;
+      }
+      fop->setAttr("pf_target", b.getI64IntegerAttr(1));
+      fop->setAttr("nahead", b.getI64IntegerAttr(1));
+      fop->setAttr("batch", b.getI64IntegerAttr(loop_batch)); 
+      fop->setAttr("access_mem", b.getArrayAttr(access_mem_attrs));
+    }
   }
 };
 }
@@ -347,10 +391,12 @@ namespace {
     range[fop].push_back(std::make_tuple(access.base, newLow, s));
   }
 
-  void AffineAccessMemInternal::mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range) {
+  void AffineAccessMemInternal::mergeRange(DenseMap<AffineForOp, std::vector<std::tuple<Value, AffineMap, uint64_t>>> &range,
+    DenseMap<AffineForOp, DenseMap<Value, std::pair<AffineMap, AffineMap>>> &fop_base_low_high, 
+    DenseMap<AffineForOp, DenseMap<Value, int64_t>> &fop_base_size) {
     for (auto [fop, access_mems] : range) {
       // by value low high
-      DenseMap<Value, std::pair<AffineMap, AffineMap>> by_base;
+      auto &by_base = fop_base_low_high[fop];
       MLIRContext *ctx = fop->getContext();
       for (auto [base, low, s] : access_mems) {
         if (by_base.find(base) == by_base.end()) {
@@ -385,7 +431,7 @@ namespace {
 
       // calculate size
       // size = max(high - low, induction gap)
-      DenseMap<Value, int64_t> access_size; 
+      auto &access_size = fop_base_size[fop]; 
       for (auto [base, lh] : by_base) {
         auto [low, high] = lh;
         AffineMap sizeMap = simplifyAffineMap(AffineMap::get(
@@ -407,30 +453,8 @@ namespace {
         access_size[base] = size;
         // update local cache lofst and block size
         StringRef tname = catch_to_temp[mem_to_catcher[base]];
-        localPools[tname].blockSize = size;
+        localPools[tname].blockSize = std::max(localPools[tname].blockSize, (size_t) size);
       }
-      
-
-      // write to attributes
-      OpBuilder b(ctx);
-      SmallVector<Attribute> access_mem_attrs;
-      for (auto [base, lh] : by_base) {
-        StringRef catcher = this->mem_to_catcher[base];
-        AffineMap ofst = lh.first;
-        uint64_t size = access_size[base];
-        StringRef tname = this->catch_to_temp[catcher];
-        SmallVector<Attribute> mem_attr = {
-          b.getStringAttr(catcher),
-          AffineMapAttr::get(ofst),
-          b.getIntegerAttr(b.getI64Type(), size),
-          b.getStringAttr(tname)
-        };
-        access_mem_attrs.push_back(b.getArrayAttr(mem_attr));
-      }
-      fop->setAttr("pf_target", b.getI64IntegerAttr(1));
-      fop->setAttr("nahead", b.getI64IntegerAttr(1));
-      fop->setAttr("batch", b.getI64IntegerAttr(1));
-      fop->setAttr("access_mem", b.getArrayAttr(access_mem_attrs));
     }
   }
 }

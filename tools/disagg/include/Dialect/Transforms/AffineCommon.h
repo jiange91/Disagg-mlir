@@ -67,6 +67,7 @@ public:
   std::string fromPool;
 
   access_type t;
+  Value _laddr; // set after paddr (inner preloop)
 };
 
 

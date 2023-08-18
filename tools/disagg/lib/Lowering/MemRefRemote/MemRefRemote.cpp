@@ -313,6 +313,99 @@ public:
   DenseMap<StringRef, LocalCache> &pools;
 };
 
+class RemoteMemAffineReqLoering : public RemoteMemOpLoweringPattern<rmem::AffineReqOp> {
+public:
+  RemoteMemAffineReqLoering(
+  rmem::RemoteMemTypeLowerer &typeConverter,
+  MLIRContext *ctx)
+  : RemoteMemOpLoweringPattern<rmem::AffineReqOp>::RemoteMemOpLoweringPattern(typeConverter, ctx) {} 
+
+  LogicalResult matchAndRewrite(rmem::AffineReqOp op, rmem::AffineReqOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+
+    // get remote base addr
+    MemRefDescriptor rmemrefDesc(adaptor.getRbase());
+    Value rbase = rmemrefDesc.alignedPtr(rewriter, loc);
+    Value mapOffset = rewriter.create<arith::IndexCastOp>(loc, 
+      rewriter.getI64Type(),
+      rewriter.create<AffineApplyOp>(loc, op.getMap(), op.getMapInput())
+    );
+    Value totalOffset = rewriter.create<arith::AddIOp>(loc, 
+      rewriter.getI64Type(),
+      mapOffset, rmemrefDesc.offset(rewriter, loc)
+    );
+    Value rAddr = rewriter.create<LLVM::GEPOp>(loc,
+        rbase.getType(),
+        rbase,
+        SmallVector<LLVM::GEPArg>({totalOffset}));
+    Value slot = rewriter.create<rmem::RequestOp>(loc,
+      rewriter.getI32Type(),
+      rAddr,
+      adaptor.getCacheIdAttr()
+    );
+    rewriter.replaceOp(op, slot);
+    return mlir::success();
+  }
+};
+
+class RemoteMemAffinePaddrLowering : public RemoteMemOpLoweringPattern<rmem::AffinePaddrOp> {
+public:
+  using RemoteMemOpLoweringPattern<rmem::AffinePaddrOp>::RemoteMemOpLoweringPattern;
+  LogicalResult matchAndRewrite(rmem::AffinePaddrOp op, rmem::AffinePaddrOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
+    Location loc = op.getLoc();
+    Type relType = op.getLocalRef().getType();
+    if (!relType.isa<MemRefType>())
+      return mlir::failure();
+    MemRefType memRefType = relType.cast<MemRefType>();
+
+    // get remote base addr
+    MemRefDescriptor rmemrefDesc(adaptor.getRbase());
+    Value rbase = rmemrefDesc.alignedPtr(rewriter, loc);
+    Value mapOffset = rewriter.create<arith::IndexCastOp>(loc, 
+      rewriter.getI64Type(),
+      rewriter.create<AffineApplyOp>(loc, op.getMap(), op.getMapInput())
+    );
+    Value totalOffset = rewriter.create<arith::AddIOp>(loc, 
+      rewriter.getI64Type(),
+      mapOffset, rmemrefDesc.offset(rewriter, loc)
+    );
+    Value rAddr = rewriter.create<LLVM::GEPOp>(loc,
+        rbase.getType(),
+        rbase,
+        SmallVector<LLVM::GEPArg>({totalOffset}));
+
+    // get raw pointer
+    unsigned cache_id = op.getRbase().getType().cast<RemoteMemRefType>().getCanRemote();  
+    Value laddr = rewriter.create<rmem::PaddrOp>(loc, 
+      rbase.getType(),
+      adaptor.getOffset(), rAddr, rewriter.getI32IntegerAttr(cache_id)
+    );
+
+    SmallVector<Value, 2> sizes;
+    SmallVector<Value, 2> strides;
+    SmallVector<Value, 0> dynSizeOpds;
+    Value sizeBytes;
+    this->getMemRefDescriptorSizes(loc, memRefType, dynSizeOpds, rewriter, sizes,
+                                  strides, sizeBytes);
+
+    // The allocated address is pinned by rdma, we do not expect it to be ever freed
+    // Set to known bad value to help debugging
+    auto intPtrType = getIntPtrType(memRefType.getMemorySpaceAsInt());
+    Value deadBeefConst =
+      createIndexAttrConstant(rewriter, loc, intPtrType, 0xdeadbeef);
+    auto deadBeefPtr =
+      rewriter.create<LLVM::IntToPtrOp>(loc, rbase.getType(), deadBeefConst); 
+
+    // Create the MemRef descriptor.
+    auto memRefDescriptor = this->createMemRefDescriptor(
+        loc, memRefType, deadBeefPtr, laddr, sizes, strides, rewriter);
+
+    // Return the final value of the descriptor.
+    rewriter.replaceOp(op, {memRefDescriptor});
+    return mlir::success();
+  }
+};
+
 class RemoteMemGetSlotLowering : public RemoteMemOpLoweringPattern<rmem::GetSlotOp> {
 public:
   RemoteMemGetSlotLowering(
@@ -438,7 +531,9 @@ void populateLowerMemRefRMemPatterns (rmem::RemoteMemTypeLowerer &converter, Rew
     RMemRefLoadOpLowering,
     RMemRefStoreOpLowering,
     RMemRefCastOpLowering,
-    RMemRefReinterpretCastOpLowering
+    RMemRefReinterpretCastOpLowering,
+    RemoteMemAffinePaddrLowering,
+    RemoteMemAffineReqLoering
   >(converter, &converter.getContext());
 
   patterns.add<

@@ -415,12 +415,7 @@ public:
     // offs[i] = C2::select(tags[i]);
     // C2R::request(offs[i], tags[i]);
     mlir::Location loc = op.getLoc();
-    rmem::RemoteMemRefType vaddrType = op.getVaddr().getType().cast<rmem::RemoteMemRefType>();
-    if (!rmem::isTrueRemoteRef(vaddrType)) {
-      llvm::errs() << "This will never happen, since fake remote access should not be the prefetch target\n";
-      return mlir::failure();
-    }
-    unsigned cache_id = vaddrType.getCanRemote();
+    unsigned cache_id = adaptor.getCacheId();
     ModuleOp mop = op->getParentOfType<ModuleOp>(); 
     Value vaddr = adaptor.getVaddr();
     Value tagI64 = caches[cache_id]->tag(rewriter, vaddr, loc);
@@ -467,18 +462,14 @@ public:
   
   LogicalResult matchAndRewrite(rmem::PaddrOp op, rmem::PaddrOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
     Value newAddr = adaptor.getVaddr();
-    // if not true remote, do nothing
-    auto r = rmem::isTrueRemoteRef(op.getVaddr().getType());
-    if (r) {
-      Location loc = op->getLoc();
-      ModuleOp mop = op->getParentOfType<ModuleOp>();
-      unsigned cache_id = adaptor.getCacheId();
-      newAddr = caches[cache_id]->paddr(rewriter, mop, 
+    Location loc = op->getLoc();
+    ModuleOp mop = op->getParentOfType<ModuleOp>();
+    unsigned cache_id = adaptor.getCacheId();
+    newAddr = caches[cache_id]->paddr(rewriter, mop, 
       newAddr.getType(), 
       adaptor.getOffset(), 
       rewriter.create<LLVM::PtrToIntOp>(loc, rewriter.getI64Type(), newAddr), 
       loc);
-    }
     rewriter.replaceOp(op, newAddr);
     return mlir::success();
   }

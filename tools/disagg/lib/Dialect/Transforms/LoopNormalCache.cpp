@@ -107,16 +107,9 @@ public:
         auto dfs = newAddrPathDFS(rp.second);
         if (checkDFS(dfs, &op)) {
           // unsigned DC = dfsComplexity(dfs);
-          Value addr;
-          if (auto load = dyn_cast<rmem::LoadOp>(op)) {
-            addr = load.getAddr();
-          }
-          if (auto store = dyn_cast<rmem::StoreOp>(op)) {
-            addr = store.getAddr();
-          }
           // TODO: if DC > Data movement, cancel prefetch
           // Not likely
-          pattern.prefetches[&op] = std::pair(addr, dfs);
+          pattern.prefetches[&op] = std::pair(rp.second, dfs);
           // distances[&op] = ceilDiv(2000, DC + loopInterval);
           pattern.distances[&op] = this->prefDist;
           pattern.maxDistance = std::max(pattern.maxDistance, pattern.distances[&op]);

@@ -44,6 +44,10 @@ def RMEMLoopRingCache : Pass<"rmem-loop-ring-cache", "mlir::ModuleOp"> {
   let summary = "Create ring cache access code for for-loops";
   let constructor = "mlir::createRemoteMemLoopRingCachePass()";
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "scf::SCFDialect"];
+  let options = [
+    Option<"cacheCFG", "ccfg", "std::string", "", "cache configurations">,
+    Option<"prefDist", "dist", "unsigned", "0", "prefetch distance">
+  ];
 }
 
 def RMEMLoopNormalCache : Pass<"rmem-loop-normal-cache", "mlir::ModuleOp"> {
@@ -66,6 +70,22 @@ def RMEMAffineRingCache : Pass<"rmem-affine-ring-cache", "mlir::ModuleOp"> {
     Option<"debug", "debug", "bool", "false", "print meta info">
   ];
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
+}
+
+def RMEMAffineNormalCache : Pass<"rmem-affine-normal-cache", "mlir::ModuleOp"> {
+  let summary = "Create new runtime access code for affine-loops";
+  let constructor = "mlir::createRemoteMemAffineNormalCachePass()";
+  let options = [
+    Option<"cacheCFG", "ccfg", "std::string", "", "cache configurations">,
+    Option<"debug", "debug", "bool", "false", "print meta info">
+  ];
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
+}
+
+def RMEMScfParallelSep : Pass<"rmem-scf-parallel-sep", "mlir::ModuleOp"> {
+  let summary = "Create different version of function for scf parallel";
+  let constructor = "mlir::createRemoteMemSCFParallelSepPass()";
+  let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "scf::SCFDialect", "func::FuncDialect"]; 
 }
 
 def RMEMAffineAccessMem : Pass<"rmem-affine-access-mem", "mlir::ModuleOp"> {

@@ -8,9 +8,11 @@ add_mlir_dialect_library(MLIRRMEMTransforms
   LoopRingCache.cpp
   LoopNormalCache.cpp
   AffineRingCache.cpp
+  AffineNormalCache.cpp
   AffineAccessMem.cpp
   PropRemote.cpp
   MemPooling.cpp
+  ScfParallelSep.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include

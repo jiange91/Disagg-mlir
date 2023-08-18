@@ -114,8 +114,8 @@ LLVMGlobalOp LLVMAddressOfOp::getGlobal() {
 // RemoteMem Dialect
 //================================================================
 
-RingCache::RingCache(size_t blockSize, size_t nBlocks, size_t totalSize, mlir::Type T, size_t eleTypeSize): blockSize(blockSize), nBlocks(nBlocks), totalSize(totalSize), lbase(nullptr), rbase(nullptr), eleType(T) {
-  perBlock = blockSize / eleTypeSize;
+RingCache::RingCache(size_t blockSize, size_t nBlocks, rmem::RemoteMemRefType vaddrType, size_t perBlock, Value lbase, Value rbase): blockSize(blockSize), nBlocks(nBlocks), perBlock(perBlock), lbase(lbase), rbase(rbase), vaddrType(vaddrType) {
+  totalSize = blockSize * nBlocks;
 };
 
 LocalCache::LocalCache(ArrayAttr attrs) {

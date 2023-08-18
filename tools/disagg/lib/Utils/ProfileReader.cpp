@@ -33,6 +33,21 @@ Type typeAttrArrayToType(Attribute attr) {
   return typeAttr.dyn_cast<TypeAttr>().getValue();
 }
 
+size_t transformTypeSize(Type type) {
+  unsigned factor = 512 * 1024;
+  if (isa<LLVM::LLVMPointerType>(type)) {
+    auto ptrType = cast<LLVM::LLVMPointerType>(type);
+    return transformTypeSize(ptrType.getElementType());
+  } else if (isa<LLVM::LLVMStructType>(type)) {
+    auto structType = cast<LLVM::LLVMStructType>(type);
+    for (auto elementType : structType.getBody()) {
+      return transformTypeSize(elementType);
+    }
+  } else if (isa<IntegerType>(type) || isa<FloatType>(type)) {
+    return type.getIntOrFloatBitWidth() / 8 * factor;
+  }
+}
+
 Type transformStruct(MLIRContext *context, Type type, int cacheId = 0) {
   if (isa<LLVM::LLVMPointerType>(type)) {
     auto ptrType = cast<LLVM::LLVMPointerType>(type);
@@ -77,7 +92,7 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
   auto newFuncOp = dyn_cast<func::FuncOp>(funcOp->clone());
   newFuncOp.setName(funcOp.getName().str() + "__" + std::to_string(typeFuncs.size()));
 
-  llvm::errs() << "create remote function: " << newFuncOp.getName() << ", index " << index << ", type" << type << "\n";
+  // llvm::errs() << "create remote function: " << newFuncOp.getName() << ", index " << index << ", type" << type << "\n";
   auto types = newFuncOp->hasAttr("operand_types")
                   ? llvm::to_vector(llvm::map_range(
                       newFuncOp->getAttrOfType<ArrayAttr>("operand_types").getValue(),
@@ -94,7 +109,7 @@ AllocationAnnotationPass::propogateRemotableFunction(func::FuncOp funcOp,
     auto _retType = newFuncOp.getResultTypes()[0];
     if (isa<LLVM::LLVMPointerType>(_retType))
       newFuncOp->setAttr("rel_types", builder.getTypeArrayAttr(rmem::RemoteMemRefType::get(_retType, id)));
-    llvm::errs() << "propogate remotable function: " << newFuncOp << "\n\n\n";
+    // llvm::errs() << "propogate remotable function: " << newFuncOp << "\n\n\n";
   }
 
   builder.setInsertionPointAfter(funcOp);
@@ -109,17 +124,17 @@ void AllocationAnnotationPass::propogateRemotableOperator(Operation* op, Type re
   SymbolTableCollection symbolTable;
   OpBuilder builder(op);
 
-  llvm::errs() << "With remote type: " << remoteType << "\n";
+  // llvm::errs() << "With remote type: " << remoteType << "\n";
 
   if (auto globalOp = dyn_cast<LLVM::GlobalOp>(op)) {
-    llvm::errs() << "propogate global op\n" << globalOp << "\n";
+    // llvm::errs() << "propogate global op\n" << globalOp << "\n";
     auto uses = globalOp.getSymbolUses(moduleOp);
     if (uses.has_value()) {
       for (auto &use : uses.value())
         propogateRemotableOperator(use.getUser(), remoteType, op);
     }
   } else if (auto addressOfOp = dyn_cast<LLVM::AddressOfOp>(op)) {
-    llvm::errs() << "propogate addressof op\n" << addressOfOp << "\n";
+    // llvm::errs() << "propogate addressof op\n" << addressOfOp << "\n";
     if (!isa<LLVM::GlobalOp>(parentOp))
       return;
     addressOfOp->setAttr("remote_target", builder.getI64IntegerAttr(1));
@@ -128,16 +143,16 @@ void AllocationAnnotationPass::propogateRemotableOperator(Operation* op, Type re
     for (auto use: addressOfOp->getUsers())
       propogateRemotableOperator(use, remoteType, addressOfOp);
   } else if (auto loadOp = dyn_cast<LLVM::LoadOp>(op)) {
-    llvm::errs() << "propogate load op\n" << loadOp << "\n";
+    // llvm::errs() << "propogate load op\n" << loadOp << "\n";
     if (auto ptrType = dyn_cast<LLVM::LLVMPointerType>(remoteType))
       for (auto use: loadOp->getUsers())
         propogateRemotableOperator(use, ptrType.getElementType(), loadOp);
   } else if (auto callOp = dyn_cast<func::CallOp>(op)) {
-    llvm::errs() << "propogate call op\n" << callOp << "\n";
+    // llvm::errs() << "propogate call op\n" << callOp << "\n";
     auto callee = callOp.getCallee();
     symbolTable.getSymbolTable(moduleOp);
     auto funcOp = symbolTable.lookupNearestSymbolFrom(callOp, builder.getStringAttr(callee));
-    llvm::errs() << "trace to function: " << callee << ", result: " << funcOp << "\n";
+    // llvm::errs() << "trace to function: " << callee << ", result: " << funcOp << "\n";
 
     auto operands = callOp.getArgOperands();
     auto index = std::distance(operands.begin(), std::find(operands.begin(), operands.end(), parentOp->getResult(0)));
@@ -156,12 +171,17 @@ void AllocationAnnotationPass::propogateRemotable() {
   OpBuilder builder(op);
   unsigned remote_id = 1;
   op->walk([this, op, &remote_id, &builder](LLVM::GlobalOp globalOp) {
-    if (!globalOp->hasAttr("remote_target"))
+    if (globalOp.getLinkage() != LLVM::Linkage::External)
       return;
-    if (!globalOp->hasAttr("rel_types"))
+    globalOp->setAttr("remote_target", builder.getI64IntegerAttr(1));
+    if (!globalOp->hasAttr("rel_types")) {
+      configMap[remote_id] =
+          std::make_tuple(256, transformTypeSize(globalOp.getType()),
+                          static_cast<uint64_t>(1) * 1024 * 1024 * 1024);
       globalOp->setAttr(
           "rel_types", builder.getTypeArrayAttr(transformStruct(
                            op->getContext(), globalOp.getType(), remote_id++)));
+    }
 
     auto remoteType = globalOp->getAttrOfType<ArrayAttr>("rel_types")[0].dyn_cast<TypeAttr>().getValue();
     propogateRemotableOperator(globalOp, remoteType, op);
@@ -190,7 +210,7 @@ void AllocationAnnotationPass::duplicateFunctions() {
           localCalls.push_back(callOp);
       }
 
-    llvm::errs() << "Function: " << funcOp.getName() << ", local calls: " << localCalls.size() << "\n";
+    // llvm::errs() << "Function: " << funcOp.getName() << ", local calls: " << localCalls.size() << "\n";
 
     if (localCalls.empty())
       return WalkResult::advance();
@@ -203,7 +223,7 @@ void AllocationAnnotationPass::duplicateFunctions() {
     funcOp->removeAttr("remote_target");
     funcOp->removeAttr("rel_type");
 
-    llvm::errs() << "Duplicate Function: " << funcOp.getName() << ", to function: " << newFuncOp.getName() << "\n";
+    // llvm::errs() << "Duplicate Function: " << funcOp.getName() << ", to function: " << newFuncOp.getName() << "\n";
 
     // Annotate funcop callers
     for (auto &callOp : remoteCalls)
@@ -211,6 +231,28 @@ void AllocationAnnotationPass::duplicateFunctions() {
                       builder.getStringAttr(newFuncOp.getName()));
     return WalkResult::advance();
   });
+}
+
+void AllocationAnnotationPass::normalizeConfig() {
+  if (!memorySizeOption.hasValue())
+    return;
+  size_t memorySize = memorySizeOption.getValue();
+  size_t totalMemory = std::reduce(configMap.begin(), configMap.end(), 0ULL,
+              [memorySize](size_t acc, auto &kv) {
+                auto [id, config] = kv;
+                auto [size, linesize, _] = config;
+                return acc + size * linesize;
+              });
+  if (totalMemory < memorySize)
+    return;
+  // llvm::errs() << "totalMem" << totalMemory << ", memorySize " << memorySize << "\n";
+  int factor = (1 + (totalMemory - 1)) / (memorySize * cache_factor);
+  for (auto &kv : configMap) {
+    auto &[id, config] = kv;
+    auto &[size, _linesize, _space] = config;
+    // llvm::errs() << "Normalize: id = " << id <<  " size " << size << ", factor " << factor << "\n";
+    size = size / factor;
+  }
 }
 
 void AllocationAnnotationPass::runOnOperation() {
@@ -289,55 +331,21 @@ void AllocationAnnotationPass::runOnOperation() {
       }
     });
 
-    // For parallelsim
-    // if (auto parallelOp = dyn_cast<scf::ParallelOp>(getOperation())) {
-    //   auto step = parallelOp.getStep();
-    //   auto lowerBound = parallelOp.getLowerBound();
-    //   auto upperBound = parallelOp.getUpperBound();
-
-    //   if (lowerBound.size() != 1 || upperBound.size() != 1 || step.size() != 1)
-    //     return;
-    //   auto stepValue = step[0];
-    //   if (!isConstantIntValue(step[0], 1) || !isConstantIntValue(lowerBound[0], 0))
-    //     return;
-
-    //   int numThreads = 4;
-
-    //   OpBuilder builder(parallelOp);
-    //   auto funcOp = dyn_cast<func::FuncOp>(getOperation());
-    //   auto callOp = dyn_cast<func::CallOp>(getOperation());
-
-    //   // build a pid_t array
-    //   // build new functions for threads
-    //   for (int i = 0; i < numThreads; i++) {
-    //     auto newFuncOp = dyn_cast<func::FuncOp>(funcOp->clone());
-    //     newFuncOp.setName(funcOp.getName().str() + "__" + std::to_string(i));
-    //     builder.setInsertionPointAfter(funcOp);
-    //     builder.insert(newFuncOp);
-
-    //     // do this at generation time.
-    //     auto loc = funcOp->getLoc();
-    //     scf::IfOp ifOp = builder.create<scf::IfOp>(loc,
-    //       builder.getI1Type(),
-    //       builder.create<arith::CmpIOp>(loc, arith::CmpIPredicate::eq, 
-    //         inductionVar,
-    //         builder.create<arith::ConstantIntOp>(loc, 0, i)),
-    //       false
-    //     );
-    //     builder.setInsertionPointToStart(ifOp.thenBlock());
-        
-    //     auto newCallOp = dyn_cast<func::CallOp>(callOp->clone());
-    //     newCallOp.setCallee(newFuncOp.getName());
-    //     builder.insert(newCallOp);
-    //   }
-      // dispatch to different funcion at thread time. use a if-else tree
-    // }
-
-    // another pass for parallel call
-    // parallel -> normal llvm loop
-    // call -> thread call
-
-    // add a wait after calls
+    if (configMap.size() != 0 && !configFile.empty()) {
+      normalizeConfig();
+      std::ofstream file;
+      file.open(configFile);
+      size_t token_offset = 0, offset = 0;
+      for (const auto &[id, config] : configMap) {
+        auto [size, linesize, space] = config;
+        file << id << " " << 0 << " " << token_offset << " " << offset
+                   << " " << offset << " " << size << " " << linesize << " "
+                   << id << "\n";
+        token_offset += size;
+        offset += space;
+      }
+      file.close();
+    }
 }
 
 void AllocationAnnotationPass::parseProfilingResults() {
@@ -347,7 +355,7 @@ void AllocationAnnotationPass::parseProfilingResults() {
     return;
   }
 
-  {
+  if (memoryProfOption.hasValue()) {
     std::vector<ProfilingResult> docs;
     loadProfilingFromFile(memoryProfOption.getValue(), docs);
 

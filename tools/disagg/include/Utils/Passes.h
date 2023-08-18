@@ -78,6 +78,11 @@ struct AllocationAnnotationPass
     void propogateRemotable();
     void duplicateFunctions();
 
+    float cache_factor = 0.8;
+    std::string configFile = "/tmp/cache.cfg";
+    std::map <int, std::tuple<size_t, size_t, uint64_t>> configMap{};
+    void normalizeConfig();
+
     std::map<std::pair<std::string,int>, std::map<llvm::hash_code, func::FuncOp>> funcOverrideMap{};
     func::FuncOp propogateRemotableFunction(func::FuncOp funcOp, int index, Type type);
 };

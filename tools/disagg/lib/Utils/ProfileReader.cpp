@@ -237,12 +237,12 @@ void AllocationAnnotationPass::normalizeConfig() {
   if (!memorySizeOption.hasValue())
     return;
   size_t memorySize = memorySizeOption.getValue();
-  size_t totalMemory = std::reduce(configMap.begin(), configMap.end(), 0ULL,
-              [memorySize](size_t acc, auto &kv) {
-                auto [id, config] = kv;
-                auto [size, linesize, _] = config;
-                return acc + size * linesize;
-              });
+  size_t totalMemory = 0;
+  for (auto &kv : configMap) {
+    auto [id, config] = kv;
+    auto [size, linesize, _] = config;
+    totalMemory + size * linesize;
+  }
   if (totalMemory < memorySize)
     return;
   // llvm::errs() << "totalMem" << totalMemory << ", memorySize " << memorySize << "\n";

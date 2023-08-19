@@ -31,6 +31,25 @@ using namespace mlir::rmem;
 using namespace mlir::scf;
 
 namespace {
+
+Type transformType(Type type, int id, int factor) {
+  if (auto rmrefType = type.dyn_cast<rmem::RemoteMemRefType>()) {
+    return rmem::RemoteMemRefType::get(rmrefType.getElementType(), rmrefType.getCanRemote() + id * factor);
+  } else
+    return type;
+}
+
+void parallelAssign(func::FuncOp funcOp, int id, int factor) {
+  auto operands = funcOp.getArguments();
+  std::vector<Type> newArgTypes;
+  for (auto op : operands) {
+    auto newType = transformType(op.getType(), id, factor);
+    op.setType(newType);
+    newArgTypes.push_back(newType);
+  }
+  funcOp.setFunctionType(mlir::FunctionType::get(funcOp.getContext(), newArgTypes, funcOp.getFunctionType().getResults()));
+}
+
 void parallelSeperation(scf::ParallelOp para, ModuleOp mop, std::map<func::CallOp, func::FuncOp> &oldCalls) {
   OpBuilder b(para);
   MLIRContext *ctx = mop->getContext();
@@ -49,17 +68,12 @@ void parallelSeperation(scf::ParallelOp para, ModuleOp mop, std::map<func::CallO
     // create a swtich-like pattern
     for (uint64_t i = 0; i < plevel; ++ i) {
       // create new function
-      auto newFunc = dyn_cast<func::FuncOp>(func->clone());
+      auto newFunc = dyn_cast<func::FuncOp>(func->clone(Operation::CloneOptions::all()));
       newFunc.setName(callee.str() + "__" + std::to_string(i));
       b.setInsertionPointAfter(func);
       b.insert(newFunc);
+      parallelAssign(newFunc, i, 2);
 
-      // use fake callee fow now
-      // auto funcType = mlir::FunctionType::get(ctx, {
-      //   newFunc.getArgumentTypes()[0],
-      //   LLVM::LLVMPointerType::get(ctx, newFunc.getArgumentTypes()[1], 0),
-      //   LLVM::LLVMPointerType::get(ctx, newFunc.getArgumentTypes()[2], 0),
-      //   }, newFunc.getResultTypes());
       auto funcType = mlir::FunctionType::get(ctx,
         newFunc.getArgumentTypes(), newFunc.getResultTypes());
       auto fakeFunc = b.create<func::FuncOp>(loc, "run_task_" + std::to_string(i), funcType);
@@ -75,7 +89,17 @@ void parallelSeperation(scf::ParallelOp para, ModuleOp mop, std::map<func::CallO
       // NOTE: assume callop does not have result
       scf::IfOp cond = b.create<scf::IfOp>(loc, match, false);
       b.setInsertionPointToStart(cond.thenBlock());
-      b.create<func::CallOp>(loc, fakeFunc.getNameAttr(), callOp.getResultTypes(), callOp.getArgOperands());
+      // process operands
+      auto newOperands = llvm::to_vector<4>(
+          llvm::map_range(callOp.getOperands(), [&](Value operand) -> Value {
+            auto newType = transformType(operand.getType(), i, 2);
+            if (newType != operand.getType()) {
+              auto newValue = b.create<rmem::BitCastOp>(loc, newType, operand);
+              return newValue;
+            } else
+              return operand;
+          }));
+      b.create<func::CallOp>(loc, fakeFunc.getNameAttr(), callOp.getResultTypes(), newOperands);
     }
     oldCalls[callOp] = func;
   }

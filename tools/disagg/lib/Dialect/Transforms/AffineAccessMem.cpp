@@ -79,6 +79,9 @@ public:
 namespace {
 class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineAccessMemPass> {
   void runOnOperation() override {
+    unsigned dist = prefDist;
+    if (dist == 0)
+      return;
     ModuleOp mop = getOperation();
     MLIRContext *ctx = mop.getContext();
     RemoteMemTypeLowerer typeConverter(ctx);
@@ -312,7 +315,7 @@ class RMEMAffineAccessMemPass : public impl::RMEMAffineAccessMemBase<RMEMAffineA
           loop_batch = batch;
       }
       fop->setAttr("pf_target", b.getI64IntegerAttr(1));
-      fop->setAttr("nahead", b.getI64IntegerAttr(1));
+      fop->setAttr("nahead", b.getI64IntegerAttr(dist));
       fop->setAttr("batch", b.getI64IntegerAttr(loop_batch)); 
       fop->setAttr("access_mem", b.getArrayAttr(access_mem_attrs));
     }

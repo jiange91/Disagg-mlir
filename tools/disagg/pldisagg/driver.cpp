@@ -57,6 +57,12 @@ int main(int argc, char **argv) {
 
   // interface perpare
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
+    LLVM::LLVMFunctionType::attachInterface<MemRefInsider>(*ctx);
+  });
+  registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
+    LLVM::LLVMArrayType::attachInterface<MemRefInsider>(*ctx);
+  });
+  registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
     LLVM::LLVMPointerType::attachInterface<MemRefInsider>(*ctx);
   });
   registry.addExtension(+[](MLIRContext *ctx, LLVM::LLVMDialect *dialect) {
@@ -82,7 +88,7 @@ int main(int argc, char **argv) {
   });
 
   return mlir::asMainReturnCode(mlir::MlirOptMain(
-    argc, argv, "Remote Mem opt driver", registry
+    argc, argv, "Remote Mem opt driver", registry, true
   ));
 
 

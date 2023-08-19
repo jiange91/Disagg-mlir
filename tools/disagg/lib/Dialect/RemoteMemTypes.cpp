@@ -209,7 +209,7 @@ Type mlir::rmem::getAggrIndexType(Type base, ArrayRef<int32_t> constIndices) {
 
 
 //====--------------------------------------====
-// Get first-level element type of a remote memref
+// Get second-level element type of a remote memref
 //====--------------------------------------====
 Type mlir::rmem::getEleTypeFromRemoteMemRef(RemoteMemRefType rmref) {
   Type RT = rmref.getElementType();

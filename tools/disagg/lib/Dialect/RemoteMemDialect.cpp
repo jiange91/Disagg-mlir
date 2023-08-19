@@ -473,6 +473,22 @@ Value FullLRUCache::select(OpBuilder &rewriter, Value tag, mlir::Location loc) {
   return rels.front();
 }
 
+static constexpr const char kVolatileAttrName[] = "volatile_";
+static constexpr const char kNonTemporalAttrName[] = "nontemporal";
+
+void rmem::StoreOp::build(OpBuilder &builder, OperationState &result, Value value,
+                    Value addr, unsigned alignment, bool isVolatile,
+                    bool isNonTemporal) {
+  result.addOperands({value, addr});
+  result.addTypes({});
+  if (isVolatile)
+    result.addAttribute(kVolatileAttrName, builder.getUnitAttr());
+  if (isNonTemporal)
+    result.addAttribute(kNonTemporalAttrName, builder.getUnitAttr());
+  if (alignment != 0)
+    result.addAttribute("alignment", builder.getI64IntegerAttr(alignment));
+}
+
 void RemoteMemDialect::initialize() {
   registerTypes();
   addOperations<

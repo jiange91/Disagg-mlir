@@ -91,6 +91,9 @@ def RMEMScfParallelSep : Pass<"rmem-scf-parallel-sep", "mlir::ModuleOp"> {
 def RMEMAffineAccessMem : Pass<"rmem-affine-access-mem", "mlir::ModuleOp"> {
   let summary = "Analyse affine loop accessed continuous remote memory";
   let constructor = "mlir::createRemoteMemAffineAccessMemPass()";
+  let options = [
+    Option<"prefDist", "dist", "unsigned", "0", "prefetch distance">
+  ];
   let dependentDialects = ["LLVM::LLVMDialect", "rmem::RemoteMemDialect", "memref::MemRefDialect", "vector::VectorDialect", "func::FuncDialect"];
 }
 

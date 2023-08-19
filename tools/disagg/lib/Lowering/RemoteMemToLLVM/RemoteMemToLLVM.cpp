@@ -147,10 +147,18 @@ class RemoteMemMallocPtrLowering : public RemoteMemOpLoweringPattern<rmem::LLVMM
 class RemoteMemBitCastLowering : public RemoteMemOpLoweringPattern<rmem::BitCastOp> {
   using RemoteMemOpLoweringPattern<rmem::BitCastOp>::RemoteMemOpLoweringPattern;
   LogicalResult matchAndRewrite(rmem::BitCastOp op, rmem::BitCastOpAdaptor adaptor, ConversionPatternRewriter &rewriter) const override {
-    Type ptrType = getTypeConverter()->convertType(op.getResult().getType());
+
+    Type rType = getTypeConverter()->convertType(op.getResult().getType());
+    if (!isa<LLVM::LLVMPointerType>(rType)) {
+      if (rType == adaptor.getArg().getType()) {
+        rewriter.replaceOp(op, adaptor.getArg());
+        return mlir::success();
+      }
+      assert(0 && "Bit cast of non-ptr type but not match");
+    }
     auto newPtr = rewriter.create<LLVM::BitcastOp>(
       op.getLoc(),
-      ptrType,
+      rType,
       adaptor.getOperands()
     );
     rewriter.replaceOp(op, {newPtr});

@@ -109,7 +109,11 @@ def RemoteMem_StoreOp : RemoteMem_Op<"llvm.store"> {
   let assemblyFormat = [{
     $value `->` $addr attr-dict `:` type(operands)
   }];
-
+  let builders = [
+    OpBuilder<(ins "Value":$value, "Value":$addr,
+      CArg<"unsigned", "0">:$alignment, CArg<"bool", "false">:$isVolatile,
+      CArg<"bool", "false">:$isNonTemporal)>
+    ];
   // let hasVerifier = 1;
 }
 

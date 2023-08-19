@@ -241,7 +241,7 @@ void AllocationAnnotationPass::normalizeConfig() {
   for (auto &kv : configMap) {
     auto [id, config] = kv;
     auto [size, linesize, _] = config;
-    totalMemory + size * linesize;
+    totalMemory += size * linesize;
   }
   if (totalMemory < memorySize)
     return;

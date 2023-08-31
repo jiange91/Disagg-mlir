@@ -1,0 +1,80 @@
+can merge ?
+%14 = llvm.load %13 : !llvm.ptr<i64>
+can merge ?
+%16 = llvm.load %15 : !llvm.ptr<i64>
+merge with: 
+%14 = llvm.load %13 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%12 = arith.index_cast %arg3 : index to i64
+check:  
+%13 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%15 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+can merge ?
+%19 = llvm.load %18 : !llvm.ptr<i64>
+merge with: 
+%16 = llvm.load %15 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%17 = arith.index_cast %arg3 : index to i64
+check:  
+%15 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%18 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %17) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+merge with: 
+%14 = llvm.load %13 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%17 = arith.index_cast %arg3 : index to i64
+check:  
+%13 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%18 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %17) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%17 = arith.index_cast %arg3 : index to i64
+can merge ?
+%21 = llvm.load %20 : !llvm.ptr<i64>
+merge with: 
+%16 = llvm.load %15 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%17 = arith.index_cast %arg3 : index to i64
+check:  
+%15 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%20 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %17) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%17 = arith.index_cast %arg3 : index to i64
+can merge ?
+%24 = llvm.load %23 : !llvm.ptr<i64>
+merge with: 
+%16 = llvm.load %15 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%22 = arith.index_cast %arg3 : index to i64
+check:  
+%15 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%23 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %22) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+merge with: 
+%14 = llvm.load %13 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%22 = arith.index_cast %arg3 : index to i64
+check:  
+%13 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%23 = func.call @_ZNSt6vectorImSaImEEixEm(%6, %22) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%22 = arith.index_cast %arg3 : index to i64
+can merge ?
+%26 = llvm.load %25 : !llvm.ptr<i64>
+merge with: 
+%16 = llvm.load %15 : !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%22 = arith.index_cast %arg3 : index to i64
+check:  
+%15 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %12) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+%25 = func.call @_ZNSt6vectorImSaImEEixEm(%4, %22) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl", (struct<"struct.std::_Vector_base<unsigned long, std::allocator<unsigned long>>::_Vector_impl_data", (ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+check:  
+%12 = arith.index_cast %arg3 : index to i64
+%22 = arith.index_cast %arg3 : index to i64

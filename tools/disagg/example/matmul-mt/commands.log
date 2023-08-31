@@ -1,0 +1,22 @@
+# At /users/Zijian/Disagg-mlir/tools/disagg/example/matmul-mt/mt
+# change line 10 and 18 attr to change parallism
+
+pldisagg --rmem-scf-parallel-sep -cse --canonicalize remote.mlir -o depara.mlir 
+pldisagg --rmem-affine-access-mem="dist=2" --canonicalize --cse depara.mlir -o pools.mlir
+pldisagg --rmem-affine-normal-cache="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/matmul-mt/cache.cfg" -cse --canonicalize pools.mlir -o pref.mlir
+pldisagg pref.mlir --lower-rmem-in-func -emit-llvm="ccfg=/users/Zijian/Disagg-mlir/tools/disagg/example/matmul-mt/cache.cfg" --reconcile-unrealized-casts -cse --canonicalize -o lower.mlir
+mlir-translate --mlir-to-llvmir lower.mlir -o lower.ll
+clang-16 -O3 -c lower.ll -o lower_remote.o
+
+# at /users/Zijian/new_rt/build
+make mt-mlir 
+
+# ref impl
+# at /users/Zijian/raw_eth_pktgen/build
+make mt-ref (matmul from mlir local)
+
+# manual version
+# at /users/Zijian/new_rt/apps/bench-matmul-mt
+python mt_gen.py > mm-old-mt.cc 
+make mm-old-mt
+# might stuck

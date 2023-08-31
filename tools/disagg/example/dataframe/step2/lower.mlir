@@ -1,10 +1,10 @@
 module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness", "little">, #dlti.dl_entry<i64, dense<64> : vector<2xi32>>, #dlti.dl_entry<f80, dense<128> : vector<2xi32>>, #dlti.dl_entry<i1, dense<8> : vector<2xi32>>, #dlti.dl_entry<i8, dense<8> : vector<2xi32>>, #dlti.dl_entry<i16, dense<16> : vector<2xi32>>, #dlti.dl_entry<i32, dense<32> : vector<2xi32>>, #dlti.dl_entry<f16, dense<16> : vector<2xi32>>, #dlti.dl_entry<f64, dense<64> : vector<2xi32>>, #dlti.dl_entry<f128, dense<128> : vector<2xi32>>>, llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu", "polygeist.target-cpu" = "x86-64", "polygeist.target-features" = "+cx8,+fxsr,+mmx,+sse,+sse2,+x87", "polygeist.tune-cpu" = "generic"} {
-  llvm.func @poll_qid3(i32, i16)
+  llvm.func @poll_qid12(i32, i16)
   llvm.mlir.global external @tokens() {addr_space = 0 : i32} : !llvm.array<33554432 x struct<(i64, i8, i8, i16, i32)>>
   llvm.mlir.global external @_rbuf() {addr_space = 0 : i32} : !llvm.ptr<i8>
-  llvm.func @cache_request_impl_3(i32, i64, i32, i8) -> i32
-  llvm.func @cache_request_impl_1(i32, i64, i32, i8) -> i32
+  llvm.func @cache_request_impl_12(i32, i64, i32, i8) -> i32
   llvm.func @cache_request_impl_2(i32, i64, i32, i8) -> i32
+  llvm.func @cache_request_impl_5(i32, i64, i32, i8) -> i32
   llvm.mlir.global internal constant @str5("vector::_M_realloc_insert\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str4("vector::reserve\00") {addr_space = 0 : i32}
   llvm.mlir.global external @psg_cnt_col() {addr_space = 0 : i32} : !llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>
@@ -233,242 +233,239 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<"dlti.endianness"
     llvm.return
   }
   llvm.func internal @_Z14get_psg_by_vidIZ33print_passage_counts_by_vendor_idiE3$_0iEvRT_RSt6vectorIT0_SaIS4_EE(%arg0: !llvm.ptr<struct<"class.anon", (ptr<i32>)>>, %arg1: !llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl_data", (ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>) attributes {sym_visibility = "private"} {
-    %0 = llvm.mlir.constant(288 : i32) : i32
-    %1 = llvm.mlir.constant(9663676416 : i64) : i64
-    %2 = llvm.mlir.constant(3221225472 : i64) : i64
-    %3 = llvm.mlir.constant(0 : i64) : i64
-    %4 = llvm.mlir.constant(4194304 : i64) : i64
-    %5 = llvm.mlir.constant(-4194304 : i64) : i64
-    %6 = llvm.mlir.constant(1 : i8) : i8
-    %7 = llvm.mlir.constant(0 : i32) : i32
-    %8 = llvm.mlir.constant(32 : i64) : i64
-    %9 = llvm.mlir.constant(2097152 : i64) : i64
-    %10 = llvm.mlir.constant(-2097152 : i64) : i64
-    %11 = llvm.mlir.constant(9 : i64) : i64
-    %12 = llvm.mlir.constant(8 : i64) : i64
-    %13 = llvm.mlir.constant(524288 : index) : i64
-    %14 = llvm.mlir.constant(1 : index) : i64
-    %15 = llvm.mlir.constant(8 : index) : i64
-    %16 = llvm.mlir.constant(9 : i32) : i32
-    %17 = llvm.mlir.constant(524288 : i64) : i64
-    %18 = llvm.mlir.constant(524287 : i64) : i64
-    %19 = llvm.mlir.constant(0 : index) : i64
-    %20 = llvm.mlir.constant(0 : i8) : i8
-    %21 = llvm.mlir.constant(1 : i64) : i64
-    %22 = llvm.alloca %21 x i32 : (i64) -> !llvm.ptr<i32>
-    %23 = llvm.mlir.undef : i32
-    llvm.store %23, %22 : !llvm.ptr<i32>
-    %24 = llvm.alloca %21 x i32 : (i64) -> !llvm.ptr<i32>
-    llvm.store %23, %24 : !llvm.ptr<i32>
-    %25 = llvm.alloca %21 x i64 : (i64) -> !llvm.ptr<i64>
-    %26 = llvm.mlir.undef : i64
-    llvm.store %26, %25 : !llvm.ptr<i64>
-    %27 = llvm.mlir.addressof @index_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>>
-    %28 = llvm.load %27 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>>
-    %29 = llvm.mlir.addressof @vendor_id_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
-    %30 = llvm.load %29 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
-    %31 = llvm.mlir.addressof @psg_cnt_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
-    %32 = llvm.load %31 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
-    %33 = llvm.call @_ZNKSt6vectorIiSaIiEE4sizeEv__0(%30) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>) -> i64
-    llvm.call @_ZNSt6vectorIiSaIiEE7reserveEm(%arg1, %33) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl_data", (ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> ()
-    %34 = llvm.add %33, %18  : i64
-    %35 = llvm.sdiv %34, %17  : i64
-    %36 = llvm.alloca %16 x i32 : (i32) -> !llvm.ptr<i32>
-    llvm.br ^bb1(%19 : i64)
-  ^bb1(%37: i64):  // 2 preds: ^bb0, ^bb2
-    %38 = llvm.icmp "slt" %37, %15 : i64
-    llvm.cond_br %38, ^bb2, ^bb3
+    %0 = llvm.mlir.constant(0 : i64) : i64
+    %1 = llvm.mlir.constant(3221225472 : i64) : i64
+    %2 = llvm.mlir.constant(9663676416 : i64) : i64
+    %3 = llvm.mlir.constant(2097152 : i64) : i64
+    %4 = llvm.mlir.constant(-2097152 : i64) : i64
+    %5 = llvm.mlir.constant(1 : i8) : i8
+    %6 = llvm.mlir.constant(0 : i32) : i32
+    %7 = llvm.mlir.constant(24 : i64) : i64
+    %8 = llvm.mlir.constant(4194304 : i64) : i64
+    %9 = llvm.mlir.constant(-4194304 : i64) : i64
+    %10 = llvm.mlir.constant(9 : i64) : i64
+    %11 = llvm.mlir.constant(8 : i64) : i64
+    %12 = llvm.mlir.constant(524288 : index) : i64
+    %13 = llvm.mlir.constant(1 : index) : i64
+    %14 = llvm.mlir.constant(8 : index) : i64
+    %15 = llvm.mlir.constant(9 : i32) : i32
+    %16 = llvm.mlir.constant(524288 : i64) : i64
+    %17 = llvm.mlir.constant(524287 : i64) : i64
+    %18 = llvm.mlir.constant(0 : index) : i64
+    %19 = llvm.mlir.constant(0 : i8) : i8
+    %20 = llvm.mlir.constant(1 : i64) : i64
+    %21 = llvm.alloca %20 x i32 : (i64) -> !llvm.ptr<i32>
+    %22 = llvm.mlir.undef : i32
+    llvm.store %22, %21 : !llvm.ptr<i32>
+    %23 = llvm.alloca %20 x i32 : (i64) -> !llvm.ptr<i32>
+    llvm.store %22, %23 : !llvm.ptr<i32>
+    %24 = llvm.alloca %20 x i64 : (i64) -> !llvm.ptr<i64>
+    %25 = llvm.mlir.undef : i64
+    llvm.store %25, %24 : !llvm.ptr<i64>
+    %26 = llvm.mlir.addressof @index_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>>
+    %27 = llvm.load %26 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>>
+    %28 = llvm.mlir.addressof @vendor_id_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
+    %29 = llvm.load %28 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
+    %30 = llvm.mlir.addressof @psg_cnt_col : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
+    %31 = llvm.load %30 : !llvm.ptr<ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>>
+    %32 = llvm.call @_ZNKSt6vectorIiSaIiEE4sizeEv__0(%29) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>) -> i64
+    llvm.call @_ZNSt6vectorIiSaIiEE7reserveEm(%arg1, %32) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl_data", (ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> ()
+    %33 = llvm.add %32, %17  : i64
+    %34 = llvm.sdiv %33, %16  : i64
+    %35 = llvm.alloca %15 x i32 : (i32) -> !llvm.ptr<i32>
+    llvm.br ^bb1(%18 : i64)
+  ^bb1(%36: i64):  // 2 preds: ^bb0, ^bb2
+    %37 = llvm.icmp "slt" %36, %14 : i64
+    llvm.cond_br %37, ^bb2, ^bb3
   ^bb2:  // pred: ^bb1
-    %39 = llvm.mul %37, %13  : i64
-    %40 = llvm.trunc %37 : i64 to i32
-    %41 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%30, %39) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %42 = llvm.ptrtoint %41 : !llvm.ptr<i32> to i64
-    %43 = llvm.and %42, %10  : i64
-    %44 = llvm.udiv %43, %9  : i64
-    %45 = llvm.srem %44, %8  : i64
-    %46 = llvm.trunc %45 : i64 to i32
-    %47 = llvm.call @cache_request_impl_2(%7, %43, %46, %6) : (i32, i64, i32, i8) -> i32
-    %48 = llvm.sext %40 : i32 to i64
-    %49 = llvm.getelementptr %36[%48] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %46, %49 : !llvm.ptr<i32>
-    %50 = llvm.add %37, %14  : i64
-    llvm.br ^bb1(%50 : i64)
+    %38 = llvm.mul %36, %12  : i64
+    %39 = llvm.trunc %36 : i64 to i32
+    %40 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%27, %38) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+    %41 = llvm.ptrtoint %40 : !llvm.ptr<i64> to i64
+    %42 = llvm.and %41, %9  : i64
+    %43 = llvm.udiv %42, %8  : i64
+    %44 = llvm.srem %43, %7  : i64
+    %45 = llvm.trunc %44 : i64 to i32
+    %46 = llvm.call @cache_request_impl_5(%6, %42, %45, %5) : (i32, i64, i32, i8) -> i32
+    %47 = llvm.sext %39 : i32 to i64
+    %48 = llvm.getelementptr %35[%47] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %45, %48 : !llvm.ptr<i32>
+    %49 = llvm.add %36, %13  : i64
+    llvm.br ^bb1(%49 : i64)
   ^bb3:  // pred: ^bb1
-    %51 = llvm.alloca %16 x i32 : (i32) -> !llvm.ptr<i32>
-    llvm.br ^bb4(%19 : i64)
-  ^bb4(%52: i64):  // 2 preds: ^bb3, ^bb5
-    %53 = llvm.icmp "slt" %52, %15 : i64
-    llvm.cond_br %53, ^bb5, ^bb6
+    %50 = llvm.alloca %15 x i32 : (i32) -> !llvm.ptr<i32>
+    llvm.br ^bb4(%18 : i64)
+  ^bb4(%51: i64):  // 2 preds: ^bb3, ^bb5
+    %52 = llvm.icmp "slt" %51, %14 : i64
+    llvm.cond_br %52, ^bb5, ^bb6
   ^bb5:  // pred: ^bb4
-    %54 = llvm.mul %52, %13  : i64
-    %55 = llvm.trunc %52 : i64 to i32
-    %56 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%32, %54) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %57 = llvm.ptrtoint %56 : !llvm.ptr<i32> to i64
-    %58 = llvm.and %57, %10  : i64
-    %59 = llvm.udiv %58, %9  : i64
-    %60 = llvm.srem %59, %8  : i64
-    %61 = llvm.trunc %60 : i64 to i32
-    %62 = llvm.call @cache_request_impl_1(%7, %58, %61, %6) : (i32, i64, i32, i8) -> i32
-    %63 = llvm.sext %55 : i32 to i64
-    %64 = llvm.getelementptr %51[%63] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %61, %64 : !llvm.ptr<i32>
-    %65 = llvm.add %52, %14  : i64
-    llvm.br ^bb4(%65 : i64)
+    %53 = llvm.mul %51, %12  : i64
+    %54 = llvm.trunc %51 : i64 to i32
+    %55 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%31, %53) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %56 = llvm.ptrtoint %55 : !llvm.ptr<i32> to i64
+    %57 = llvm.and %56, %4  : i64
+    %58 = llvm.udiv %57, %3  : i64
+    %59 = llvm.srem %58, %7  : i64
+    %60 = llvm.trunc %59 : i64 to i32
+    %61 = llvm.call @cache_request_impl_2(%6, %57, %60, %5) : (i32, i64, i32, i8) -> i32
+    %62 = llvm.sext %54 : i32 to i64
+    %63 = llvm.getelementptr %50[%62] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %60, %63 : !llvm.ptr<i32>
+    %64 = llvm.add %51, %13  : i64
+    llvm.br ^bb4(%64 : i64)
   ^bb6:  // pred: ^bb4
-    %66 = llvm.alloca %16 x i32 : (i32) -> !llvm.ptr<i32>
-    llvm.br ^bb7(%19 : i64)
-  ^bb7(%67: i64):  // 2 preds: ^bb6, ^bb8
-    %68 = llvm.icmp "slt" %67, %15 : i64
-    llvm.cond_br %68, ^bb8, ^bb9
+    %65 = llvm.alloca %15 x i32 : (i32) -> !llvm.ptr<i32>
+    llvm.br ^bb7(%18 : i64)
+  ^bb7(%66: i64):  // 2 preds: ^bb6, ^bb8
+    %67 = llvm.icmp "slt" %66, %14 : i64
+    llvm.cond_br %67, ^bb8, ^bb9
   ^bb8:  // pred: ^bb7
-    %69 = llvm.mul %67, %13  : i64
-    %70 = llvm.trunc %67 : i64 to i32
-    %71 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%28, %69) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
-    %72 = llvm.ptrtoint %71 : !llvm.ptr<i64> to i64
-    %73 = llvm.and %72, %5  : i64
-    %74 = llvm.udiv %73, %4  : i64
-    %75 = llvm.srem %74, %8  : i64
-    %76 = llvm.trunc %75 : i64 to i32
-    %77 = llvm.call @cache_request_impl_3(%7, %73, %76, %6) : (i32, i64, i32, i8) -> i32
-    %78 = llvm.sext %70 : i32 to i64
-    %79 = llvm.getelementptr %66[%78] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %76, %79 : !llvm.ptr<i32>
-    %80 = llvm.add %67, %14  : i64
-    llvm.br ^bb7(%80 : i64)
+    %68 = llvm.mul %66, %12  : i64
+    %69 = llvm.trunc %66 : i64 to i32
+    %70 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%29, %68) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %71 = llvm.ptrtoint %70 : !llvm.ptr<i32> to i64
+    %72 = llvm.and %71, %4  : i64
+    %73 = llvm.udiv %72, %3  : i64
+    %74 = llvm.srem %73, %7  : i64
+    %75 = llvm.trunc %74 : i64 to i32
+    %76 = llvm.call @cache_request_impl_12(%6, %72, %75, %5) : (i32, i64, i32, i8) -> i32
+    %77 = llvm.sext %69 : i32 to i64
+    %78 = llvm.getelementptr %65[%77] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %75, %78 : !llvm.ptr<i32>
+    %79 = llvm.add %66, %13  : i64
+    llvm.br ^bb7(%79 : i64)
   ^bb9:  // pred: ^bb7
-    llvm.br ^bb10(%19 : i64)
-  ^bb10(%81: i64):  // 2 preds: ^bb9, ^bb22
-    %82 = llvm.icmp "slt" %81, %35 : i64
-    llvm.cond_br %82, ^bb11, ^bb23
+    llvm.br ^bb10(%18 : i64)
+  ^bb10(%80: i64):  // 2 preds: ^bb9, ^bb22
+    %81 = llvm.icmp "slt" %80, %34 : i64
+    llvm.cond_br %81, ^bb11, ^bb23
   ^bb11:  // pred: ^bb10
-    %83 = llvm.add %81, %12  : i64
-    %84 = llvm.icmp "slt" %83, %35 : i64
-    llvm.cond_br %84, ^bb12, ^bb13
+    %82 = llvm.add %80, %11  : i64
+    %83 = llvm.icmp "slt" %82, %34 : i64
+    llvm.cond_br %83, ^bb12, ^bb13
   ^bb12:  // pred: ^bb11
-    %85 = llvm.srem %83, %11  : i64
-    %86 = llvm.trunc %85 : i64 to i32
-    %87 = llvm.mul %83, %13  : i64
-    %88 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%30, %87) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %89 = llvm.ptrtoint %88 : !llvm.ptr<i32> to i64
-    %90 = llvm.and %89, %10  : i64
-    %91 = llvm.udiv %90, %9  : i64
-    %92 = llvm.srem %91, %8  : i64
-    %93 = llvm.trunc %92 : i64 to i32
-    %94 = llvm.call @cache_request_impl_2(%7, %90, %93, %6) : (i32, i64, i32, i8) -> i32
-    %95 = llvm.sext %86 : i32 to i64
-    %96 = llvm.getelementptr %36[%95] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %93, %96 : !llvm.ptr<i32>
-    %97 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%32, %87) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %98 = llvm.ptrtoint %97 : !llvm.ptr<i32> to i64
-    %99 = llvm.and %98, %10  : i64
-    %100 = llvm.udiv %99, %9  : i64
-    %101 = llvm.srem %100, %8  : i64
-    %102 = llvm.trunc %101 : i64 to i32
-    %103 = llvm.call @cache_request_impl_1(%7, %99, %102, %6) : (i32, i64, i32, i8) -> i32
-    %104 = llvm.getelementptr %51[%95] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %102, %104 : !llvm.ptr<i32>
-    %105 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%28, %87) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
-    %106 = llvm.ptrtoint %105 : !llvm.ptr<i64> to i64
-    %107 = llvm.and %106, %5  : i64
-    %108 = llvm.udiv %107, %4  : i64
-    %109 = llvm.srem %108, %8  : i64
-    %110 = llvm.trunc %109 : i64 to i32
-    %111 = llvm.call @cache_request_impl_3(%7, %107, %110, %6) : (i32, i64, i32, i8) -> i32
-    %112 = llvm.getelementptr %66[%95] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    llvm.store %110, %112 : !llvm.ptr<i32>
+    %84 = llvm.srem %82, %10  : i64
+    %85 = llvm.trunc %84 : i64 to i32
+    %86 = llvm.mul %82, %12  : i64
+    %87 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%27, %86) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+    %88 = llvm.ptrtoint %87 : !llvm.ptr<i64> to i64
+    %89 = llvm.and %88, %9  : i64
+    %90 = llvm.udiv %89, %8  : i64
+    %91 = llvm.srem %90, %7  : i64
+    %92 = llvm.trunc %91 : i64 to i32
+    %93 = llvm.call @cache_request_impl_5(%6, %89, %92, %5) : (i32, i64, i32, i8) -> i32
+    %94 = llvm.sext %85 : i32 to i64
+    %95 = llvm.getelementptr %35[%94] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %92, %95 : !llvm.ptr<i32>
+    %96 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%31, %86) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %97 = llvm.ptrtoint %96 : !llvm.ptr<i32> to i64
+    %98 = llvm.and %97, %4  : i64
+    %99 = llvm.udiv %98, %3  : i64
+    %100 = llvm.srem %99, %7  : i64
+    %101 = llvm.trunc %100 : i64 to i32
+    %102 = llvm.call @cache_request_impl_2(%6, %98, %101, %5) : (i32, i64, i32, i8) -> i32
+    %103 = llvm.getelementptr %50[%94] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %101, %103 : !llvm.ptr<i32>
+    %104 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%29, %86) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %105 = llvm.ptrtoint %104 : !llvm.ptr<i32> to i64
+    %106 = llvm.and %105, %4  : i64
+    %107 = llvm.udiv %106, %3  : i64
+    %108 = llvm.srem %107, %7  : i64
+    %109 = llvm.trunc %108 : i64 to i32
+    %110 = llvm.call @cache_request_impl_12(%6, %106, %109, %5) : (i32, i64, i32, i8) -> i32
+    %111 = llvm.getelementptr %65[%94] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    llvm.store %109, %111 : !llvm.ptr<i32>
     llvm.br ^bb13
   ^bb13:  // 2 preds: ^bb11, ^bb12
-    %113 = llvm.mul %81, %13  : i64
-    %114 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%30, %113) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %115 = llvm.srem %81, %11  : i64
-    %116 = llvm.getelementptr %36[%115] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    %117 = llvm.load %116 : !llvm.ptr<i32>
-    %118 = llvm.ptrtoint %114 : !llvm.ptr<i32> to i64
-    %119 = llvm.sext %117 : i32 to i64
-    %120 = llvm.mul %119, %9  : i64
-    %121 = llvm.srem %118, %9  : i64
-    %122 = llvm.add %120, %121  : i64
-    %123 = llvm.add %122, %3  : i64
-    %124 = llvm.mlir.addressof @_rbuf : !llvm.ptr<ptr<i8>>
-    %125 = llvm.load %124 : !llvm.ptr<ptr<i8>>
-    %126 = llvm.getelementptr %125[%123] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
-    %127 = llvm.bitcast %126 : !llvm.ptr<i8> to !llvm.ptr<i32>
-    %128 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%32, %113) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %129 = llvm.getelementptr %51[%115] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    %130 = llvm.load %129 : !llvm.ptr<i32>
-    %131 = llvm.ptrtoint %128 : !llvm.ptr<i32> to i64
-    %132 = llvm.sext %130 : i32 to i64
-    %133 = llvm.mul %132, %9  : i64
-    %134 = llvm.srem %131, %9  : i64
-    %135 = llvm.add %133, %134  : i64
-    %136 = llvm.add %135, %2  : i64
-    %137 = llvm.load %124 : !llvm.ptr<ptr<i8>>
-    %138 = llvm.getelementptr %137[%136] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
-    %139 = llvm.bitcast %138 : !llvm.ptr<i8> to !llvm.ptr<i32>
-    %140 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%28, %113) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
-    %141 = llvm.getelementptr %66[%115] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    %142 = llvm.load %141 : !llvm.ptr<i32>
-    %143 = llvm.ptrtoint %140 : !llvm.ptr<i64> to i64
-    %144 = llvm.sext %142 : i32 to i64
-    %145 = llvm.mul %144, %4  : i64
-    %146 = llvm.srem %143, %4  : i64
-    %147 = llvm.add %145, %146  : i64
-    %148 = llvm.add %147, %1  : i64
-    %149 = llvm.load %124 : !llvm.ptr<ptr<i8>>
-    %150 = llvm.getelementptr %149[%148] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
-    %151 = llvm.bitcast %150 : !llvm.ptr<i8> to !llvm.ptr<i64>
-    %152 = llvm.add %142, %0  : i32
-    %153 = llvm.sext %152 : i32 to i64
-    %154 = llvm.mlir.addressof @tokens : !llvm.ptr<array<33554432 x struct<(i64, i8, i8, i16, i32)>>>
-    %155 = llvm.getelementptr %154[0, 0] : (!llvm.ptr<array<33554432 x struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
-    %156 = llvm.getelementptr %155[%153] : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
-    %157 = llvm.getelementptr %156[0, 3] : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>) -> !llvm.ptr<i16>
-    %158 = llvm.load %157 : !llvm.ptr<i16>
-    llvm.call @poll_qid3(%16, %158) : (i32, i16) -> ()
-    %159 = llvm.add %81, %21  : i64
-    %160 = llvm.mul %159, %17  : i64
-    %161 = llvm.icmp "sgt" %33, %160 : i64
-    llvm.cond_br %161, ^bb14, ^bb15
+    %112 = llvm.mul %80, %12  : i64
+    %113 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%27, %112) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+    %114 = llvm.srem %80, %10  : i64
+    %115 = llvm.getelementptr %35[%114] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    %116 = llvm.load %115 : !llvm.ptr<i32>
+    %117 = llvm.ptrtoint %113 : !llvm.ptr<i64> to i64
+    %118 = llvm.sext %116 : i32 to i64
+    %119 = llvm.mul %118, %8  : i64
+    %120 = llvm.srem %117, %8  : i64
+    %121 = llvm.add %119, %120  : i64
+    %122 = llvm.add %121, %2  : i64
+    %123 = llvm.mlir.addressof @_rbuf : !llvm.ptr<ptr<i8>>
+    %124 = llvm.load %123 : !llvm.ptr<ptr<i8>>
+    %125 = llvm.getelementptr %124[%122] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
+    %126 = llvm.bitcast %125 : !llvm.ptr<i8> to !llvm.ptr<i64>
+    %127 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%31, %112) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %128 = llvm.getelementptr %50[%114] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    %129 = llvm.load %128 : !llvm.ptr<i32>
+    %130 = llvm.ptrtoint %127 : !llvm.ptr<i32> to i64
+    %131 = llvm.sext %129 : i32 to i64
+    %132 = llvm.mul %131, %3  : i64
+    %133 = llvm.srem %130, %3  : i64
+    %134 = llvm.add %132, %133  : i64
+    %135 = llvm.add %134, %1  : i64
+    %136 = llvm.load %123 : !llvm.ptr<ptr<i8>>
+    %137 = llvm.getelementptr %136[%135] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
+    %138 = llvm.bitcast %137 : !llvm.ptr<i8> to !llvm.ptr<i32>
+    %139 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%29, %112) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %140 = llvm.getelementptr %65[%114] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    %141 = llvm.load %140 : !llvm.ptr<i32>
+    %142 = llvm.ptrtoint %139 : !llvm.ptr<i32> to i64
+    %143 = llvm.sext %141 : i32 to i64
+    %144 = llvm.mul %143, %3  : i64
+    %145 = llvm.srem %142, %3  : i64
+    %146 = llvm.add %144, %145  : i64
+    %147 = llvm.add %146, %0  : i64
+    %148 = llvm.load %123 : !llvm.ptr<ptr<i8>>
+    %149 = llvm.getelementptr %148[%147] : (!llvm.ptr<i8>, i64) -> !llvm.ptr<i8>
+    %150 = llvm.bitcast %149 : !llvm.ptr<i8> to !llvm.ptr<i32>
+    %151 = llvm.mlir.addressof @tokens : !llvm.ptr<array<33554432 x struct<(i64, i8, i8, i16, i32)>>>
+    %152 = llvm.getelementptr %151[0, 0] : (!llvm.ptr<array<33554432 x struct<(i64, i8, i8, i16, i32)>>>) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+    %153 = llvm.getelementptr %152[%143] : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>, i64) -> !llvm.ptr<struct<(i64, i8, i8, i16, i32)>>
+    %154 = llvm.getelementptr %153[0, 3] : (!llvm.ptr<struct<(i64, i8, i8, i16, i32)>>) -> !llvm.ptr<i16>
+    %155 = llvm.load %154 : !llvm.ptr<i16>
+    llvm.call @poll_qid12(%6, %155) : (i32, i16) -> ()
+    %156 = llvm.add %80, %20  : i64
+    %157 = llvm.mul %156, %16  : i64
+    %158 = llvm.icmp "sgt" %32, %157 : i64
+    llvm.cond_br %158, ^bb14, ^bb15
   ^bb14:  // pred: ^bb13
-    llvm.br ^bb16(%17 : i64)
+    llvm.br ^bb16(%16 : i64)
   ^bb15:  // pred: ^bb13
-    %162 = llvm.mul %81, %17  : i64
-    %163 = llvm.sub %33, %162  : i64
-    llvm.br ^bb16(%163 : i64)
-  ^bb16(%164: i64):  // 2 preds: ^bb14, ^bb15
+    %159 = llvm.mul %80, %16  : i64
+    %160 = llvm.sub %32, %159  : i64
+    llvm.br ^bb16(%160 : i64)
+  ^bb16(%161: i64):  // 2 preds: ^bb14, ^bb15
     llvm.br ^bb17
   ^bb17:  // pred: ^bb16
-    %165 = llvm.mul %81, %17  : i64
-    llvm.br ^bb18(%19 : i64)
-  ^bb18(%166: i64):  // 2 preds: ^bb17, ^bb21
-    %167 = llvm.icmp "slt" %166, %164 : i64
-    llvm.cond_br %167, ^bb19, ^bb22
+    %162 = llvm.mul %80, %16  : i64
+    llvm.br ^bb18(%18 : i64)
+  ^bb18(%163: i64):  // 2 preds: ^bb17, ^bb21
+    %164 = llvm.icmp "slt" %163, %161 : i64
+    llvm.cond_br %164, ^bb19, ^bb22
   ^bb19:  // pred: ^bb18
-    %168 = llvm.add %166, %165  : i64
-    %169 = llvm.getelementptr %127[%166] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    %170 = llvm.getelementptr %139[%166] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-    %171 = llvm.getelementptr %151[%166] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
-    %172 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%28, %168) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
-    %173 = llvm.load %171 : !llvm.ptr<i64>
-    llvm.store %173, %25 : !llvm.ptr<i64>
-    %174 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%30, %168) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %175 = llvm.load %169 : !llvm.ptr<i32>
-    llvm.store %175, %24 : !llvm.ptr<i32>
-    %176 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%32, %168) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
-    %177 = llvm.load %170 : !llvm.ptr<i32>
-    llvm.store %177, %22 : !llvm.ptr<i32>
-    %178 = llvm.call @_ZZ33print_passage_counts_by_vendor_idiENK3$_0clERKmRKi(%arg0, %25, %24) : (!llvm.ptr<struct<"class.anon", (ptr<i32>)>>, !llvm.ptr<i64>, !llvm.ptr<i32>) -> i8
-    %179 = llvm.icmp "ne" %178, %20 : i8
-    llvm.cond_br %179, ^bb20, ^bb21
+    %165 = llvm.add %163, %162  : i64
+    %166 = llvm.getelementptr %126[%163] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
+    %167 = llvm.getelementptr %138[%163] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    %168 = llvm.getelementptr %150[%163] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+    %169 = llvm.call @_ZNKSt6vectorImSaImEEixEm__0(%27, %165) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i64>, ptr<i64>, ptr<i64>)>)>)>)>>, i64) -> !llvm.ptr<i64>
+    %170 = llvm.load %166 : !llvm.ptr<i64>
+    llvm.store %170, %24 : !llvm.ptr<i64>
+    %171 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__1(%29, %165) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %172 = llvm.load %168 : !llvm.ptr<i32>
+    llvm.store %172, %23 : !llvm.ptr<i32>
+    %173 = llvm.call @_ZNKSt6vectorIiSaIiEEixEm__0(%31, %165) : (!llvm.ptr<struct<(struct<(struct<(struct<(ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, i64) -> !llvm.ptr<i32>
+    %174 = llvm.load %167 : !llvm.ptr<i32>
+    llvm.store %174, %21 : !llvm.ptr<i32>
+    %175 = llvm.call @_ZZ33print_passage_counts_by_vendor_idiENK3$_0clERKmRKi(%arg0, %24, %23) : (!llvm.ptr<struct<"class.anon", (ptr<i32>)>>, !llvm.ptr<i64>, !llvm.ptr<i32>) -> i8
+    %176 = llvm.icmp "ne" %175, %19 : i8
+    llvm.cond_br %176, ^bb20, ^bb21
   ^bb20:  // pred: ^bb19
-    llvm.call @_ZNSt6vectorIiSaIiEE9push_backERKi(%arg1, %22) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl_data", (ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, !llvm.ptr<i32>) -> ()
+    llvm.call @_ZNSt6vectorIiSaIiEE9push_backERKi(%arg1, %21) : (!llvm.ptr<struct<"class.std::vector", (struct<"struct.std::_Vector_base", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl", (struct<"struct.std::_Vector_base<int, std::allocator<int>>::_Vector_impl_data", (ptr<i32>, ptr<i32>, ptr<i32>)>)>)>)>>, !llvm.ptr<i32>) -> ()
     llvm.br ^bb21
   ^bb21:  // 2 preds: ^bb19, ^bb20
-    %180 = llvm.add %166, %14  : i64
-    llvm.br ^bb18(%180 : i64)
+    %177 = llvm.add %163, %13  : i64
+    llvm.br ^bb18(%177 : i64)
   ^bb22:  // pred: ^bb18
-    %181 = llvm.add %81, %14  : i64
-    llvm.br ^bb10(%181 : i64)
+    %178 = llvm.add %80, %13  : i64
+    llvm.br ^bb10(%178 : i64)
   ^bb23:  // pred: ^bb10
     llvm.return
   }

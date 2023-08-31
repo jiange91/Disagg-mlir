@@ -176,7 +176,7 @@ void AllocationAnnotationPass::propogateRemotable() {
     globalOp->setAttr("remote_target", builder.getI64IntegerAttr(1));
     if (!globalOp->hasAttr("rel_types")) {
       configMap[remote_id] =
-          std::make_tuple(256, transformTypeSize(globalOp.getType()),
+          std::make_tuple(32, transformTypeSize(globalOp.getType()),
                           static_cast<uint64_t>(1) * 1024 * 1024 * 1024);
       globalOp->setAttr(
           "rel_types", builder.getTypeArrayAttr(transformStruct(

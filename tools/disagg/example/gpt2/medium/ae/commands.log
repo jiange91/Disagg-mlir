@@ -2,15 +2,15 @@
 onnx-mlir-opt --affine-simplify-structures --convert-krnl-glob-to-alloc="omit-entry-point=true" -cse --canonicalize gpt2.onnx.mlir -o gpt2.alloc.mlir 
 
 # At MLIR
-after annotating gpt2.alloc.mlir -> ae/target.mlir
+after annotating gpt2.alloc.mlir -> target.mlir
 
-pldisagg --prop-rmem ae/target.mlir -o ae/prop.mlir
-pldisagg --convert-target-to-remote -cse -canonicalize ae/prop.mlir -o ae/remote.mlir
-pldisagg --rmem-affine-access-mem --canonicalize --cse ae/remote.mlir -o ae/pools.mlir
-pldisagg --rmem-affine-ring-cache -cse --canonicalize ae/pools.mlir -o ae/ring.mlir 
-pldisagg ae/ring.mlir --lower-rmem-in-func -emit-llvm --reconcile-unrealized-casts -cse --canonicalize -o ae/lower.mlir
-mlir-translate --mlir-to-llvmir ae/lower.mlir -o ae/lower.ll
-clang-16 -O3 -c ae/lower.ll -o ae/lower_remote.o
+pldisagg --prop-rmem target.mlir -o prop.mlir
+pldisagg --convert-target-to-remote -cse -canonicalize prop.mlir -o remote.mlir
+pldisagg --rmem-affine-access-mem="dist=1" --canonicalize --cse remote.mlir -o pools.mlir
+pldisagg --rmem-affine-ring-cache -cse --canonicalize pools.mlir -o ring.mlir 
+pldisagg ring.mlir --lower-rmem-in-func -emit-llvm --reconcile-unrealized-casts -cse --canonicalize -o lower.mlir
+mlir-translate --mlir-to-llvmir lower.mlir -o lower.ll
+clang-16 -O3 -c lower.ll -o lower_remote.o
 
 # At runtime
 make gpt2-remote

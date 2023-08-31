@@ -2517,30 +2517,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %602 : !llvm.ptr<i64>
     %603 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %603 : !llvm.ptr<i64>
-    %604 = rmem.slot %c0 {mem = "t1"} : (index) -> memref<1x262144xf32>
-    %605 = rmem.wrid : index
-    %606 = rmem.rdma %c0, %arg2[%c0] %c261120 4 %605 {map = #map7, mem = "t74"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %607:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %604, %arg53 = %606, %arg54 = %605) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %604 = rmem.wrid : index
+    %605 = rmem.rdma %c0, %arg2[%c0] %c261120 4 %604 {map = #map7, mem = "t74"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %606 = rmem.slot %c0 {mem = "t1"} : (index) -> memref<1x262144xf32>
+    %607:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %605, %arg53 = %606, %arg54 = %604) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t1"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg2[%2260] %c261120 4 %2262 {map = #map7, mem = "t74"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg2[%2260] %c261120 4 %2261 {map = #map7, mem = "t74"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t1"} : (index) -> memref<1x262144xf32>
       rmem.sync %602 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %601[%arg49] %c262144 0 %c0 {map = #map8, mem = "t1"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %603 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %601[%arg49] %c262144 0 %2264 {map = #map8, mem = "t1"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %603 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %608 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %608 : !llvm.ptr<i64>
@@ -4147,30 +4148,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %684 : !llvm.ptr<i64>
     %685 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %685 : !llvm.ptr<i64>
-    %686 = rmem.slot %c0 {mem = "t5"} : (index) -> memref<1x262144xf32>
-    %687 = rmem.wrid : index
-    %688 = rmem.rdma %c0, %661[%c0] %c262144 4 %687 {map = #map8, mem = "t3"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %689:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %686, %arg53 = %688, %arg54 = %687) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %686 = rmem.wrid : index
+    %687 = rmem.rdma %c0, %661[%c0] %c262144 4 %686 {map = #map8, mem = "t3"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %688 = rmem.slot %c0 {mem = "t5"} : (index) -> memref<1x262144xf32>
+    %689:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %687, %arg53 = %688, %arg54 = %686) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t5"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %661[%2260] %c262144 4 %2262 {map = #map8, mem = "t3"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %661[%2260] %c262144 4 %2261 {map = #map8, mem = "t3"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t5"} : (index) -> memref<1x262144xf32>
       rmem.sync %684 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %683[%arg49] %c262144 0 %c0 {map = #map8, mem = "t5"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %685 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %683[%arg49] %c262144 0 %2264 {map = #map8, mem = "t5"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %685 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_704 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -5609,31 +5611,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %731 : !llvm.ptr<i64>
     %732 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %732 : !llvm.ptr<i64>
-    %733 = rmem.wrid : index
-    %734 = rmem.rdma %c0, %arg5[%c0] %c261120 4 %733 {map = #map7, mem = "t77"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %735 = rmem.slot %c0 {mem = "t6"} : (index) -> memref<1x262144xf32>
-    %736:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %734, %arg53 = %735, %arg54 = %733) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %733 = rmem.slot %c0 {mem = "t6"} : (index) -> memref<1x262144xf32>
+    %734 = rmem.wrid : index
+    %735 = rmem.rdma %c0, %arg5[%c0] %c261120 4 %734 {map = #map7, mem = "t77"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %736:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %733, %arg53 = %735, %arg54 = %734) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg5[%2260] %c261120 4 %2261 {map = #map7, mem = "t77"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t6"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t6"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg5[%2260] %c261120 4 %2262 {map = #map7, mem = "t77"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %731 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %730[%arg49] %c262144 0 %2264 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %732 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %730[%arg49] %c262144 0 %c0 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %732 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %737 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %737 : !llvm.ptr<i64>
@@ -5664,31 +5665,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %742 : !llvm.ptr<i64>
     %743 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %743 : !llvm.ptr<i64>
-    %744 = rmem.wrid : index
-    %745 = rmem.rdma %c0, %arg6[%c0] %c261120 4 %744 {map = #map7, mem = "t78"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %746 = rmem.slot %c0 {mem = "t7"} : (index) -> memref<1x262144xf32>
-    %747:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %745, %arg53 = %746, %arg54 = %744) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %744 = rmem.slot %c0 {mem = "t7"} : (index) -> memref<1x262144xf32>
+    %745 = rmem.wrid : index
+    %746 = rmem.rdma %c0, %arg6[%c0] %c261120 4 %745 {map = #map7, mem = "t78"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %747:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %744, %arg53 = %746, %arg54 = %745) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg6[%2260] %c261120 4 %2261 {map = #map7, mem = "t78"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t7"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t7"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg6[%2260] %c261120 4 %2262 {map = #map7, mem = "t78"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %742 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %741[%arg49] %c262144 0 %2264 {map = #map8, mem = "t7"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %743 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %741[%arg49] %c262144 0 %c0 {map = #map8, mem = "t7"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %743 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %748 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %748 : !llvm.ptr<i64>
@@ -5719,30 +5719,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %753 : !llvm.ptr<i64>
     %754 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %754 : !llvm.ptr<i64>
-    %755 = rmem.slot %c0 {mem = "t8"} : (index) -> memref<1x262144xf32>
-    %756 = rmem.wrid : index
-    %757 = rmem.rdma %c0, %730[%c0] %c262144 4 %756 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %758:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %755, %arg53 = %757, %arg54 = %756) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %755 = rmem.wrid : index
+    %756 = rmem.rdma %c0, %730[%c0] %c262144 4 %755 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %757 = rmem.slot %c0 {mem = "t8"} : (index) -> memref<1x262144xf32>
+    %758:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %756, %arg53 = %757, %arg54 = %755) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t8"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %730[%2260] %c262144 4 %2262 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %730[%2260] %c262144 4 %2261 {map = #map8, mem = "t6"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t8"} : (index) -> memref<1x262144xf32>
       rmem.sync %753 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %752[%arg49] %c262144 0 %c0 {map = #map8, mem = "t8"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %754 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %752[%arg49] %c262144 0 %2264 {map = #map8, mem = "t8"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %754 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_794 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -7235,31 +7236,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %811 : !llvm.ptr<i64>
     %812 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %812 : !llvm.ptr<i64>
-    %813 = rmem.wrid : index
-    %814 = rmem.rdma %c0, %arg8[%c0] %c261120 4 %813 {map = #map7, mem = "t80"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %815 = rmem.slot %c0 {mem = "t10"} : (index) -> memref<1x262144xf32>
-    %816:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %814, %arg53 = %815, %arg54 = %813) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %813 = rmem.slot %c0 {mem = "t10"} : (index) -> memref<1x262144xf32>
+    %814 = rmem.wrid : index
+    %815 = rmem.rdma %c0, %arg8[%c0] %c261120 4 %814 {map = #map7, mem = "t80"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %816:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %813, %arg53 = %815, %arg54 = %814) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg8[%2260] %c261120 4 %2261 {map = #map7, mem = "t80"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t10"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t10"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg8[%2260] %c261120 4 %2262 {map = #map7, mem = "t80"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %811 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %810[%arg49] %c262144 0 %2264 {map = #map8, mem = "t10"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %812 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %810[%arg49] %c262144 0 %c0 {map = #map8, mem = "t10"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %812 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %817 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %817 : !llvm.ptr<i64>
@@ -7290,30 +7290,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %822 : !llvm.ptr<i64>
     %823 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %823 : !llvm.ptr<i64>
-    %824 = rmem.slot %c0 {mem = "t11"} : (index) -> memref<1x262144xf32>
-    %825 = rmem.wrid : index
-    %826 = rmem.rdma %c0, %799[%c0] %c262144 4 %825 {map = #map8, mem = "t9"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %827:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %824, %arg53 = %826, %arg54 = %825) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %824 = rmem.wrid : index
+    %825 = rmem.rdma %c0, %799[%c0] %c262144 4 %824 {map = #map8, mem = "t9"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %826 = rmem.slot %c0 {mem = "t11"} : (index) -> memref<1x262144xf32>
+    %827:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %825, %arg53 = %826, %arg54 = %824) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t11"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %799[%2260] %c262144 4 %2262 {map = #map8, mem = "t9"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %799[%2260] %c262144 4 %2261 {map = #map8, mem = "t9"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t11"} : (index) -> memref<1x262144xf32>
       rmem.sync %822 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %821[%arg49] %c262144 0 %c0 {map = #map8, mem = "t11"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %823 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %821[%arg49] %c262144 0 %2264 {map = #map8, mem = "t11"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %823 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_884 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -10322,30 +10323,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %938 : !llvm.ptr<i64>
     %939 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %939 : !llvm.ptr<i64>
-    %940 = rmem.slot %c0 {mem = "t15"} : (index) -> memref<1x262144xf32>
-    %941 = rmem.wrid : index
-    %942 = rmem.rdma %c0, %arg11[%c0] %c261120 4 %941 {map = #map7, mem = "t83"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %943:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %940, %arg53 = %942, %arg54 = %941) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %940 = rmem.wrid : index
+    %941 = rmem.rdma %c0, %arg11[%c0] %c261120 4 %940 {map = #map7, mem = "t83"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %942 = rmem.slot %c0 {mem = "t15"} : (index) -> memref<1x262144xf32>
+    %943:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %941, %arg53 = %942, %arg54 = %940) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t15"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg11[%2260] %c261120 4 %2262 {map = #map7, mem = "t83"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg11[%2260] %c261120 4 %2261 {map = #map7, mem = "t83"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t15"} : (index) -> memref<1x262144xf32>
       rmem.sync %938 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %937[%arg49] %c262144 0 %c0 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %939 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %937[%arg49] %c262144 0 %2264 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %939 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %944 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %944 : !llvm.ptr<i64>
@@ -10376,31 +10378,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %949 : !llvm.ptr<i64>
     %950 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %950 : !llvm.ptr<i64>
-    %951 = rmem.wrid : index
-    %952 = rmem.rdma %c0, %arg12[%c0] %c261120 4 %951 {map = #map7, mem = "t84"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %953 = rmem.slot %c0 {mem = "t16"} : (index) -> memref<1x262144xf32>
-    %954:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %952, %arg53 = %953, %arg54 = %951) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %951 = rmem.slot %c0 {mem = "t16"} : (index) -> memref<1x262144xf32>
+    %952 = rmem.wrid : index
+    %953 = rmem.rdma %c0, %arg12[%c0] %c261120 4 %952 {map = #map7, mem = "t84"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %954:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %951, %arg53 = %953, %arg54 = %952) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg12[%2260] %c261120 4 %2261 {map = #map7, mem = "t84"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t16"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t16"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg12[%2260] %c261120 4 %2262 {map = #map7, mem = "t84"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %949 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %948[%arg49] %c262144 0 %2264 {map = #map8, mem = "t16"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %950 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %948[%arg49] %c262144 0 %c0 {map = #map8, mem = "t16"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %950 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %955 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %955 : !llvm.ptr<i64>
@@ -10431,31 +10432,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %960 : !llvm.ptr<i64>
     %961 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %961 : !llvm.ptr<i64>
-    %962 = rmem.wrid : index
-    %963 = rmem.rdma %c0, %937[%c0] %c262144 4 %962 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %964 = rmem.slot %c0 {mem = "t17"} : (index) -> memref<1x262144xf32>
-    %965:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %963, %arg53 = %964, %arg54 = %962) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %962 = rmem.slot %c0 {mem = "t17"} : (index) -> memref<1x262144xf32>
+    %963 = rmem.wrid : index
+    %964 = rmem.rdma %c0, %937[%c0] %c262144 4 %963 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %965:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %962, %arg53 = %964, %arg54 = %963) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %937[%2260] %c262144 4 %2261 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t17"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t17"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %937[%2260] %c262144 4 %2262 {map = #map8, mem = "t15"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %960 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %959[%arg49] %c262144 0 %2264 {map = #map8, mem = "t17"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %961 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %959[%arg49] %c262144 0 %c0 {map = #map8, mem = "t17"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %961 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1064 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -12002,30 +12002,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1029 : !llvm.ptr<i64>
     %1030 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1030 : !llvm.ptr<i64>
-    %1031 = rmem.slot %c0 {mem = "t20"} : (index) -> memref<1x262144xf32>
-    %1032 = rmem.wrid : index
-    %1033 = rmem.rdma %c0, %1006[%c0] %c262144 4 %1032 {map = #map8, mem = "t18"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1034:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1031, %arg53 = %1033, %arg54 = %1032) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1031 = rmem.wrid : index
+    %1032 = rmem.rdma %c0, %1006[%c0] %c262144 4 %1031 {map = #map8, mem = "t18"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1033 = rmem.slot %c0 {mem = "t20"} : (index) -> memref<1x262144xf32>
+    %1034:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1032, %arg53 = %1033, %arg54 = %1031) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t20"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %1006[%2260] %c262144 4 %2262 {map = #map8, mem = "t18"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %1006[%2260] %c262144 4 %2261 {map = #map8, mem = "t18"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t20"} : (index) -> memref<1x262144xf32>
       rmem.sync %1029 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1028[%arg49] %c262144 0 %c0 {map = #map8, mem = "t20"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1030 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1028[%arg49] %c262144 0 %2264 {map = #map8, mem = "t20"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1030 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1154 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -13519,30 +13520,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1087 : !llvm.ptr<i64>
     %1088 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1088 : !llvm.ptr<i64>
-    %1089 = rmem.slot %c0 {mem = "t22"} : (index) -> memref<1x262144xf32>
-    %1090 = rmem.wrid : index
-    %1091 = rmem.rdma %c0, %arg16[%c0] %c261120 4 %1090 {map = #map7, mem = "t88"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1092:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1089, %arg53 = %1091, %arg54 = %1090) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1089 = rmem.wrid : index
+    %1090 = rmem.rdma %c0, %arg16[%c0] %c261120 4 %1089 {map = #map7, mem = "t88"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1091 = rmem.slot %c0 {mem = "t22"} : (index) -> memref<1x262144xf32>
+    %1092:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1090, %arg53 = %1091, %arg54 = %1089) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t22"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg16[%2260] %c261120 4 %2262 {map = #map7, mem = "t88"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg16[%2260] %c261120 4 %2261 {map = #map7, mem = "t88"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t22"} : (index) -> memref<1x262144xf32>
       rmem.sync %1087 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1086[%arg49] %c262144 0 %c0 {map = #map8, mem = "t22"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1088 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1086[%arg49] %c262144 0 %2264 {map = #map8, mem = "t22"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1088 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1093 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1093 : !llvm.ptr<i64>
@@ -15144,30 +15146,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1167 : !llvm.ptr<i64>
     %1168 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1168 : !llvm.ptr<i64>
-    %1169 = rmem.slot %c0 {mem = "t26"} : (index) -> memref<1x262144xf32>
-    %1170 = rmem.wrid : index
-    %1171 = rmem.rdma %c0, %1144[%c0] %c262144 4 %1170 {map = #map8, mem = "t24"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1172:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1169, %arg53 = %1171, %arg54 = %1170) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1169 = rmem.wrid : index
+    %1170 = rmem.rdma %c0, %1144[%c0] %c262144 4 %1169 {map = #map8, mem = "t24"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1171 = rmem.slot %c0 {mem = "t26"} : (index) -> memref<1x262144xf32>
+    %1172:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1170, %arg53 = %1171, %arg54 = %1169) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t26"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %1144[%2260] %c262144 4 %2262 {map = #map8, mem = "t24"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %1144[%2260] %c262144 4 %2261 {map = #map8, mem = "t24"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t26"} : (index) -> memref<1x262144xf32>
       rmem.sync %1167 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1166[%arg49] %c262144 0 %c0 {map = #map8, mem = "t26"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1168 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1166[%arg49] %c262144 0 %2264 {map = #map8, mem = "t26"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1168 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1334 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -16714,31 +16717,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1236 : !llvm.ptr<i64>
     %1237 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1237 : !llvm.ptr<i64>
-    %1238 = rmem.wrid : index
-    %1239 = rmem.rdma %c0, %1213[%c0] %c262144 4 %1238 {map = #map8, mem = "t27"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1240 = rmem.slot %c0 {mem = "t29"} : (index) -> memref<1x262144xf32>
-    %1241:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1239, %arg53 = %1240, %arg54 = %1238) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1238 = rmem.slot %c0 {mem = "t29"} : (index) -> memref<1x262144xf32>
+    %1239 = rmem.wrid : index
+    %1240 = rmem.rdma %c0, %1213[%c0] %c262144 4 %1239 {map = #map8, mem = "t27"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1241:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1238, %arg53 = %1240, %arg54 = %1239) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %1213[%2260] %c262144 4 %2261 {map = #map8, mem = "t27"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t29"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t29"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %1213[%2260] %c262144 4 %2262 {map = #map8, mem = "t27"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %1236 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1235[%arg49] %c262144 0 %2264 {map = #map8, mem = "t29"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1237 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1235[%arg49] %c262144 0 %c0 {map = #map8, mem = "t29"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1237 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1424 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -19804,31 +19806,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1363 : !llvm.ptr<i64>
     %1364 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1364 : !llvm.ptr<i64>
-    %1365 = rmem.wrid : index
-    %1366 = rmem.rdma %c0, %arg24[%c0] %c261120 4 %1365 {map = #map7, mem = "t96"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1367 = rmem.slot %c0 {mem = "t34"} : (index) -> memref<1x262144xf32>
-    %1368:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1366, %arg53 = %1367, %arg54 = %1365) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1365 = rmem.slot %c0 {mem = "t34"} : (index) -> memref<1x262144xf32>
+    %1366 = rmem.wrid : index
+    %1367 = rmem.rdma %c0, %arg24[%c0] %c261120 4 %1366 {map = #map7, mem = "t96"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1368:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1365, %arg53 = %1367, %arg54 = %1366) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg24[%2260] %c261120 4 %2261 {map = #map7, mem = "t96"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t34"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t34"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg24[%2260] %c261120 4 %2262 {map = #map7, mem = "t96"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1363 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1362[%arg49] %c262144 0 %2264 {map = #map8, mem = "t34"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1364 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1362[%arg49] %c262144 0 %c0 {map = #map8, mem = "t34"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1364 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1369 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1369 : !llvm.ptr<i64>
@@ -21429,31 +21430,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1443 : !llvm.ptr<i64>
     %1444 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1444 : !llvm.ptr<i64>
-    %1445 = rmem.wrid : index
-    %1446 = rmem.rdma %c0, %1420[%c0] %c262144 4 %1445 {map = #map8, mem = "t36"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1447 = rmem.slot %c0 {mem = "t38"} : (index) -> memref<1x262144xf32>
-    %1448:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1446, %arg53 = %1447, %arg54 = %1445) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1445 = rmem.slot %c0 {mem = "t38"} : (index) -> memref<1x262144xf32>
+    %1446 = rmem.wrid : index
+    %1447 = rmem.rdma %c0, %1420[%c0] %c262144 4 %1446 {map = #map8, mem = "t36"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1448:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1445, %arg53 = %1447, %arg54 = %1446) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %1420[%2260] %c262144 4 %2261 {map = #map8, mem = "t36"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t38"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t38"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %1420[%2260] %c262144 4 %2262 {map = #map8, mem = "t36"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %1443 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1442[%arg49] %c262144 0 %2264 {map = #map8, mem = "t38"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1444 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1442[%arg49] %c262144 0 %c0 {map = #map8, mem = "t38"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1444 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1694 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -22892,31 +22892,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1490 : !llvm.ptr<i64>
     %1491 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1491 : !llvm.ptr<i64>
-    %1492 = rmem.wrid : index
-    %1493 = rmem.rdma %c0, %arg27[%c0] %c261120 4 %1492 {map = #map7, mem = "t99"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1494 = rmem.slot %c0 {mem = "t39"} : (index) -> memref<1x262144xf32>
-    %1495:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1493, %arg53 = %1494, %arg54 = %1492) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1492 = rmem.slot %c0 {mem = "t39"} : (index) -> memref<1x262144xf32>
+    %1493 = rmem.wrid : index
+    %1494 = rmem.rdma %c0, %arg27[%c0] %c261120 4 %1493 {map = #map7, mem = "t99"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1495:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1492, %arg53 = %1494, %arg54 = %1493) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg27[%2260] %c261120 4 %2261 {map = #map7, mem = "t99"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t39"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t39"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg27[%2260] %c261120 4 %2262 {map = #map7, mem = "t99"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1490 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1489[%arg49] %c262144 0 %2264 {map = #map8, mem = "t39"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1491 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1489[%arg49] %c262144 0 %c0 {map = #map8, mem = "t39"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1491 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1496 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1496 : !llvm.ptr<i64>
@@ -22947,30 +22946,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1501 : !llvm.ptr<i64>
     %1502 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1502 : !llvm.ptr<i64>
-    %1503 = rmem.slot %c0 {mem = "t40"} : (index) -> memref<1x262144xf32>
-    %1504 = rmem.wrid : index
-    %1505 = rmem.rdma %c0, %arg28[%c0] %c261120 4 %1504 {map = #map7, mem = "t100"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1506:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1503, %arg53 = %1505, %arg54 = %1504) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1503 = rmem.wrid : index
+    %1504 = rmem.rdma %c0, %arg28[%c0] %c261120 4 %1503 {map = #map7, mem = "t100"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1505 = rmem.slot %c0 {mem = "t40"} : (index) -> memref<1x262144xf32>
+    %1506:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1504, %arg53 = %1505, %arg54 = %1503) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t40"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg28[%2260] %c261120 4 %2262 {map = #map7, mem = "t100"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg28[%2260] %c261120 4 %2261 {map = #map7, mem = "t100"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t40"} : (index) -> memref<1x262144xf32>
       rmem.sync %1501 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1500[%arg49] %c262144 0 %c0 {map = #map8, mem = "t40"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1502 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1500[%arg49] %c262144 0 %2264 {map = #map8, mem = "t40"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1502 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1507 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1507 : !llvm.ptr<i64>
@@ -24519,30 +24519,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1570 : !llvm.ptr<i64>
     %1571 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1571 : !llvm.ptr<i64>
-    %1572 = rmem.slot %c0 {mem = "t43"} : (index) -> memref<1x262144xf32>
-    %1573 = rmem.wrid : index
-    %1574 = rmem.rdma %c0, %arg30[%c0] %c261120 4 %1573 {map = #map7, mem = "t102"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1575:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1572, %arg53 = %1574, %arg54 = %1573) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1572 = rmem.wrid : index
+    %1573 = rmem.rdma %c0, %arg30[%c0] %c261120 4 %1572 {map = #map7, mem = "t102"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1574 = rmem.slot %c0 {mem = "t43"} : (index) -> memref<1x262144xf32>
+    %1575:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1573, %arg53 = %1574, %arg54 = %1572) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t43"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg30[%2260] %c261120 4 %2262 {map = #map7, mem = "t102"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg30[%2260] %c261120 4 %2261 {map = #map7, mem = "t102"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t43"} : (index) -> memref<1x262144xf32>
       rmem.sync %1570 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1569[%arg49] %c262144 0 %c0 {map = #map8, mem = "t43"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1571 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1569[%arg49] %c262144 0 %2264 {map = #map8, mem = "t43"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1571 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1576 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1576 : !llvm.ptr<i64>
@@ -24573,30 +24574,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1581 : !llvm.ptr<i64>
     %1582 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1582 : !llvm.ptr<i64>
-    %1583 = rmem.slot %c0 {mem = "t44"} : (index) -> memref<1x262144xf32>
-    %1584 = rmem.wrid : index
-    %1585 = rmem.rdma %c0, %1558[%c0] %c262144 4 %1584 {map = #map8, mem = "t42"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1586:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1583, %arg53 = %1585, %arg54 = %1584) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1583 = rmem.wrid : index
+    %1584 = rmem.rdma %c0, %1558[%c0] %c262144 4 %1583 {map = #map8, mem = "t42"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1585 = rmem.slot %c0 {mem = "t44"} : (index) -> memref<1x262144xf32>
+    %1586:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1584, %arg53 = %1585, %arg54 = %1583) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t44"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %1558[%2260] %c262144 4 %2262 {map = #map8, mem = "t42"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %1558[%2260] %c262144 4 %2261 {map = #map8, mem = "t42"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t44"} : (index) -> memref<1x262144xf32>
       rmem.sync %1581 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1580[%arg49] %c262144 0 %c0 {map = #map8, mem = "t44"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1582 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1580[%arg49] %c262144 0 %2264 {map = #map8, mem = "t44"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1582 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_1874 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -26035,30 +26037,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1628 : !llvm.ptr<i64>
     %1629 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1629 : !llvm.ptr<i64>
-    %1630 = rmem.slot %c0 {mem = "t45"} : (index) -> memref<1x262144xf32>
-    %1631 = rmem.wrid : index
-    %1632 = rmem.rdma %c0, %arg31[%c0] %c261120 4 %1631 {map = #map7, mem = "t103"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1633:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1630, %arg53 = %1632, %arg54 = %1631) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1630 = rmem.wrid : index
+    %1631 = rmem.rdma %c0, %arg31[%c0] %c261120 4 %1630 {map = #map7, mem = "t103"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1632 = rmem.slot %c0 {mem = "t45"} : (index) -> memref<1x262144xf32>
+    %1633:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1631, %arg53 = %1632, %arg54 = %1630) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t45"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg31[%2260] %c261120 4 %2262 {map = #map7, mem = "t103"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg31[%2260] %c261120 4 %2261 {map = #map7, mem = "t103"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t45"} : (index) -> memref<1x262144xf32>
       rmem.sync %1628 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1627[%arg49] %c262144 0 %c0 {map = #map8, mem = "t45"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1629 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1627[%arg49] %c262144 0 %2264 {map = #map8, mem = "t45"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1629 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1634 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1634 : !llvm.ptr<i64>
@@ -26089,31 +26092,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1639 : !llvm.ptr<i64>
     %1640 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1640 : !llvm.ptr<i64>
-    %1641 = rmem.wrid : index
-    %1642 = rmem.rdma %c0, %arg32[%c0] %c261120 4 %1641 {map = #map7, mem = "t104"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1643 = rmem.slot %c0 {mem = "t46"} : (index) -> memref<1x262144xf32>
-    %1644:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1642, %arg53 = %1643, %arg54 = %1641) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1641 = rmem.slot %c0 {mem = "t46"} : (index) -> memref<1x262144xf32>
+    %1642 = rmem.wrid : index
+    %1643 = rmem.rdma %c0, %arg32[%c0] %c261120 4 %1642 {map = #map7, mem = "t104"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1644:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1641, %arg53 = %1643, %arg54 = %1642) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg32[%2260] %c261120 4 %2261 {map = #map7, mem = "t104"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t46"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t46"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg32[%2260] %c261120 4 %2262 {map = #map7, mem = "t104"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1639 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1638[%arg49] %c262144 0 %2264 {map = #map8, mem = "t46"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1640 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1638[%arg49] %c262144 0 %c0 {map = #map8, mem = "t46"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1640 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1645 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1645 : !llvm.ptr<i64>
@@ -27662,31 +27664,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1708 : !llvm.ptr<i64>
     %1709 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1709 : !llvm.ptr<i64>
-    %1710 = rmem.wrid : index
-    %1711 = rmem.rdma %c0, %arg34[%c0] %c261120 4 %1710 {map = #map7, mem = "t106"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1712 = rmem.slot %c0 {mem = "t49"} : (index) -> memref<1x262144xf32>
-    %1713:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1711, %arg53 = %1712, %arg54 = %1710) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1710 = rmem.slot %c0 {mem = "t49"} : (index) -> memref<1x262144xf32>
+    %1711 = rmem.wrid : index
+    %1712 = rmem.rdma %c0, %arg34[%c0] %c261120 4 %1711 {map = #map7, mem = "t106"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1713:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1710, %arg53 = %1712, %arg54 = %1711) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg34[%2260] %c261120 4 %2261 {map = #map7, mem = "t106"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t49"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t49"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg34[%2260] %c261120 4 %2262 {map = #map7, mem = "t106"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1708 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1707[%arg49] %c262144 0 %2264 {map = #map8, mem = "t49"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1709 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1707[%arg49] %c262144 0 %c0 {map = #map8, mem = "t49"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1709 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1714 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1714 : !llvm.ptr<i64>
@@ -27717,30 +27718,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1719 : !llvm.ptr<i64>
     %1720 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1720 : !llvm.ptr<i64>
-    %1721 = rmem.slot %c0 {mem = "t50"} : (index) -> memref<1x262144xf32>
-    %1722 = rmem.wrid : index
-    %1723 = rmem.rdma %c0, %1696[%c0] %c262144 4 %1722 {map = #map8, mem = "t48"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1724:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1721, %arg53 = %1723, %arg54 = %1722) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1721 = rmem.wrid : index
+    %1722 = rmem.rdma %c0, %1696[%c0] %c262144 4 %1721 {map = #map8, mem = "t48"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1723 = rmem.slot %c0 {mem = "t50"} : (index) -> memref<1x262144xf32>
+    %1724:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1722, %arg53 = %1723, %arg54 = %1721) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t50"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %1696[%2260] %c262144 4 %2262 {map = #map8, mem = "t48"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %1696[%2260] %c262144 4 %2261 {map = #map8, mem = "t48"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      %2263 = rmem.slot %arg50 {mem = "t50"} : (index) -> memref<1x262144xf32>
       rmem.sync %1719 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1718[%arg49] %c262144 0 %c0 {map = #map8, mem = "t50"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1720 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1718[%arg49] %c262144 0 %2264 {map = #map8, mem = "t50"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1720 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_2054 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -29179,31 +29181,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1766 : !llvm.ptr<i64>
     %1767 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1767 : !llvm.ptr<i64>
-    %1768 = rmem.wrid : index
-    %1769 = rmem.rdma %c0, %arg35[%c0] %c261120 4 %1768 {map = #map7, mem = "t107"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1770 = rmem.slot %c0 {mem = "t51"} : (index) -> memref<1x262144xf32>
-    %1771:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1769, %arg53 = %1770, %arg54 = %1768) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1768 = rmem.slot %c0 {mem = "t51"} : (index) -> memref<1x262144xf32>
+    %1769 = rmem.wrid : index
+    %1770 = rmem.rdma %c0, %arg35[%c0] %c261120 4 %1769 {map = #map7, mem = "t107"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1771:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1768, %arg53 = %1770, %arg54 = %1769) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg35[%2260] %c261120 4 %2261 {map = #map7, mem = "t107"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t51"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t51"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg35[%2260] %c261120 4 %2262 {map = #map7, mem = "t107"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1766 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1765[%arg49] %c262144 0 %2264 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1767 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1765[%arg49] %c262144 0 %c0 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1767 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1772 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1772 : !llvm.ptr<i64>
@@ -29234,30 +29235,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1777 : !llvm.ptr<i64>
     %1778 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1778 : !llvm.ptr<i64>
-    %1779 = rmem.slot %c0 {mem = "t52"} : (index) -> memref<1x262144xf32>
-    %1780 = rmem.wrid : index
-    %1781 = rmem.rdma %c0, %arg36[%c0] %c261120 4 %1780 {map = #map7, mem = "t108"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1782:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1779, %arg53 = %1781, %arg54 = %1780) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1779 = rmem.wrid : index
+    %1780 = rmem.rdma %c0, %arg36[%c0] %c261120 4 %1779 {map = #map7, mem = "t108"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1781 = rmem.slot %c0 {mem = "t52"} : (index) -> memref<1x262144xf32>
+    %1782:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1780, %arg53 = %1781, %arg54 = %1779) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t52"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg36[%2260] %c261120 4 %2262 {map = #map7, mem = "t108"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg36[%2260] %c261120 4 %2261 {map = #map7, mem = "t108"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t52"} : (index) -> memref<1x262144xf32>
       rmem.sync %1777 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1776[%arg49] %c262144 0 %c0 {map = #map8, mem = "t52"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1778 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1776[%arg49] %c262144 0 %2264 {map = #map8, mem = "t52"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1778 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1783 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1783 : !llvm.ptr<i64>
@@ -29288,31 +29290,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1788 : !llvm.ptr<i64>
     %1789 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1789 : !llvm.ptr<i64>
-    %1790 = rmem.wrid : index
-    %1791 = rmem.rdma %c0, %1765[%c0] %c262144 4 %1790 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1792 = rmem.slot %c0 {mem = "t53"} : (index) -> memref<1x262144xf32>
-    %1793:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1791, %arg53 = %1792, %arg54 = %1790) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1790 = rmem.slot %c0 {mem = "t53"} : (index) -> memref<1x262144xf32>
+    %1791 = rmem.wrid : index
+    %1792 = rmem.rdma %c0, %1765[%c0] %c262144 4 %1791 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1793:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1790, %arg53 = %1792, %arg54 = %1791) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %1765[%2260] %c262144 4 %2261 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t53"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t53"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %1765[%2260] %c262144 4 %2262 {map = #map8, mem = "t51"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %1788 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1787[%arg49] %c262144 0 %2264 {map = #map8, mem = "t53"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1789 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1787[%arg49] %c262144 0 %c0 {map = #map8, mem = "t53"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1789 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_2144 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -30806,30 +30807,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1846 : !llvm.ptr<i64>
     %1847 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1847 : !llvm.ptr<i64>
-    %1848 = rmem.slot %c0 {mem = "t55"} : (index) -> memref<1x262144xf32>
-    %1849 = rmem.wrid : index
-    %1850 = rmem.rdma %c0, %arg38[%c0] %c261120 4 %1849 {map = #map7, mem = "t110"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1851:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1848, %arg53 = %1850, %arg54 = %1849) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1848 = rmem.wrid : index
+    %1849 = rmem.rdma %c0, %arg38[%c0] %c261120 4 %1848 {map = #map7, mem = "t110"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1850 = rmem.slot %c0 {mem = "t55"} : (index) -> memref<1x262144xf32>
+    %1851:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1849, %arg53 = %1850, %arg54 = %1848) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t55"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg38[%2260] %c261120 4 %2262 {map = #map7, mem = "t110"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg38[%2260] %c261120 4 %2261 {map = #map7, mem = "t110"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t55"} : (index) -> memref<1x262144xf32>
       rmem.sync %1846 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1845[%arg49] %c262144 0 %c0 {map = #map8, mem = "t55"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1847 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1845[%arg49] %c262144 0 %2264 {map = #map8, mem = "t55"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1847 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1852 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1852 : !llvm.ptr<i64>
@@ -32322,30 +32324,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1904 : !llvm.ptr<i64>
     %1905 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1905 : !llvm.ptr<i64>
-    %1906 = rmem.slot %c0 {mem = "t57"} : (index) -> memref<1x262144xf32>
-    %1907 = rmem.wrid : index
-    %1908 = rmem.rdma %c0, %arg39[%c0] %c261120 4 %1907 {map = #map7, mem = "t111"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1909:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1906, %arg53 = %1908, %arg54 = %1907) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %1906 = rmem.wrid : index
+    %1907 = rmem.rdma %c0, %arg39[%c0] %c261120 4 %1906 {map = #map7, mem = "t111"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1908 = rmem.slot %c0 {mem = "t57"} : (index) -> memref<1x262144xf32>
+    %1909:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1907, %arg53 = %1908, %arg54 = %1906) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t57"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg39[%2260] %c261120 4 %2262 {map = #map7, mem = "t111"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg39[%2260] %c261120 4 %2261 {map = #map7, mem = "t111"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t57"} : (index) -> memref<1x262144xf32>
       rmem.sync %1904 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %1903[%arg49] %c262144 0 %c0 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1905 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %1903[%arg49] %c262144 0 %2264 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1905 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %1910 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1910 : !llvm.ptr<i64>
@@ -32376,31 +32379,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1915 : !llvm.ptr<i64>
     %1916 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1916 : !llvm.ptr<i64>
-    %1917 = rmem.wrid : index
-    %1918 = rmem.rdma %c0, %arg40[%c0] %c261120 4 %1917 {map = #map7, mem = "t112"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1919 = rmem.slot %c0 {mem = "t58"} : (index) -> memref<1x262144xf32>
-    %1920:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1918, %arg53 = %1919, %arg54 = %1917) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1917 = rmem.slot %c0 {mem = "t58"} : (index) -> memref<1x262144xf32>
+    %1918 = rmem.wrid : index
+    %1919 = rmem.rdma %c0, %arg40[%c0] %c261120 4 %1918 {map = #map7, mem = "t112"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1920:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1917, %arg53 = %1919, %arg54 = %1918) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg40[%2260] %c261120 4 %2261 {map = #map7, mem = "t112"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t58"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t58"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg40[%2260] %c261120 4 %2262 {map = #map7, mem = "t112"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1915 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1914[%arg49] %c262144 0 %2264 {map = #map8, mem = "t58"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1916 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1914[%arg49] %c262144 0 %c0 {map = #map8, mem = "t58"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1916 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1921 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1921 : !llvm.ptr<i64>
@@ -32431,31 +32433,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1926 : !llvm.ptr<i64>
     %1927 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1927 : !llvm.ptr<i64>
-    %1928 = rmem.wrid : index
-    %1929 = rmem.rdma %c0, %1903[%c0] %c262144 4 %1928 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %1930 = rmem.slot %c0 {mem = "t59"} : (index) -> memref<1x262144xf32>
-    %1931:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1929, %arg53 = %1930, %arg54 = %1928) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %1928 = rmem.slot %c0 {mem = "t59"} : (index) -> memref<1x262144xf32>
+    %1929 = rmem.wrid : index
+    %1930 = rmem.rdma %c0, %1903[%c0] %c262144 4 %1929 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %1931:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1928, %arg53 = %1930, %arg54 = %1929) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %1903[%2260] %c262144 4 %2261 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t59"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t59"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %1903[%2260] %c262144 4 %2262 {map = #map8, mem = "t57"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %1926 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1925[%arg49] %c262144 0 %2264 {map = #map8, mem = "t59"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1927 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1925[%arg49] %c262144 0 %c0 {map = #map8, mem = "t59"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1927 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_2324 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -33894,31 +33895,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1973 : !llvm.ptr<i64>
     %1974 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1974 : !llvm.ptr<i64>
-    %1975 = rmem.wrid : index
-    %1976 = rmem.rdma %c0, %arg41[%c0] %c261120 4 %1975 {map = #map7, mem = "t113"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1977 = rmem.slot %c0 {mem = "t60"} : (index) -> memref<1x262144xf32>
-    %1978:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1976, %arg53 = %1977, %arg54 = %1975) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1975 = rmem.slot %c0 {mem = "t60"} : (index) -> memref<1x262144xf32>
+    %1976 = rmem.wrid : index
+    %1977 = rmem.rdma %c0, %arg41[%c0] %c261120 4 %1976 {map = #map7, mem = "t113"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1978:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1975, %arg53 = %1977, %arg54 = %1976) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg41[%2260] %c261120 4 %2261 {map = #map7, mem = "t113"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t60"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t60"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg41[%2260] %c261120 4 %2262 {map = #map7, mem = "t113"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1973 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1972[%arg49] %c262144 0 %2264 {map = #map8, mem = "t60"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1974 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1972[%arg49] %c262144 0 %c0 {map = #map8, mem = "t60"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1974 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1979 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1979 : !llvm.ptr<i64>
@@ -33949,31 +33949,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %1984 : !llvm.ptr<i64>
     %1985 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1985 : !llvm.ptr<i64>
-    %1986 = rmem.wrid : index
-    %1987 = rmem.rdma %c0, %arg42[%c0] %c261120 4 %1986 {map = #map7, mem = "t114"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %1988 = rmem.slot %c0 {mem = "t61"} : (index) -> memref<1x262144xf32>
-    %1989:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1987, %arg53 = %1988, %arg54 = %1986) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %1986 = rmem.slot %c0 {mem = "t61"} : (index) -> memref<1x262144xf32>
+    %1987 = rmem.wrid : index
+    %1988 = rmem.rdma %c0, %arg42[%c0] %c261120 4 %1987 {map = #map7, mem = "t114"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %1989:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %1986, %arg53 = %1988, %arg54 = %1987) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg42[%2260] %c261120 4 %2261 {map = #map7, mem = "t114"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t61"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t61"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg42[%2260] %c261120 4 %2262 {map = #map7, mem = "t114"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %1984 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %1983[%arg49] %c262144 0 %2264 {map = #map8, mem = "t61"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %1985 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %1983[%arg49] %c262144 0 %c0 {map = #map8, mem = "t61"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %1985 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %1990 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %1990 : !llvm.ptr<i64>
@@ -35467,30 +35466,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %2042 : !llvm.ptr<i64>
     %2043 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2043 : !llvm.ptr<i64>
-    %2044 = rmem.slot %c0 {mem = "t63"} : (index) -> memref<1x262144xf32>
-    %2045 = rmem.wrid : index
-    %2046 = rmem.rdma %c0, %arg43[%c0] %c261120 4 %2045 {map = #map7, mem = "t115"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %2047:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2044, %arg53 = %2046, %arg54 = %2045) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %2044 = rmem.wrid : index
+    %2045 = rmem.rdma %c0, %arg43[%c0] %c261120 4 %2044 {map = #map7, mem = "t115"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %2046 = rmem.slot %c0 {mem = "t63"} : (index) -> memref<1x262144xf32>
+    %2047:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2045, %arg53 = %2046, %arg54 = %2044) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t63"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg43[%2260] %c261120 4 %2262 {map = #map7, mem = "t115"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg43[%2260] %c261120 4 %2261 {map = #map7, mem = "t115"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t63"} : (index) -> memref<1x262144xf32>
       rmem.sync %2042 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %2041[%arg49] %c262144 0 %c0 {map = #map8, mem = "t63"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %2043 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %2041[%arg49] %c262144 0 %2264 {map = #map8, mem = "t63"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %2043 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %2048 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2048 : !llvm.ptr<i64>
@@ -35521,31 +35521,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %2053 : !llvm.ptr<i64>
     %2054 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2054 : !llvm.ptr<i64>
-    %2055 = rmem.wrid : index
-    %2056 = rmem.rdma %c0, %arg44[%c0] %c261120 4 %2055 {map = #map7, mem = "t116"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %2057 = rmem.slot %c0 {mem = "t64"} : (index) -> memref<1x262144xf32>
-    %2058:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2056, %arg53 = %2057, %arg54 = %2055) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %2055 = rmem.slot %c0 {mem = "t64"} : (index) -> memref<1x262144xf32>
+    %2056 = rmem.wrid : index
+    %2057 = rmem.rdma %c0, %arg44[%c0] %c261120 4 %2056 {map = #map7, mem = "t116"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %2058:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2055, %arg53 = %2057, %arg54 = %2056) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg44[%2260] %c261120 4 %2261 {map = #map7, mem = "t116"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t64"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t64"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg44[%2260] %c261120 4 %2262 {map = #map7, mem = "t116"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %2053 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %2052[%arg49] %c262144 0 %2264 {map = #map8, mem = "t64"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %2054 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %2052[%arg49] %c262144 0 %c0 {map = #map8, mem = "t64"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %2054 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %2059 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2059 : !llvm.ptr<i64>
@@ -37147,31 +37146,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %2133 : !llvm.ptr<i64>
     %2134 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2134 : !llvm.ptr<i64>
-    %2135 = rmem.wrid : index
-    %2136 = rmem.rdma %c0, %2110[%c0] %c262144 4 %2135 {map = #map8, mem = "t66"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-    %2137 = rmem.slot %c0 {mem = "t68"} : (index) -> memref<1x262144xf32>
-    %2138:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2136, %arg53 = %2137, %arg54 = %2135) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
+    %2135 = rmem.slot %c0 {mem = "t68"} : (index) -> memref<1x262144xf32>
+    %2136 = rmem.wrid : index
+    %2137 = rmem.rdma %c0, %2110[%c0] %c262144 4 %2136 {map = #map8, mem = "t66"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+    %2138:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2135, %arg53 = %2137, %arg54 = %2136) -> (index, index, memref<1x262144xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %2110[%2260] %c262144 4 %2261 {map = #map8, mem = "t66"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      %2263 = rmem.slot %arg50 {mem = "t68"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t68"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %2110[%2260] %c262144 4 %2262 {map = #map8, mem = "t66"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
       rmem.sync %2133 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 256 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 + %arg58 * 256] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %2132[%arg49] %c262144 0 %2264 {map = #map8, mem = "t68"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %2134 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %2132[%arg49] %c262144 0 %c0 {map = #map8, mem = "t68"} : (index, !rmem.rmref<1, memref<64x16x64x256xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %2134 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x262144xf32>, index
     }
     %alloc_2594 = memref.alloc() {alignment = 16 : i64} : memref<64x16x1x256xf32>
     affine.for %arg49 = 0 to 64 {
@@ -38610,30 +38608,31 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %2180 : !llvm.ptr<i64>
     %2181 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2181 : !llvm.ptr<i64>
-    %2182 = rmem.slot %c0 {mem = "t69"} : (index) -> memref<1x262144xf32>
-    %2183 = rmem.wrid : index
-    %2184 = rmem.rdma %c0, %arg47[%c0] %c261120 4 %2183 {map = #map7, mem = "t119"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %2185:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2182, %arg53 = %2184, %arg54 = %2183) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
+    %2182 = rmem.wrid : index
+    %2183 = rmem.rdma %c0, %arg47[%c0] %c261120 4 %2182 {map = #map7, mem = "t119"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %2184 = rmem.slot %c0 {mem = "t69"} : (index) -> memref<1x262144xf32>
+    %2185:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2183, %arg53 = %2184, %arg54 = %2182) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.slot %arg50 {mem = "t69"} : (index) -> memref<1x262144xf32>
-      %2262 = rmem.wrid : index
-      %2263 = rmem.rdma %arg50, %arg47[%2260] %c261120 4 %2262 {map = #map7, mem = "t119"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2261 = rmem.wrid : index
+      %2262 = rmem.rdma %arg50, %arg47[%2260] %c261120 4 %2261 {map = #map7, mem = "t119"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+      %2263 = rmem.slot %arg50 {mem = "t69"} : (index) -> memref<1x262144xf32>
       rmem.sync %2180 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.rdma %arg51, %2179[%arg49] %c262144 0 %c0 {map = #map8, mem = "t69"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %2181 -> %c0 : <i64>, index
-      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
+      %2264 = rmem.wrid : index
+      %2265 = rmem.rdma %arg51, %2179[%arg49] %c262144 0 %2264 {map = #map8, mem = "t69"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %2181 -> %2264 : <i64>, index
+      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
     }
     %2186 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2186 : !llvm.ptr<i64>
@@ -38664,31 +38663,30 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.store %c0_i64, %2191 : !llvm.ptr<i64>
     %2192 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2192 : !llvm.ptr<i64>
-    %2193 = rmem.wrid : index
-    %2194 = rmem.rdma %c0, %arg48[%c0] %c261120 4 %2193 {map = #map7, mem = "t120"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-    %2195 = rmem.slot %c0 {mem = "t70"} : (index) -> memref<1x262144xf32>
-    %2196:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2194, %arg53 = %2195, %arg54 = %2193) -> (index, index, memref<1x261120xf32>, memref<1x262144xf32>, index) {
+    %2193 = rmem.slot %c0 {mem = "t70"} : (index) -> memref<1x262144xf32>
+    %2194 = rmem.wrid : index
+    %2195 = rmem.rdma %c0, %arg48[%c0] %c261120 4 %2194 {map = #map7, mem = "t120"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
+    %2196:5 = affine.for %arg49 = 0 to 64 iter_args(%arg50 = %c1, %arg51 = %c0, %arg52 = %2193, %arg53 = %2195, %arg54 = %2194) -> (index, index, memref<1x262144xf32>, memref<1x261120xf32>, index) {
       %2258 = arith.addi %arg50, %c1 : index
       %2259 = arith.addi %arg51, %c1 : index
       %2260 = arith.addi %arg49, %c1 : index
-      %2261 = rmem.wrid : index
-      %2262 = rmem.rdma %arg50, %arg48[%2260] %c261120 4 %2261 {map = #map7, mem = "t120"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
-      %2263 = rmem.slot %arg50 {mem = "t70"} : (index) -> memref<1x262144xf32>
+      %2261 = rmem.slot %arg50 {mem = "t70"} : (index) -> memref<1x262144xf32>
+      %2262 = rmem.wrid : index
+      %2263 = rmem.rdma %arg50, %arg48[%2260] %c261120 4 %2262 {map = #map7, mem = "t120"} : (index, !rmem.rmref<1, memref<64x16x255x64xf32>>, index, index, index) -> memref<1x261120xf32>
       rmem.sync %2191 -> %arg54 : <i64>, index
       affine.for %arg55 = 0 to 1 {
         affine.for %arg56 = 0 to 16 {
           affine.for %arg57 = 0 to 255 {
             affine.for %arg58 = 0 to 64 {
-              %2266 = affine.load %arg52[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
-              affine.store %2266, %arg53[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
+              %2265 = affine.load %arg53[%arg55, %arg56 * 16320 + %arg57 * 64 + %arg58] : memref<1x261120xf32>
+              affine.store %2265, %arg52[%arg55, %arg56 * 16384 + %arg57 * 64 + %arg58] : memref<1x262144xf32>
             }
           }
         }
       }
-      %2264 = rmem.wrid : index
-      %2265 = rmem.rdma %arg51, %2190[%arg49] %c262144 0 %2264 {map = #map8, mem = "t70"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
-      rmem.sync %2192 -> %2264 : <i64>, index
-      affine.yield %2258, %2259, %2262, %2263, %2261 : index, index, memref<1x261120xf32>, memref<1x262144xf32>, index
+      %2264 = rmem.rdma %arg51, %2190[%arg49] %c262144 0 %c0 {map = #map8, mem = "t70"} : (index, !rmem.rmref<1, memref<64x16x256x64xf32>>, index, index, index) -> memref<1x262144xf32>
+      rmem.sync %2192 -> %c0 : <i64>, index
+      affine.yield %2258, %2259, %2261, %2263, %2262 : index, index, memref<1x262144xf32>, memref<1x261120xf32>, index
     }
     %2197 = llvm.alloca %c1_i64 x i64 : (i64) -> !llvm.ptr<i64>
     llvm.store %c0_i64, %2197 : !llvm.ptr<i64>
